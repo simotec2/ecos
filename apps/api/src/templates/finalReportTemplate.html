@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<style>
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  margin-bottom:20px;
+}
+
+.logo{
+  position:absolute;
+  left:0;
+}
+
+.title{
+  font-size:22px;
+  font-weight:bold;
+  text-align:center;
+}
+
+body{
+  font-family: Arial;
+  padding:40px;
+  color:#111;
+}
+
+/* KPI */
+.kpis{
+  display:flex;
+  gap:20px;
+  margin-top:20px;
+}
+
+.kpi{
+  flex:1;
+  background:#f3f4f6;
+  padding:20px;
+  border-radius:10px;
+  text-align:center;
+}
+
+.result{
+  color:#fff;
+  padding:12px;
+  border-radius:8px;
+  font-weight:bold;
+}
+
+/* RADAR */
+.radar{
+  margin-top:30px;
+  text-align:center;
+}
+
+/* PAGE BREAK */
+.page-break{
+  page-break-before: always;
+}
+
+/* ANALISIS */
+.analysis{
+  margin-top:20px;
+  line-height:1.7;
+  text-align:justify;
+  font-size:14px;
+}
+
+hr{
+  margin:25px 0;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- PAGINA 1 -->
+<div class="header">
+
+  <div class="logo">
+    {{logo}}
+  </div>
+
+  <div class="title">
+    INFORME FINAL ECOS
+  </div>
+
+</div>
+
+<div>{{participant}}</div>
+<div>{{perfil}}</div>
+<div>{{company}}</div>
+
+<hr/>
+
+<div class="kpis">
+  <div class="kpi">
+    Puntaje Global<br/>
+    <b>{{score}}%</b>
+  </div>
+
+  <div class="kpi">
+    Resultado<br/>
+    <div class="result" style="background:{{color}}">
+      {{result}}
+    </div>
+  </div>
+</div>
+
+<div class="radar">
+  {{radar}}
+</div>
+
+<div class="page-break"></div>
+
+<!-- PAGINA 2 -->
+<h3>Análisis Ejecutivo</h3>
+
+<div class="analysis">
+  {{analysis}}
+</div>
+
+</body>
+</html> 

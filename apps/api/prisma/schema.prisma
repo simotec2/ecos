@@ -1,0 +1,258 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/**
+ * =====================================
+ * ENUMS
+ * =====================================
+ */
+
+enum Role {
+  SUPERADMIN
+  COMPANY_ADMIN
+  PSYCHOLOGIST
+  PARTICIPANT
+}
+
+enum EvaluationType {
+  PETS
+  ICOM
+  SECURITY
+}
+
+enum QuestionType {
+  OPEN
+  LIKERT
+  MCQ
+}
+
+enum AssignmentStatus {
+  PENDING
+  STARTED
+  COMPLETED
+}
+
+/**
+ * =====================================
+ * COMPANY
+ * =====================================
+ */
+
+model Company {
+  id String @id @default(cuid())
+
+  name        String
+  razonSocial String?
+  rut         String? @unique
+
+  direccion String?
+  giro      String?
+
+  contactoNombre   String?
+  contactoTelefono String?
+  contactoEmail    String?
+
+  users        User[]
+  participants Participant[]
+
+  createdAt DateTime @default(now())
+}
+
+/**
+ * =====================================
+ * USER
+ * =====================================
+ */
+
+model User {
+  id String @id @default(cuid())
+
+  name     String
+  rut      String @unique
+  password String
+  role     Role
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+/**
+ * =====================================
+ * PARTICIPANT
+ * =====================================
+ */
+
+model Participant {
+  id String @id @default(cuid())
+
+  rut      String  @unique
+  nombre   String
+  apellido String
+  email    String?
+
+  perfil String?
+
+  accessToken String? @unique
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  sessions    EvaluationSession[]
+  results     EvaluationResult[]
+  assignments Assignment[]
+
+  createdAt DateTime @default(now())
+}
+
+/**
+ * =====================================
+ * EVALUATION
+ * =====================================
+ */
+
+model Evaluation {
+  id String @id @default(cuid())
+
+  name String
+  code String? // 🔥 importante para SECURITY (SEC_SUP_MIN, etc)
+
+  type EvaluationType
+
+  questions         EvaluationQuestion[]
+  sessions          EvaluationSession[]
+  assignments       Assignment[]
+  evaluationResults EvaluationResult[]
+
+  createdAt DateTime @default(now())
+}
+
+/**
+ * =====================================
+ * EVALUATION QUESTION
+ * =====================================
+ */
+model EvaluationQuestion {
+  id String @id @default(cuid())
+
+  evaluationId String
+  evaluation Evaluation @relation(fields: [evaluationId], references: [id])
+
+  text String
+  type QuestionType
+
+  optionsJson String?
+  correctAnswer String?
+
+  competency String?
+  keywordsJson String?
+
+  weight Int?   // 🔥 IMPORTANTE
+
+  answers EvaluationAnswer[]
+}
+/**
+ * =====================================
+ * ASSIGNMENT
+ * =====================================
+ */
+
+model Assignment {
+  id String @id @default(cuid())
+
+  participantId String
+  evaluationId  String
+
+  status AssignmentStatus @default(PENDING)
+
+  invitedAt DateTime?
+
+  participant Participant @relation(fields: [participantId], references: [id])
+  evaluation  Evaluation  @relation(fields: [evaluationId], references: [id])
+
+  createdAt DateTime @default(now())
+  @@unique([participantId, evaluationId])
+}
+
+/**
+ * =====================================
+ * EVALUATION SESSION
+ * =====================================
+ */
+
+model EvaluationSession {
+  id String @id @default(cuid())
+
+  participantId String
+  evaluationId  String
+
+  participant Participant @relation(fields: [participantId], references: [id])
+  evaluation  Evaluation  @relation(fields: [evaluationId], references: [id])
+
+  answers EvaluationAnswer[]
+
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  status String?
+
+  // 🔥 SOLO REFERENCIA INVERSA
+  result EvaluationResult?
+
+}
+
+/**
+ * =====================================
+ * EVALUATION ANSWER
+ * =====================================
+ */
+
+model EvaluationAnswer {
+  id String @id @default(cuid())
+
+  sessionId  String
+  questionId String
+
+  answer String?
+
+  aiScore    Float?
+  aiAnalysis String?
+
+  session  EvaluationSession  @relation(fields: [sessionId], references: [id])
+  question EvaluationQuestion @relation(fields: [questionId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+/**
+ * =====================================
+ * EVALUATION RESULT
+ * =====================================
+ */
+
+model EvaluationResult {
+  id String @id @default(cuid())
+
+  sessionId     String @unique   // 🔥 CLAVE
+  participantId String
+  evaluationId  String
+
+  score      Float
+  resultJson String?
+
+  participant Participant @relation(fields: [participantId], references: [id])
+  evaluation  Evaluation  @relation(fields: [evaluationId], references: [id])
+
+  // 🔥 RELACIÓN CORRECTA
+  session EvaluationSession @relation(fields: [sessionId], references: [id])
+
+  createdAt DateTime @default(now())
+}

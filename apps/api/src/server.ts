@@ -1,0 +1,82 @@
+console.log("🔥 SERVER NUEVO ACTIVO")
+import "dotenv/config"
+import express from "express"
+import cors from "cors"
+
+import prisma from "./db"
+
+import dashboardRoutes from "./routes/dashboard"
+import authRoutes from "./routes/auth"
+import usersRoutes from "./routes/users"
+import companiesRoutes from "./routes/companies"
+import participantsRoutes from "./routes/participants"
+import participantsBulkRoutes from "./routes/participantsBulk"
+import assignmentsRoutes from "./routes/assignments"
+import sessionRoutes from "./routes/session"
+import resultsRoutes from "./routes/results"
+import reportsRoutes from "./routes/reports"
+import evaluationsRoutes from "./routes/evaluations"
+import participantAccessRoutes from "./routes/participantAccess"
+import participantInviteRoutes from "./routes/participantInvite"
+import sendInvitationRoutes from "./routes/sendInvitation"
+import evaluationFinishRoutes from "./routes/evaluationFinish"
+import finalReportRoutes from "./routes/finalReport"
+import evaluationAnswerRoutes from "./routes/evaluationAnswer"
+import historyRoutes from "./routes/history"
+import questionsRoutes from "./routes/questions"
+
+const app = express()
+
+app.use(cors())
+app.use(express.json())
+
+/* =========================
+HEALTH CHECK
+========================= */
+app.get("/api/health", async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`
+    res.json({ ok: true })
+  } catch (error) {
+    console.error("Health error:", error)
+    res.status(500).json({ ok: false })
+  }
+})
+
+/* =========================
+RUTAS
+========================= */
+
+app.use("/api/dashboard", dashboardRoutes)
+app.use("/api/auth", authRoutes)
+app.use("/api/users", usersRoutes)
+app.use("/api/companies", companiesRoutes)
+app.use("/api/participants", participantsRoutes)
+app.use("/api/participants/bulk", participantsBulkRoutes)
+app.use("/api/assignments", assignmentsRoutes)
+app.use("/api/session", sessionRoutes)
+
+app.use("/api/evaluationanswer", evaluationAnswerRoutes)
+
+app.use("/api/results", resultsRoutes)
+app.use("/api/reports", reportsRoutes)
+app.use("/api/evaluations", evaluationsRoutes)
+app.use("/api/participant/access", participantAccessRoutes)
+app.use("/api/participant/invite", participantInviteRoutes)
+app.use("/api/send-invitation", sendInvitationRoutes)
+app.use("/api/evaluationfinish", evaluationFinishRoutes)
+app.use("/api/history", historyRoutes)
+app.use("/api/questions", questionsRoutes)
+
+/* 🔥 CORREGIDO AQUÍ */
+app.use("/api/final", finalReportRoutes)
+
+/* =========================
+START SERVER
+========================= */
+
+const PORT = 3001
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 API running on http://localhost:${PORT}`)
+})

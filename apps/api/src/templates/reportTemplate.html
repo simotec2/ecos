@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+
+<style>
+
+@page {
+  size: letter;
+  margin: 15mm;
+}
+
+body{
+  font-family: Arial, sans-serif;
+  margin:0;
+  color:#1f2937;
+}
+
+.container{
+  max-width:760px;
+  margin:auto;
+}
+
+.header{
+  text-align:center;
+  margin-bottom:10px;
+}
+
+.title{
+  font-size:16px;
+  font-weight:bold;
+}
+
+.card{
+  padding:6px;
+  margin-bottom:6px;
+  page-break-inside: avoid;
+}
+
+.compact{
+  font-size:11.5px;
+  line-height:1.3;
+}
+
+.section{
+  page-break-inside: avoid;
+}
+
+.page-break{
+  page-break-before: always;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    {{logo}}
+    <div class="title">INFORME ECOS</div>
+  </div>
+
+  <!-- PERFIL -->
+  <div class="card compact">
+    {{perfil}}
+  </div>
+
+  <!-- KPI -->
+  <div class="card compact">
+    {{kpi}}
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="card compact section">
+    <b>Resumen</b><br/>
+    {{resumen}}
+  </div>
+
+  <!-- RADAR -->
+  <div class="card section">
+
+    <div style="text-align:center;margin-bottom:10px;">
+      {{radar}}
+    </div>
+
+    <div style="display:flex;gap:40px;font-size:12px;">
+
+      <div style="flex:1;">
+        <b style="color:#16a34a;">Fortalezas</b>
+        <div style="margin-top:5px;">
+          {{top}}
+        </div>
+      </div>
+
+      <div style="flex:1;">
+        <b style="color:#dc2626;">Brechas</b>
+        <div style="margin-top:5px;">
+          {{bottom}}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- SALTO -->
+  <div class="page-break"></div>
+
+  <!-- ANALISIS -->
+  <div class="card compact">
+    <b>Análisis del Profesional</b><br/>
+    {{analysis}}
+  </div>
+
+</div>
+
+</body>
+</html>
