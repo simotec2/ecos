@@ -1,23 +1,18 @@
 import jwt from "jsonwebtoken"
 
-const SECRET = "ECOS_SECRET_KEY"
+const JWT_SECRET = process.env.JWT_SECRET || "secret"
 
 /* =========================
 GENERAR TOKEN
 ========================= */
-export function signAccessToken(payload: any) {
-  return jwt.sign(payload, SECRET, {
-    expiresIn: "8h"
-  })
-}
+export function signToken(user: any) {
 
-/* =========================
-VALIDAR TOKEN
-========================= */
-export function verifyAccessToken(token: string) {
-  try {
-    return jwt.verify(token, SECRET)
-  } catch {
-    return null
-  }
+  return jwt.sign(
+    {
+      id: user.id,
+      role: user.role
+    },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  )
 }

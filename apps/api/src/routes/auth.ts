@@ -1,6 +1,6 @@
 import { Router } from "express"
 import prisma from "../db"
-import { signAccessToken } from "../utils/jwt"
+import { signToken } from "../utils/jwt" // 🔥 IMPORT CORRECTO
 
 const router = Router()
 
@@ -16,11 +16,19 @@ router.post("/login", async (req, res) => {
 
     const { rut, password } = req.body
 
+    /* =========================
+    VALIDACIONES
+    ========================= */
+
     if (!rut || !password) {
       return res.status(400).json({
         error: "RUT y contraseña requeridos"
       })
     }
+
+    /* =========================
+    BUSCAR USUARIO
+    ========================= */
 
     const user = await prisma.user.findUnique({
       where: { rut }
@@ -32,19 +40,25 @@ router.post("/login", async (req, res) => {
       })
     }
 
-    // ⚠️ Comparación simple (después podemos meter bcrypt)
+    /* =========================
+    VALIDAR PASSWORD
+    ========================= */
+
     if (user.password !== password) {
       return res.status(401).json({
         error: "Credenciales inválidas"
       })
     }
 
-    const token = signAccessToken({
-      sub: user.id,
-      rut: user.rut,
-      role: user.role,
-      companyId: user.companyId
-    })
+    /* =========================
+    GENERAR TOKEN
+    ========================= */
+
+    const token = signToken(user)
+
+    /* =========================
+    RESPUESTA
+    ========================= */
 
     return res.json({
       ok: true,
@@ -57,12 +71,17 @@ router.post("/login", async (req, res) => {
       }
     })
 
-  } catch (error) {
+  } catch (error: any) {
 
-    console.error("LOGIN ERROR:", error)
+    /* =========================
+    LOG REAL (CLAVE EN RENDER)
+    ========================= */
+
+    console.error("LOGIN ERROR DETALLE:", error)
 
     return res.status(500).json({
-      error: "Error en login"
+      error: "Error en login",
+      detalle: error?.message || error
     })
 
   }

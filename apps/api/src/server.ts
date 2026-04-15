@@ -1,4 +1,5 @@
 console.log("🔥 SERVER NUEVO ACTIVO")
+
 import "dotenv/config"
 import express from "express"
 import cors from "cors"
@@ -28,11 +29,14 @@ import debugRoutes from "./routes/debug"
 
 const app = express()
 
+/* =========================
+MIDDLEWARES
+========================= */
 app.use(cors())
 app.use(express.json())
 
 /* =========================
-HEALTH CHECK
+HEALTH CHECK (CRÍTICO)
 ========================= */
 app.get("/api/health", (req, res) => {
   res.json({ ok: true })
@@ -41,7 +45,6 @@ app.get("/api/health", (req, res) => {
 /* =========================
 RUTAS
 ========================= */
-
 app.use("/api/dashboard", dashboardRoutes)
 app.use("/api/auth", authRoutes)
 app.use("/api/users", usersRoutes)
@@ -50,9 +53,7 @@ app.use("/api/participants", participantsRoutes)
 app.use("/api/participants/bulk", participantsBulkRoutes)
 app.use("/api/assignments", assignmentsRoutes)
 app.use("/api/session", sessionRoutes)
-
 app.use("/api/evaluationanswer", evaluationAnswerRoutes)
-
 app.use("/api/results", resultsRoutes)
 app.use("/api/reports", reportsRoutes)
 app.use("/api/evaluations", evaluationsRoutes)
@@ -64,15 +65,16 @@ app.use("/api/history", historyRoutes)
 app.use("/api/questions", questionsRoutes)
 app.use("/api/debug", debugRoutes)
 
-/* 🔥 CORREGIDO AQUÍ */
+/* =========================
+FINAL REPORT
+========================= */
 app.use("/api/final", finalReportRoutes)
 
 /* =========================
-START SERVER
+START SERVER (CORREGIDO PARA RENDER)
 ========================= */
-
-const PORT = 3001
+const PORT = Number(process.env.PORT) || 3001
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 API running on http://localhost:${PORT}`)
+  console.log(`🚀 API running on port ${PORT}`)
 })
