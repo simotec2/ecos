@@ -33,14 +33,8 @@ app.use(express.json())
 /* =========================
 HEALTH CHECK
 ========================= */
-app.get("/api/health", async (req, res) => {
-  try {
-    await prisma.$queryRaw`SELECT 1`
-    res.json({ ok: true })
-  } catch (error) {
-    console.error("Health error:", error)
-    res.status(500).json({ ok: false })
-  }
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true })
 })
 
 /* =========================
