@@ -24,6 +24,7 @@ import finalReportRoutes from "./routes/finalReport"
 import evaluationAnswerRoutes from "./routes/evaluationAnswer"
 import historyRoutes from "./routes/history"
 import questionsRoutes from "./routes/questions"
+import debugRoutes from "./routes/debug"
 
 const app = express()
 
@@ -61,6 +62,7 @@ app.use("/api/send-invitation", sendInvitationRoutes)
 app.use("/api/evaluationfinish", evaluationFinishRoutes)
 app.use("/api/history", historyRoutes)
 app.use("/api/questions", questionsRoutes)
+app.use("/api/debug", debugRoutes)
 
 /* 🔥 CORREGIDO AQUÍ */
 app.use("/api/final", finalReportRoutes)
