@@ -12,6 +12,19 @@ function normalize(text){
   return String(text || "").toLowerCase()
 }
 
+function getText(row){
+  // 🔥 TOMA LA PRIMERA COLUMNA SI TODO FALLA
+  return String(
+    row.pregunta ||
+    row.Pregunta ||
+    row.PREGUNTA ||
+    row.Preguntas ||
+    row["Preguntas"] ||
+    Object.values(row)[0] ||
+    ""
+  ).trim()
+}
+
 function mapICOMCompetency(text){
   const t = normalize(text)
 
@@ -55,7 +68,10 @@ function groupByTipo(data){
   const groups = {}
 
   for(const row of data){
-    const tipo = String(row.tipo || "").trim()
+    const tipo = String(row.tipo || "")
+      .trim()
+      .toUpperCase()
+
     if(!tipo) continue
 
     if(!groups[tipo]){
@@ -96,16 +112,15 @@ async function main(){
     data:{
       name: "ECOS DEMO",
       razonSocial: "ECOS SPA",
-      rut: "76.123.456-7",
-      perfil: "Operaciones mineras"
+      rut: "76.123.456-7"
     }
   })
 
   await prisma.user.create({
     data:{
       name: "Super Admin",
-      rut: "11111111-1",
-      password: "1234",
+      rut: "12222412-o",
+      password: "admin123",
       role: "SUPERADMIN"
     }
   })
@@ -123,13 +138,12 @@ async function main(){
   console.log("👤 Usuarios creados")
 
   /* =========================
-  ICOM + PETS
+  ICOM
   ========================= */
 
-  console.log("🧠 Cargando ICOM y PETS...")
+  console.log("🧠 Cargando ICOM...")
 
-  const psyData = loadExcel("../psyc_questions.xlsx")
-  const psyGroups = groupByTipo(psyData)
+  const icomData = loadExcel("../ICOM_questions.xlsx")
 
   const icom = await prisma.evaluation.create({
     data:{
@@ -142,9 +156,9 @@ async function main(){
   const seenICOM = new Set()
   let icomCount = 0
 
-  for(const row of psyGroups["ICOM"] || []){
+  for(const row of icomData){
 
-    const text = String(row.pregunta || "").trim()
+    const text = getText(row)
     if(!text) continue
 
     if(seenICOM.has(text)) continue
@@ -154,7 +168,7 @@ async function main(){
       data:{
         text,
         type:"LIKERT",
-        competency: row.competency || mapICOMCompetency(text),
+        competency: row.Competencia || mapICOMCompetency(text),
         optionsJson: JSON.stringify([
           "Nunca","Casi nunca","A veces","Casi siempre","Siempre"
         ]),
@@ -167,6 +181,14 @@ async function main(){
 
   console.log(`✅ ICOM únicas: ${icomCount}`)
 
+  /* =========================
+  PETS
+  ========================= */
+
+  console.log("🧠 Cargando PETS...")
+
+  const petsData = loadExcel("../psyc_questions.xlsx")
+
   const pets = await prisma.evaluation.create({
     data:{
       code:"PETS",
@@ -178,9 +200,9 @@ async function main(){
   const seenPETS = new Set()
   let petsCount = 0
 
-  for(const row of psyGroups["PETS"] || []){
+  for(const row of petsData){
 
-    const text = String(row.pregunta || "").trim()
+    const text = getText(row)
     if(!text) continue
 
     if(seenPETS.has(text)) continue
@@ -190,7 +212,7 @@ async function main(){
       data:{
         text,
         type:"OPEN",
-        competency: row.competency || mapPETSCompetency(text),
+        competency: mapPETSCompetency(text),
         evaluationId: pets.id
       }
     })
@@ -224,7 +246,7 @@ async function main(){
 
     for(const row of securityGroups[tipo]){
 
-      const text = String(row.pregunta || "").trim()
+      const text = getText(row)
       if(!text) continue
 
       if(seenSEC.has(text)) continue
