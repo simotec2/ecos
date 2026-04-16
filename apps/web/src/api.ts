@@ -6,7 +6,7 @@ export async function apiFetch(url: string, options: any = {}) {
 
   const isBodyObject = options.body && typeof options.body === "object"
 
-  const res = await fetch(`https://ecos-api-uy3j.onrender.com${url}`, {
+  const res = await fetch(`https://api.seguridad-simotec.com${url}`, {
     method: options.method || "GET",
     headers: {
       "Content-Type": "application/json",
