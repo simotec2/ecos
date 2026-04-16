@@ -44,11 +44,20 @@ export default function Assignments(){
 
   }
 
+  /* =========================
+  🔥 FORMATEO PROFESIONAL
+  ========================= */
   function formatName(name:string){
-    return name
-      .split("_").join(" ")
-      .toLowerCase()
-      .replace(/\b\w/g, l => l.toUpperCase())
+
+    if(!name) return ""
+
+    const n = name.toLowerCase().trim()
+
+    if(n.includes("icom")) return "Evaluación ICOM"
+    if(n.includes("pets")) return "Evaluación PETS"
+    if(n.includes("security")) return "Evaluación SEGURIDAD"
+
+    return "Evaluación"
   }
 
   async function assign(){
@@ -100,9 +109,6 @@ export default function Assignments(){
 
   }
 
-  /* =========================
-  PLANTILLA EXCEL REAL
-  ========================= */
   function downloadTemplate(){
 
     const headers = [
@@ -156,11 +162,10 @@ export default function Assignments(){
 
     <PageContainer title="Asignaciones">
 
-      {/* CARGA MASIVA */}
       <Card title="Carga masiva">
 
         <button style={styles.downloadBtn} onClick={downloadTemplate}>
-          Descargar plantilla Excel
+          Descargar Plantilla Excel
         </button>
 
         <label style={styles.uploadBtn}>
@@ -170,7 +175,6 @@ export default function Assignments(){
 
       </Card>
 
-      {/* ASIGNACIÓN MANUAL */}
       <Card title="Asignar evaluaciones">
 
         <select
@@ -214,7 +218,6 @@ export default function Assignments(){
 
       </Card>
 
-      {/* TABLA */}
       <Card title="Asignaciones">
 
         <SearchBox onSearch={setSearch}/>
