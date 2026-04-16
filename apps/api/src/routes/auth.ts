@@ -53,13 +53,19 @@ router.post("/login", async (req, res) => {
     ========================= */
 
     const rutNormalized = normalizeRut(rut)
+    const rutNoDash = rutNormalized.replace("-", "")
 
     /* =========================
-    BUSCAR USUARIO
+    BUSCAR USUARIO (ROBUSTO)
     ========================= */
 
-    const user = await prisma.user.findUnique({
-      where: { rut: rutNormalized }
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { rut: rutNormalized },
+          { rut: rutNoDash }
+        ]
+      }
     })
 
     if (!user) {
