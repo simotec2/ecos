@@ -13,25 +13,18 @@ export default function Login() {
   async function onSubmit(e:any){
 
     e.preventDefault();
-
     setError("");
 
     try{
 
       const data = await apiFetch("/api/auth/login", {
-  method: "POST",
-  body: JSON.stringify({ rut, password })
-})
-
-// 🔥 GUARDAR USUARIO
-localStorage.setItem("user", JSON.stringify(data))
+        method: "POST",
+        body: { rut, password } // 🔥 CORREGIDO
+      })
 
       if(!data?.token){
-
         setError(data?.error || "Error de autenticación");
-
         return;
-
       }
 
       const token = data.token;
@@ -50,44 +43,25 @@ localStorage.setItem("user", JSON.stringify(data))
       GUARDAR DATOS USUARIO
       =============================== */
 
-      if(user.name){
-        localStorage.setItem("userName",user.name);
-      }
+      localStorage.setItem("user", JSON.stringify(user));
 
-      if(user.role){
-        localStorage.setItem("role",user.role);
-      }
-
-      if(user.rut){
-        localStorage.setItem("rut",user.rut);
-      }
+      if(user.name) localStorage.setItem("userName",user.name);
+      if(user.role) localStorage.setItem("role",user.role);
+      if(user.rut) localStorage.setItem("rut",user.rut);
 
       /* ===============================
-      REDIRECCIÓN SEGÚN ROL
+      REDIRECCIÓN
       =============================== */
 
-      if(user.role === "SUPERADMIN"){
-  navigate("/app")
-}
+      if(user.role === "PARTICIPANT"){
+        navigate("/app/my-evaluations")
+      } else {
+        navigate("/app")
+      }
 
-if(user.role === "COMPANY_ADMIN"){
-  navigate("/app")
-}
-
-if(user.role === "PSYCHOLOGIST"){
-  navigate("/app")
-}
-
-if(user.role === "PARTICIPANT"){
-  navigate("/app/my-evaluations")
-}
-
-    }catch(error){
-
+    }catch(error:any){
       console.error(error);
-
-      setError("Error de conexión con el servidor");
-
+      setError(error.message || "Error de conexión con el servidor");
     }
 
   }
@@ -95,70 +69,86 @@ if(user.role === "PARTICIPANT"){
   return(
 
     <div style={{
+      height:"100vh",
       display:"flex",
-      justifyContent:"center",
       alignItems:"center",
-      height:"100vh"
+      justifyContent:"center",
+      background:"#f3f4f6"
     }}>
 
-      <form
-        onSubmit={onSubmit}
-        style={{
-          width:320,
-          padding:30,
-          border:"1px solid #ddd",
-          borderRadius:10
-        }}
-      >
+      <div style={{
+        width:"380px",
+        background:"#fff",
+        padding:"30px",
+        borderRadius:"12px",
+        boxShadow:"0 10px 30px rgba(0,0,0,0.1)"
+      }}>
 
-        <h2 style={{marginBottom:20}}>Ingreso</h2>
+        {/* LOGO */}
+        <div style={{ textAlign:"center", marginBottom:"20px" }}>
+          <img src="/ecos-logo.png" style={{ width:"90px" }} />
+          <h2 style={{ margin:"10px 0 5px" }}>ECOS</h2>
+          <p style={{ fontSize:"13px", color:"#666" }}>
+            Plataforma de evaluación de competencias en seguridad
+          </p>
+        </div>
 
-        <input
-          placeholder="RUT"
-          value={rut}
-          onChange={e=>setRut(e.target.value)}
-          style={{
-            width:"100%",
-            padding:10,
-            marginBottom:10
-          }}
-        />
+        <form onSubmit={onSubmit}>
 
-        <input
-          type="password"
-          placeholder="Clave"
-          value={password}
-          onChange={e=>setPassword(e.target.value)}
-          style={{
-            width:"100%",
-            padding:10,
-            marginBottom:10
-          }}
-        />
+          <input
+            placeholder="RUT"
+            value={rut}
+            onChange={e=>setRut(e.target.value)}
+            style={{
+              width:"100%",
+              padding:"10px",
+              marginBottom:"10px",
+              borderRadius:"6px",
+              border:"1px solid #ccc"
+            }}
+          />
 
-        {error && (
-          <div style={{
-            color:"red",
-            marginBottom:10
-          }}>
-            {error}
-          </div>
-        )}
+          <input
+            type="password"
+            placeholder="Clave"
+            value={password}
+            onChange={e=>setPassword(e.target.value)}
+            style={{
+              width:"100%",
+              padding:"10px",
+              marginBottom:"10px",
+              borderRadius:"6px",
+              border:"1px solid #ccc"
+            }}
+          />
 
-        <button
-          style={{
-            width:"100%",
-            padding:10,
-            background:"#2563eb",
-            color:"white",
-            border:"none",
-            borderRadius:6
-          }}
-        >
-          Ingresar
-        </button>
+          {error && (
+            <div style={{
+              color:"red",
+              fontSize:"12px",
+              marginBottom:"10px"
+            }}>
+              {error}
+            </div>
+          )}
 
-      </form>
+          <button
+            style={{
+              width:"100%",
+              padding:"12px",
+              background:"#1f2937",
+              color:"#fff",
+              border:"none",
+              borderRadius:"6px",
+              cursor:"pointer"
+            }}
+          >
+            Ingresar
+          </button>
+
+        </form>
+
+      </div>
 
     </div>
 
