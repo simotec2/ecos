@@ -1,15 +1,37 @@
 import { Router } from "express"
 import prisma from "../db"
-import { signToken } from "../utils/jwt" // 🔥 IMPORT CORRECTO
+import { signToken } from "../utils/jwt"
 
 const router = Router()
+
+/* =====================================
+NORMALIZAR RUT
+===================================== */
+function normalizeRut(rut: string){
+
+  if(!rut) return ""
+
+  // quitar puntos y espacios
+  let clean = rut.replace(/\./g,"").replace(/\s/g,"")
+
+  // si ya tiene guión
+  if(clean.includes("-")){
+    const [num,dv] = clean.split("-")
+    return `${num}-${dv.toLowerCase()}`
+  }
+
+  // si NO tiene guión
+  const body = clean.slice(0,-1)
+  const dv = clean.slice(-1)
+
+  return `${body}-${dv.toLowerCase()}`
+}
 
 /*
 =====================================
 LOGIN SOLO PARA USUARIOS (ADMIN)
 =====================================
 */
-
 router.post("/login", async (req, res) => {
 
   try {
@@ -27,11 +49,17 @@ router.post("/login", async (req, res) => {
     }
 
     /* =========================
+    NORMALIZAR RUT
+    ========================= */
+
+    const rutNormalized = normalizeRut(rut)
+
+    /* =========================
     BUSCAR USUARIO
     ========================= */
 
     const user = await prisma.user.findUnique({
-      where: { rut }
+      where: { rut: rutNormalized }
     })
 
     if (!user) {
@@ -72,10 +100,6 @@ router.post("/login", async (req, res) => {
     })
 
   } catch (error: any) {
-
-    /* =========================
-    LOG REAL (CLAVE EN RENDER)
-    ========================= */
 
     console.error("LOGIN ERROR DETALLE:", error)
 
