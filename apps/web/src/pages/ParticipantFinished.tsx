@@ -58,7 +58,7 @@ export default function ParticipantFinished(){
           color:"#777",
           marginBottom:40
         }}>
-          Su participación ha sido registrada correctamente.
+          Su participación ha sido registrada correctamente y los resultados serán entregados a su empresa, muchas gracias.
         </p>
 
         {/* BOTÓN */}
