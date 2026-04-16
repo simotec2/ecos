@@ -82,6 +82,7 @@ model User {
   company   Company? @relation(fields: [companyId], references: [id])
 
   createdAt DateTime @default(now())
+  forcePasswordChange Boolean @default(true)
 }
 
 /**

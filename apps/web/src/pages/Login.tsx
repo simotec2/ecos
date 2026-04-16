@@ -19,7 +19,7 @@ export default function Login() {
 
       const data = await apiFetch("/api/auth/login", {
         method: "POST",
-        body: { rut, password } // 🔥 CORREGIDO
+        body: { rut, password }
       })
 
       if(!data?.token){
@@ -50,7 +50,16 @@ export default function Login() {
       if(user.rut) localStorage.setItem("rut",user.rut);
 
       /* ===============================
-      REDIRECCIÓN
+      🔥 FORZAR CAMBIO DE CLAVE
+      =============================== */
+
+      if(data.forcePasswordChange){
+        navigate("/change-password");
+        return;
+      }
+
+      /* ===============================
+      REDIRECCIÓN NORMAL
       =============================== */
 
       if(user.role === "PARTICIPANT"){
