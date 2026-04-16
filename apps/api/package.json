@@ -2,11 +2,9 @@
   "name": "api",
   "version": "1.0.0",
   "scripts": {
-    "dev": "ts-node-dev --respawn src/server.ts",
-    "build": "tsc && prisma generate",
-    "start": "node dist/server.js",
-    "reprocess": "ts-node src/scripts/reprocessResults.ts"
-  },
+  "build": "prisma generate && prisma migrate deploy && tsc",
+  "start": "node dist/server.js"
+},
   "prisma": {
     "seed": "node prisma/seed.js"
   },
