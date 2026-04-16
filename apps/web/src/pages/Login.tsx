@@ -50,6 +50,15 @@ export default function Login() {
       if(user.rut) localStorage.setItem("rut",user.rut);
 
       /* ===============================
+      🔥 ESTA ES LA LÍNEA QUE FALTABA
+      =============================== */
+
+      localStorage.setItem(
+        "forcePasswordChange",
+        data.forcePasswordChange ? "true" : "false"
+      );
+
+      /* ===============================
       🔥 FORZAR CAMBIO DE CLAVE
       =============================== */
 
@@ -93,7 +102,6 @@ export default function Login() {
         boxShadow:"0 10px 30px rgba(0,0,0,0.1)"
       }}>
 
-        {/* LOGO */}
         <div style={{ textAlign:"center", marginBottom:"20px" }}>
           <img src="/ecos-logo.png" style={{ width:"90px" }} />
           <h2 style={{ margin:"10px 0 5px" }}>ECOS</h2>
