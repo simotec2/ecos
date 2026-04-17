@@ -1,73 +1,90 @@
 import nodemailer from "nodemailer"
 
+/* ======================================
+TRANSPORTER GLOBAL (NO SE CREA CADA VEZ)
+====================================== */
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+})
+
+/* ======================================
+ENVIAR EMAIL INVITACIÓN
+====================================== */
 export async function sendEvaluationEmail(
   email: string,
   name: string,
   token: string
-){
+) {
 
-  try{
+  try {
 
-    const transporter = nodemailer.createTransport({
+    /* =========================
+    URL DINÁMICA
+    ========================= */
+    const baseUrl =
+      process.env.FRONTEND_URL ||
+      "http://localhost:5173"
 
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: true,
+    const link = `${baseUrl}/access/${token}`
 
-      auth:{
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-
-    })
-
-    const link = `http://localhost:5173/participant/${token}`
-
-    const info = await transporter.sendMail({
+    await transporter.sendMail({
 
       from: `"ECOS Evaluaciones" <${process.env.SMTP_USER}>`,
+
       to: email,
+
       subject: "Invitación a evaluación ECOS",
 
       html: `
-        <div style="font-family:Arial;padding:20px">
-
+        <div style="font-family: Arial; max-width:600px; margin:auto;">
+          
           <h2>Invitación a evaluación</h2>
 
-          <p>Hola <b>${name}</b>,</p>
+          <p>Hola ${name},</p>
 
-          <p>Has sido invitado a rendir una evaluación en ECOS.</p>
+          <p>Has sido invitado a rendir una evaluación en la plataforma ECOS.</p>
 
-          <p>
-            <a href="${link}" style="
-              background:#16a34a;
-              color:white;
-              padding:12px 20px;
+          <p>Haz clic en el siguiente enlace para comenzar:</p>
+
+          <a 
+            href="${link}" 
+            style="
+              display:inline-block;
+              padding:10px 20px;
+              background:#2563eb;
+              color:#fff;
               text-decoration:none;
-              border-radius:6px
-            ">
-              Iniciar evaluación
-            </a>
+              border-radius:6px;
+              margin:10px 0;
+            "
+          >
+            Ingresar a evaluación
+          </a>
+
+          <p style="font-size:12px; color:#666;">
+            Si el botón no funciona, copia este enlace:<br/>
+            ${link}
           </p>
 
-          <p>O copia este enlace:</p>
-          <p>${link}</p>
-
-          <hr>
-
-          <p style="font-size:12px;color:#777">
-            ECOS by Simotec
-          </p>
+          <p>Plataforma ECOS</p>
 
         </div>
       `
+
     })
 
-    console.log("✅ Email enviado:", info.messageId)
+    console.log("EMAIL ENVIADO OK:", email)
 
-  }catch(error){
-    console.error("❌ Error enviando email:", error)
-    throw error
+  } catch (error:any) {
+
+    console.error("ERROR EMAIL:", error?.message || error)
+
   }
 
 }

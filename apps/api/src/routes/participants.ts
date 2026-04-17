@@ -42,9 +42,9 @@ router.get("/", async (req, res) => {
 
     res.json(participants)
 
-  } catch (error) {
+  } catch (error:any) {
 
-    console.error(error)
+    console.error("GET PARTICIPANTS ERROR:", error?.message, error)
 
     res.status(500).json({
       error:"Error obteniendo participantes"
@@ -55,7 +55,7 @@ router.get("/", async (req, res) => {
 })
 
 /* ======================================
-CREAR PARTICIPANTE (CORREGIDO PRO)
+CREAR PARTICIPANTE (PRO REAL)
 ====================================== */
 router.post("/", async (req, res) => {
 
@@ -78,7 +78,7 @@ router.post("/", async (req, res) => {
     const cleanRut = normalizeRut(rut)
 
     /* =========================
-    VALIDAR DUPLICADO POR EMPRESA
+    VALIDAR DUPLICADO
     ========================= */
     const existing = await prisma.participant.findFirst({
       where:{
@@ -95,6 +95,9 @@ router.post("/", async (req, res) => {
 
     const token = randomUUID()
 
+    /* =========================
+    CREAR PARTICIPANTE
+    ========================= */
     const participant = await prisma.participant.create({
       data:{
         nombre,
@@ -107,26 +110,24 @@ router.post("/", async (req, res) => {
     })
 
     /* =========================
-    EMAIL (con debug)
+    RESPONDER INMEDIATO (CLAVE UX)
+    ========================= */
+    res.json(participant)
+
+    /* =========================
+    EMAIL NO BLOQUEANTE (CLAVE)
     ========================= */
     if(email){
-      try{
-        await sendEvaluationEmail(
-          email,
-          `${nombre} ${apellido}`,
-          token
-        )
-        console.log("EMAIL ENVIADO OK:", email)
-      }catch(e){
-        console.error("ERROR EMAIL:", e)
-      }
+      sendEvaluationEmail(
+        email,
+        `${nombre} ${apellido}`,
+        token
+      )
     }
-
-    return res.json(participant)
 
   } catch (error:any) {
 
-    console.error("CREATE PARTICIPANT ERROR:", error)
+    console.error("CREATE PARTICIPANT ERROR:", error?.message, error)
 
     return res.status(500).json({
       error:"Error creando participante"
@@ -153,10 +154,16 @@ router.put("/:id", async (req, res) => {
       companyId
     } = req.body
 
+    if(!nombre || !apellido || !rut){
+      return res.status(400).json({
+        error:"Nombre, apellido y rut requeridos"
+      })
+    }
+
     const cleanRut = normalizeRut(rut)
 
     /* =========================
-    VALIDAR DUPLICADO AL EDITAR
+    VALIDAR DUPLICADO
     ========================= */
     const existing = await prisma.participant.findFirst({
       where:{
@@ -185,9 +192,9 @@ router.put("/:id", async (req, res) => {
 
     res.json(participant)
 
-  } catch (error) {
+  } catch (error:any) {
 
-    console.error(error)
+    console.error("UPDATE PARTICIPANT ERROR:", error?.message, error)
 
     res.status(500).json({
       error:"Error actualizando participante"
@@ -212,9 +219,9 @@ router.delete("/:id", async (req, res) => {
 
     res.json({ success:true })
 
-  } catch (error) {
+  } catch (error:any) {
 
-    console.error(error)
+    console.error("DELETE PARTICIPANT ERROR:", error?.message, error)
 
     res.status(500).json({
       error:"Error eliminando participante"
@@ -265,9 +272,9 @@ router.get("/access/:token", async (req,res)=>{
       evaluations
     })
 
-  }catch(err){
+  }catch(err:any){
 
-    console.error("ERROR ACCESS:", err)
+    console.error("ERROR ACCESS:", err?.message, err)
 
     return res.status(500).json({
       error:"Error obteniendo acceso"
