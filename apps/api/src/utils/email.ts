@@ -1,12 +1,12 @@
 import nodemailer from "nodemailer"
 
 /* ======================================
-TRANSPORTER GLOBAL (NO SE CREA CADA VEZ)
+TRANSPORTER (GODADDY / SECURESERVER)
 ====================================== */
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
+  host: process.env.SMTP_HOST || "smtpout.secureserver.net",
+  port: Number(process.env.SMTP_PORT) || 587,
+  secure: false, // IMPORTANTE: false para puerto 587
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
@@ -44,7 +44,7 @@ export async function sendEvaluationEmail(
       html: `
         <div style="font-family: Arial; max-width:600px; margin:auto;">
           
-          <h2>Invitación a evaluación</h2>
+          <h2 style="color:#111;">Invitación a evaluación</h2>
 
           <p>Hola ${name},</p>
 
@@ -72,7 +72,7 @@ export async function sendEvaluationEmail(
             ${link}
           </p>
 
-          <p>Plataforma ECOS</p>
+          <p style="margin-top:20px;">Plataforma ECOS</p>
 
         </div>
       `
@@ -81,7 +81,7 @@ export async function sendEvaluationEmail(
 
     console.log("EMAIL ENVIADO OK:", email)
 
-  } catch (error:any) {
+  } catch (error: any) {
 
     console.error("ERROR EMAIL:", error?.message || error)
 

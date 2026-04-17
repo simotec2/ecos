@@ -2,7 +2,8 @@
   "name": "api",
   "version": "1.0.0",
   "scripts": {
-  "build": "prisma generate && prisma migrate deploy && tsc",
+  "dev": "ts-node-dev src/server.ts",
+  "build": "prisma generate && tsc",
   "start": "node dist/server.js"
 },
   "prisma": {
