@@ -141,7 +141,7 @@ router.get("/grouped", async (req,res)=>{
         id: r.id,
         name: r.evaluation?.name,
         score: data.score || 0,
-        pdf: `http://localhost:3001/api/reports/${r.id}/pdf`
+        pdf: `${process.env.BASE_URL}/api/reports/${r.id}/pdf`
       })
     })
 
@@ -171,7 +171,7 @@ router.get("/grouped", async (req,res)=>{
       return{
         ...g,
         finalScore,
-        finalPdf:`http://localhost:3001/api/final/${g.participantId}/pdf`
+        finalPdf:`${process.env.BASE_URL}/api/final/${g.participantId}/pdf`
       }
     })
 
