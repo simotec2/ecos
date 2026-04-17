@@ -42,14 +42,23 @@ function normalizeResult(result:any){
 
 /*
 =====================================
-CONFIGURACIÓN PUPPETEER
+CONFIGURACIÓN PUPPETEER (FIX RENDER)
 =====================================
 */
 async function generatePDF(html:string){
 
   const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    headless: "new",
+
+    // 🔥 ESTO ES LO QUE ARREGLA TODO EN RENDER
+    executablePath: puppeteer.executablePath(),
+
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu"
+    ]
   })
 
   const page = await browser.newPage()
