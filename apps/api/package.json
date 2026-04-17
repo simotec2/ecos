@@ -2,10 +2,11 @@
   "name": "api",
   "version": "1.0.0",
   "scripts": {
-    "dev": "ts-node-dev src/server.ts",
-    "build": "prisma generate && tsc && npx puppeteer browsers install chrome && cp -r src/templates dist/templates",
-    "start": "node dist/server.js"
-  },
+  "dev": "ts-node-dev src/server.ts",
+  "build": "prisma generate && tsc && cp -r src/templates dist/templates",
+  "start": "node dist/server.js",
+  "postinstall": "npx puppeteer browsers install chrome"
+},
   "prisma": {
     "seed": "node prisma/seed.js"
   },
