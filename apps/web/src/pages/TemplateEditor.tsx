@@ -1,24 +1,27 @@
-import { useEffect, useState } from "react"
-import { apiFetch } from "../api"
+import { useState, useEffect } from "react"
 
 export default function TemplateEditor(){
 
-  const [html,setHtml]=useState("")
+  const [html, setHtml] = useState("")
 
-  useEffect(()=>{
-    load()
-  },[])
-
+  /* =========================
+  CARGAR TEMPLATE
+  ========================= */
   async function load(){
-    const res = await fetch("http://localhost:3001/api/template")
+
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/template`)
     const text = await res.text()
     setHtml(text)
+
   }
 
+  /* =========================
+  GUARDAR TEMPLATE
+  ========================= */
   async function save(){
 
-    await fetch("http://localhost:3001/api/template",{
-      method:"POST",
+    await fetch(`${import.meta.env.VITE_API_URL}/api/template`,{
+      method: "POST",
       headers:{
         "Content-Type":"application/json"
       },
@@ -26,28 +29,32 @@ export default function TemplateEditor(){
     })
 
     alert("Template guardado")
+
   }
 
-  return(
+  /* =========================
+  INIT
+  ========================= */
+  useEffect(()=>{
+    load()
+  },[])
 
-    <div style={{padding:20}}>
-
-      <h2>Editor de Informe</h2>
+  return (
+    <div style={{ padding:20 }}>
+      <h2>Editor de Template</h2>
 
       <textarea
         value={html}
-        onChange={e=>setHtml(e.target.value)}
-        style={{
-          width:"100%",
-          height:"500px"
-        }}
+        onChange={(e)=>setHtml(e.target.value)}
+        style={{ width:"100%", height:400 }}
       />
 
-      <button onClick={save} style={{marginTop:10}}>
+      <br/><br/>
+
+      <button onClick={save}>
         Guardar
       </button>
 
     </div>
-
   )
 }
