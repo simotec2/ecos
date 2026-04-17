@@ -5,6 +5,9 @@ import puppeteer from "puppeteer"
 import { renderReportHTML } from "../services/reportRenderer"
 import { renderFinalReportHTML } from "../services/finalReportRenderer"
 
+import fs from "fs"
+import path from "path"
+
 const router = Router()
 
 /*
@@ -42,17 +45,41 @@ function normalizeResult(result:any){
 
 /*
 =====================================
-CONFIGURACIÓN PUPPETEER (FIX RENDER)
+CONFIGURACIÓN PUPPETEER (RENDER FIX TOTAL)
 =====================================
 */
 async function generatePDF(html:string){
 
+  let executablePath = ""
+
+  const chromeBasePath = "/opt/render/.cache/puppeteer/chrome"
+
+  try{
+    if (fs.existsSync(chromeBasePath)) {
+
+      const folders = fs.readdirSync(chromeBasePath)
+
+      if (folders.length > 0) {
+
+        const chromeFolder = folders[0]
+
+        executablePath = path.join(
+          chromeBasePath,
+          chromeFolder,
+          "chrome-linux64",
+          "chrome"
+        )
+      }
+    }
+  }catch(e){
+    console.log("Error buscando Chrome:", e)
+  }
+
+  console.log("🚀 Chrome path:", executablePath)
+
   const browser = await puppeteer.launch({
     headless: true,
-
-    // 🔥 ESTO ES LO QUE ARREGLA TODO EN RENDER
-    executablePath: puppeteer.executablePath(),
-
+    executablePath: executablePath || undefined,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
