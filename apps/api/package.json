@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "ts-node-dev src/server.ts",
-    "build": "prisma generate && tsc && npx puppeteer browsers install chrome && cp -r src/templates dist/templates"
+    "build": "prisma generate && tsc && npx puppeteer browsers install chrome && cp -r src/templates dist/templates",
     "start": "node dist/server.js"
   },
   "prisma": {
