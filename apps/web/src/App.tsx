@@ -32,12 +32,10 @@ function PrivateRoute({ children }: any) {
   const token = localStorage.getItem("token")
   const forcePasswordChange = localStorage.getItem("forcePasswordChange") === "true"
 
-  // 🔴 SIN TOKEN → LOGIN
   if (!token) {
     return <Navigate to="/login" replace />
   }
 
-  // 🔥 BLOQUEO POR CAMBIO DE CLAVE
   if (forcePasswordChange) {
     return <Navigate to="/change-password" replace />
   }
@@ -63,17 +61,22 @@ export default function App(){
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login/>} />
 
-        {/* 🔥 CAMBIO DE CLAVE (PUBLICO PERO CON TOKEN) */}
         <Route path="/change-password" element={<ChangePassword/>} />
 
-        {/* PARTICIPANTE */}
+        {/* 🔥 PARTICIPANTE (RUTA ORIGINAL) */}
         <Route path="/participant/:token" element={<ParticipantAccess/>} />
+
+        {/* 🔥 NUEVA RUTA PARA EMAIL */}
+        <Route path="/access/:token" element={<ParticipantAccess/>} />
+
+        {/* 🔥 FINAL */}
         <Route path="/participant/:token/final" element={<Finished />} />
+        <Route path="/access/:token/final" element={<Finished />} />
 
         {/* RENDIR */}
         <Route path="/evaluation/:sessionId" element={<EvaluationSession/>} />
 
-        {/* 🔥 PDF PUBLICO */}
+        {/* PDF PUBLICO */}
         <Route path="/report-public/:id" element={<ReportView/>} />
 
         <Route path="/no-access" element={<NoAccess/>} />
