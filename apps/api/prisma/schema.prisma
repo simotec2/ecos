@@ -74,10 +74,10 @@ model User {
   id String @id @default(cuid())
 
   name     String
-  rut      String @unique
+  rut      String 
   password String
   role     Role
-
+  @@unique([rut, companyId])
   companyId String?
   company   Company? @relation(fields: [companyId], references: [id])
 
@@ -94,7 +94,7 @@ model User {
 model Participant {
   id String @id @default(cuid())
 
-  rut      String  @unique
+  rut      String
   nombre   String
   apellido String
   email    String?
@@ -111,6 +111,8 @@ model Participant {
   assignments Assignment[]
 
   createdAt DateTime @default(now())
+
+  @@unique([rut, companyId]) // 🔥 CLAVE
 }
 
 /**

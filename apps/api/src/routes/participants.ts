@@ -32,7 +32,7 @@ router.get("/", async (req, res) => {
 })
 
 /* ======================================
-CREAR PARTICIPANTE
+CREAR PARTICIPANTE (PRO)
 ====================================== */
 router.post("/", async (req, res) => {
 
@@ -52,13 +52,37 @@ router.post("/", async (req, res) => {
       })
     }
 
+    /* =========================
+    NORMALIZAR RUT
+    ========================= */
+    const cleanRut = rut
+      .replace(/\./g,"")
+      .replace(/\s/g,"")
+      .toLowerCase()
+
+    /* =========================
+    VALIDAR DUPLICADO POR EMPRESA
+    ========================= */
+    const existing = await prisma.participant.findFirst({
+      where:{
+        rut: cleanRut,
+        companyId: companyId || null
+      }
+    })
+
+    if(existing){
+      return res.status(400).json({
+        error:"Este RUT ya existe en esta empresa"
+      })
+    }
+
     const token = randomUUID()
 
     const participant = await prisma.participant.create({
       data:{
         nombre,
         apellido,
-        rut,
+        rut: cleanRut,
         email,
         accessToken: token,
         companyId: companyId || null
@@ -81,7 +105,7 @@ router.post("/", async (req, res) => {
 
     if(error.code === "P2002"){
       return res.status(400).json({
-        error:"RUT ya existe"
+        error:"Duplicado detectado"
       })
     }
 
@@ -110,12 +134,17 @@ router.put("/:id", async (req, res) => {
       companyId
     } = req.body
 
+    const cleanRut = rut
+      ?.replace(/\./g,"")
+      .replace(/\s/g,"")
+      .toLowerCase()
+
     const participant = await prisma.participant.update({
       where:{ id },
       data:{
         nombre,
         apellido,
-        rut,
+        rut: cleanRut,
         email,
         companyId: companyId || null
       }
@@ -163,7 +192,7 @@ router.delete("/:id", async (req, res) => {
 })
 
 /* ======================================
-🔥 ACCESS PARTICIPANTE (CLAVE)
+ACCESS PARTICIPANTE
 ====================================== */
 router.get("/access/:token", async (req,res)=>{
 
@@ -171,15 +200,6 @@ router.get("/access/:token", async (req,res)=>{
 
     const { token } = req.params
 
-    if(!token){
-      return res.status(400).json({
-        error:"Token requerido"
-      })
-    }
-
-    /* =========================
-    PARTICIPANTE
-    ========================= */
     const participant = await prisma.participant.findFirst({
       where:{ accessToken: token },
       include:{ company:true }
@@ -191,27 +211,15 @@ router.get("/access/:token", async (req,res)=>{
       })
     }
 
-    /* =========================
-    🔥 SOLO ASIGNACIONES ACTIVAS
-    ========================= */
     const assignments = await prisma.assignment.findMany({
       where:{
         participantId: participant.id,
-        status:{
-          in:["PENDING","STARTED"]
-        }
+        status:{ in:["PENDING","STARTED"] }
       },
-      include:{
-        evaluation:true
-      },
-      orderBy:{
-        createdAt:"desc"
-      }
+      include:{ evaluation:true },
+      orderBy:{ createdAt:"desc" }
     })
 
-    /* =========================
-    FORMATO FRONTEND
-    ========================= */
     const evaluations = assignments.map(a=>({
       id: a.evaluation.id,
       name: a.evaluation.name,
@@ -226,7 +234,7 @@ router.get("/access/:token", async (req,res)=>{
 
   }catch(err){
 
-    console.error("ERROR ACCESS:", err)
+    console.error(err)
 
     return res.status(500).json({
       error:"Error obteniendo acceso"
