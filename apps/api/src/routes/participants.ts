@@ -6,6 +6,29 @@ import { sendEvaluationEmail } from "../utils/email"
 const router = Router()
 
 /* ======================================
+UTIL: NORMALIZAR RUT
+====================================== */
+function normalizeRut(rut: string){
+
+  if(!rut) return ""
+
+  let clean = rut
+    .replace(/\./g,"")
+    .replace(/\s/g,"")
+    .toLowerCase()
+
+  if(clean.includes("-")){
+    const [num,dv] = clean.split("-")
+    return `${num}-${dv}`
+  }
+
+  const body = clean.slice(0,-1)
+  const dv = clean.slice(-1)
+
+  return `${body}-${dv}`
+}
+
+/* ======================================
 OBTENER PARTICIPANTES
 ====================================== */
 router.get("/", async (req, res) => {
@@ -32,7 +55,7 @@ router.get("/", async (req, res) => {
 })
 
 /* ======================================
-CREAR PARTICIPANTE (PRO)
+CREAR PARTICIPANTE (CORREGIDO PRO)
 ====================================== */
 router.post("/", async (req, res) => {
 
@@ -52,13 +75,7 @@ router.post("/", async (req, res) => {
       })
     }
 
-    /* =========================
-    NORMALIZAR RUT
-    ========================= */
-    const cleanRut = rut
-      .replace(/\./g,"")
-      .replace(/\s/g,"")
-      .toLowerCase()
+    const cleanRut = normalizeRut(rut)
 
     /* =========================
     VALIDAR DUPLICADO POR EMPRESA
@@ -89,27 +106,29 @@ router.post("/", async (req, res) => {
       }
     })
 
+    /* =========================
+    EMAIL (con debug)
+    ========================= */
     if(email){
-      await sendEvaluationEmail(
-        email,
-        `${nombre} ${apellido}`,
-        token
-      )
+      try{
+        await sendEvaluationEmail(
+          email,
+          `${nombre} ${apellido}`,
+          token
+        )
+        console.log("EMAIL ENVIADO OK:", email)
+      }catch(e){
+        console.error("ERROR EMAIL:", e)
+      }
     }
 
-    res.json(participant)
+    return res.json(participant)
 
   } catch (error:any) {
 
-    console.error(error)
+    console.error("CREATE PARTICIPANT ERROR:", error)
 
-    if(error.code === "P2002"){
-      return res.status(400).json({
-        error:"Duplicado detectado"
-      })
-    }
-
-    res.status(500).json({
+    return res.status(500).json({
       error:"Error creando participante"
     })
 
@@ -134,10 +153,24 @@ router.put("/:id", async (req, res) => {
       companyId
     } = req.body
 
-    const cleanRut = rut
-      ?.replace(/\./g,"")
-      .replace(/\s/g,"")
-      .toLowerCase()
+    const cleanRut = normalizeRut(rut)
+
+    /* =========================
+    VALIDAR DUPLICADO AL EDITAR
+    ========================= */
+    const existing = await prisma.participant.findFirst({
+      where:{
+        rut: cleanRut,
+        companyId: companyId || null,
+        NOT:{ id }
+      }
+    })
+
+    if(existing){
+      return res.status(400).json({
+        error:"Este RUT ya existe en esta empresa"
+      })
+    }
 
     const participant = await prisma.participant.update({
       where:{ id },
@@ -234,7 +267,7 @@ router.get("/access/:token", async (req,res)=>{
 
   }catch(err){
 
-    console.error(err)
+    console.error("ERROR ACCESS:", err)
 
     return res.status(500).json({
       error:"Error obteniendo acceso"
