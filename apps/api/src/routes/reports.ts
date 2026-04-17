@@ -48,7 +48,7 @@ CONFIGURACIÓN PUPPETEER (FIX RENDER)
 async function generatePDF(html:string){
 
   const browser = await puppeteer.launch({
-    headless: "new",
+    headless: true,
 
     // 🔥 ESTO ES LO QUE ARREGLA TODO EN RENDER
     executablePath: puppeteer.executablePath(),
