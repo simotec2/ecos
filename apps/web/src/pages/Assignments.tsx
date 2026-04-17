@@ -45,7 +45,7 @@ export default function Assignments(){
   }
 
   /* =========================
-  🔥 FORMATEO PROFESIONAL
+  🔥 FORMATEO PROFESIONAL FINAL
   ========================= */
   function formatName(name:string){
 
@@ -53,11 +53,39 @@ export default function Assignments(){
 
     const n = name.toLowerCase().trim()
 
-    if(n.includes("icom")) return "Evaluación ICOM"
-    if(n.includes("pets")) return "Evaluación PETS"
-    if(n.includes("security")) return "Evaluación SEGURIDAD"
+    // ICOM
+    if(n.includes("icom")){
+      return "Evaluación ICOM"
+    }
 
-    return "Evaluación"
+    // PETS
+    if(n.includes("pets")){
+      return "Evaluación PETS"
+    }
+
+    // SEGURIDAD (con subtipo dinámico)
+    if(n.includes("seguridad")){
+
+      let label = name
+        .replace(/seguridad/i,"")
+        .trim()
+
+      // limpiar underscores
+      label = label.split("_").join(" ")
+
+      // capitalizar palabras
+      label = label
+        .split(" ")
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ")
+
+      return label
+        ? `Evaluación SEGURIDAD - ${label}`
+        : "Evaluación SEGURIDAD"
+    }
+
+    // fallback
+    return name
   }
 
   async function assign(){
