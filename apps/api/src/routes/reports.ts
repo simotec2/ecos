@@ -1,6 +1,8 @@
 import { Router } from "express"
 import prisma from "../db"
-import puppeteer from "puppeteer"
+
+import chromium from "chrome-aws-lambda"
+import puppeteer from "puppeteer-core"
 
 import { renderReportHTML } from "../services/reportRenderer"
 import { renderFinalReportHTML } from "../services/finalReportRenderer"
@@ -42,19 +44,17 @@ function normalizeResult(result:any){
 
 /*
 =====================================
-CONFIGURACIÓN PUPPETEER (VERSIÓN ESTABLE)
+CONFIGURACIÓN PUPPETEER (ESTABLE RENDER)
 =====================================
 */
 async function generatePDF(html:string){
 
+  const executablePath = await chromium.executablePath
+
   const browser = await puppeteer.launch({
+    executablePath: executablePath || undefined,
     headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu"
-    ]
+    args: chromium.args
   })
 
   const page = await browser.newPage()
