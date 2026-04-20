@@ -38,12 +38,13 @@ function normalizeResult(result:any){
 
 /*
 =====================================
-PDF ENGINE (RENDER OK)
+PDF ENGINE (CORREGIDO FINAL)
 =====================================
 */
-async function generatePDF(html:string){
+async function generatePDF(html: string){
 
   const browser = await puppeteer.launch({
+    executablePath: "/usr/bin/chromium",
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
     headless: true
   })
