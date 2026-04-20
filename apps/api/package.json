@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "scripts": {
   "dev": "ts-node-dev src/server.ts",
-  "build": "prisma generate && tsc && cp -r src/templates dist/templates",
-  "start": "node dist/server.js",
-  "postinstall": "npx puppeteer browsers install chrome"
-},
+  "build": "PUPPETEER_SKIP_DOWNLOAD=false prisma generate && tsc && cp -r src/templates dist/templates",
+  "start": "node dist/server.js"
+ },
   "prisma": {
     "seed": "node prisma/seed.js"
   },
