@@ -1,8 +1,6 @@
 import { Router } from "express"
 import prisma from "../db"
-
-import chromium from "chrome-aws-lambda"
-import puppeteer from "puppeteer-core"
+import puppeteer from "puppeteer"
 
 import { renderReportHTML } from "../services/reportRenderer"
 import { renderFinalReportHTML } from "../services/finalReportRenderer"
@@ -11,7 +9,7 @@ const router = Router()
 
 /*
 =====================================
-NORMALIZADOR UNIVERSAL
+NORMALIZADOR
 =====================================
 */
 function normalizeResult(result:any){
@@ -28,33 +26,26 @@ function normalizeResult(result:any){
 
   return {
     ...raw,
-
     participant: result.participant,
-
     evaluationName: result.evaluation?.name || "Evaluación",
-
     competencies: raw?.competencies || raw?.competenciasDetalle || [],
     analysis: raw?.analysis || raw?.aiText || "",
     traffic: raw?.traffic || { color:"GRIS", result:"SIN RESULTADO" },
     score: raw?.score || 0,
-
     evaluations: raw?.evaluations || []
   }
 }
 
 /*
 =====================================
-CONFIGURACIÓN PUPPETEER (ESTABLE RENDER)
+PDF ENGINE (RENDER OK)
 =====================================
 */
 async function generatePDF(html:string){
 
-  const executablePath = await chromium.executablePath
-
   const browser = await puppeteer.launch({
-    executablePath: executablePath || undefined,
-    headless: true,
-    args: chromium.args
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    headless: true
   })
 
   const page = await browser.newPage()
@@ -126,7 +117,7 @@ router.get("/:id/pdf", async (req, res) => {
 
 /*
 =====================================
-PDF FINAL (CONSOLIDADO)
+PDF FINAL
 =====================================
 */
 router.get("/:id/final/pdf", async (req, res) => {
@@ -138,7 +129,8 @@ router.get("/:id/final/pdf", async (req, res) => {
     const result:any = await prisma.evaluationResult.findUnique({
       where:{ id },
       include:{
-        participant:{ include:{ company:true }}
+        participant:{ include:{ company:true }},
+        evaluation:true
       }
     })
 
