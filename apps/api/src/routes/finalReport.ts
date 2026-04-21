@@ -39,7 +39,7 @@ SEMAFORO FINAL CORRECTO
 ====================================== */
 function calculateFinalTraffic(results:any[]){
 
-  const colors = results.map(r => r.color)
+  const colors = results.map(r => r.traffic) // 🔥 CORREGIDO
 
   if(colors.includes("ROJO")){
     return { color:"ROJO", label:"NO RECOMENDABLE" }
@@ -222,7 +222,7 @@ router.get("/:participantId/pdf", async (req,res)=>{
       analysis
     })
 
-    /* 🔥 CHROMIUM (RENDER) */
+    /* 🔥 CHROMIUM */
     const executablePath = await chromium.executablePath()
 
     if(!executablePath){
