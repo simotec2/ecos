@@ -41,6 +41,9 @@ HEALTH CHECK (CRÍTICO)
 app.get("/api/health", (req, res) => {
   res.json({ ok: true })
 })
+app.get("/api/test", (req, res) => {
+  res.json({ ok: true, version: "NUEVA VERSION 123" })
+})
 
 /* =========================
 RUTAS
