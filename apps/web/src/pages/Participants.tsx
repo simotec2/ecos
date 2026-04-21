@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import * as XLSX from "xlsx"
 import { apiFetch } from "../api"
 import { useNavigate } from "react-router-dom"
 
@@ -61,7 +60,6 @@ export default function Participants(){
 
       const clean = (data || []).filter((e:any)=>
         e.name &&
-        e.name !== "eee" &&
         e.name.trim() !== "" &&
         e.name.length > 2
       )
@@ -82,11 +80,10 @@ export default function Participants(){
     }
   }
 
-  function formatName(name:string){
-    return name
-      .split("_").join(" ")
-      .toLowerCase()
-      .replace(/\b\w/g, l => l.toUpperCase())
+  function getDisplayName(e:any){
+    if(e.type === "PETS") return "Evaluacion Conductual"
+    if(e.type === "ICOM") return "Evaluacion Psicolaboral"
+    return e.name
   }
 
   async function createParticipant(){
@@ -137,6 +134,36 @@ export default function Participants(){
     }
   }
 
+  /* ======================================
+  🔥 ENVÍO MASIVO POR EMPRESA
+  ====================================== */
+  async function sendInvitationsBulk(){
+
+    try{
+
+      if(!companyId){
+        alert("Selecciona empresa")
+        return
+      }
+
+      if(!confirm("¿Enviar invitaciones SOLO a pendientes de esta empresa?")){
+        return
+      }
+
+      const res = await apiFetch("/api/send-invitation",{
+        method:"POST",
+        body:{ companyId }
+      })
+
+      alert(`Enviados: ${res.sent} | Omitidos: ${res.skipped}`)
+
+    }catch(err){
+      console.error(err)
+      alert("Error envío masivo")
+    }
+
+  }
+
   const filteredParticipants=participants.filter((p:any)=>
     `${p.nombre} ${p.apellido} ${p.rut} ${p.perfil || ""}`
     .toLowerCase()
@@ -147,7 +174,40 @@ export default function Participants(){
 
     <PageContainer title="Participantes">
 
-      {/* ================= NUEVO ================= */}
+      {/* BOTONES SUPERIORES */}
+      <div style={{ display:"flex", gap:10, marginBottom:15 }}>
+
+        <button
+          onClick={() => window.open("https://api.seguridad-simotec.com/api/template")}
+          style={{
+            padding:"10px 15px",
+            background:"#16a34a",
+            color:"#fff",
+            border:"none",
+            borderRadius:6,
+            cursor:"pointer"
+          }}
+        >
+          Descargar plantilla Excel
+        </button>
+
+        <button
+          onClick={sendInvitationsBulk}
+          style={{
+            padding:"10px 15px",
+            background:"#dc2626",
+            color:"#fff",
+            border:"none",
+            borderRadius:6,
+            cursor:"pointer"
+          }}
+        >
+          Enviar invitaciones (empresa)
+        </button>
+
+      </div>
+
+      {/* NUEVO PARTICIPANTE */}
       <Card title="Nuevo participante">
 
         <select value={companyId} onChange={(e)=>setCompanyId(e.target.value)}>
@@ -168,6 +228,7 @@ export default function Participants(){
 
         <div style={styles.grid}>
           {evaluations.map((e:any)=>{
+
             const selected = selectedEvaluations.includes(e.id)
 
             return(
@@ -182,7 +243,9 @@ export default function Participants(){
                 }}
               >
                 <input type="checkbox" checked={selected} readOnly />
-                <span style={styles.cardText}>{formatName(e.name)}</span>
+                <span style={styles.cardText}>
+                  {getDisplayName(e)}
+                </span>
               </div>
             )
           })}
@@ -194,7 +257,7 @@ export default function Participants(){
 
       </Card>
 
-      {/* ================= LISTADO ================= */}
+      {/* LISTADO */}
       <Card title="Listado de participantes">
 
         <SearchBox
