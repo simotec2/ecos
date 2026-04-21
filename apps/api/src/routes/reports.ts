@@ -199,7 +199,7 @@ router.get("/:id/final/pdf", async (req, res) => {
     console.error("❌ ERROR PDF FINAL:", error)
 
     return res.status(500).json({
-      error: "Error generando informe final",
+      error: "ERROR NUEVO TEST FINAL 123",
       detail: error.message,
       stack: error.stack,
       raw: error
