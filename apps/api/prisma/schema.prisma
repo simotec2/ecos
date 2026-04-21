@@ -172,6 +172,7 @@ model Assignment {
 
   participantId String
   evaluationId  String
+  invitationSent Boolean @default(false) // 🔥 NUEVO
 
   status AssignmentStatus @default(PENDING)
 
