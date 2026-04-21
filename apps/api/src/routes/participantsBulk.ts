@@ -6,6 +6,35 @@ import { sendEvaluationEmail } from "../utils/email"
 
 const router = Router()
 
+/* ======================================
+UTILS
+====================================== */
+function normalize(text:any){
+  return String(text || "")
+    .toLowerCase()
+    .trim()
+}
+
+function isSelected(value:any){
+  return value === 1 || value === "1" || value === "X" || value === "x"
+}
+
+/* ======================================
+MAPA VISUAL → SISTEMA
+====================================== */
+const evaluationMap:any = {
+
+  // visibles
+  "evaluacion conductual": "PETS",
+  "evaluacion psicolaboral": "ICOM",
+
+  // seguridad
+  "seguridad supervisor puerto": "Seguridad Supervisor Puerto",
+  "seguridad operador puerto": "Seguridad Operador Puerto",
+  "seguridad supervisor minería": "Seguridad Supervisor Minería",
+  "seguridad operador minería": "Seguridad Operador Minería"
+}
+
 router.post("/", async (req,res)=>{
 
   try{
@@ -20,13 +49,13 @@ router.post("/", async (req,res)=>{
     const workbook = XLSX.read(buffer, { type:"buffer" })
 
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
-    const data:any[] = XLSX.utils.sheet_to_json(sheet)
+    const rows:any[] = XLSX.utils.sheet_to_json(sheet)
 
-    const allEvaluations = await prisma.evaluation.findMany()
+    const evaluationsDB = await prisma.evaluation.findMany()
 
     const results:any[] = []
 
-    for(const row of data){
+    for(const row of rows){
 
       const nombre = row.nombre
       const apellido = row.apellido
@@ -39,7 +68,9 @@ router.post("/", async (req,res)=>{
 
       const token = randomUUID()
 
-      // empresa
+      /* ======================
+      EMPRESA
+      ====================== */
       let companyId = null
 
       if(empresa){
@@ -49,6 +80,9 @@ router.post("/", async (req,res)=>{
         if(company) companyId = company.id
       }
 
+      /* ======================
+      PARTICIPANTE
+      ====================== */
       const participant = await prisma.participant.create({
         data:{
           nombre,
@@ -61,25 +95,42 @@ router.post("/", async (req,res)=>{
         }
       })
 
-      // 🔥 evaluar columnas dinámicas
-      for(const ev of allEvaluations){
+      /* ======================
+      ASIGNAR EVALUACIONES
+      ====================== */
+      for(const column in row){
 
-        const value = row[ev.name]
+        const normalizedColumn = normalize(column)
 
-        if(value === 1 || value === "1" || value === "X" || value === "x"){
+        const mappedValue = evaluationMap[normalizedColumn]
 
-          await prisma.assignment.create({
-            data:{
-              participantId: participant.id,
-              evaluationId: ev.id
-            }
-          })
+        if(!mappedValue) continue
+
+        const value = row[column]
+
+        if(isSelected(value)){
+
+          const evaluation = evaluationsDB.find(ev =>
+            ev.type === mappedValue || ev.name === mappedValue
+          )
+
+          if(evaluation){
+            await prisma.assignment.create({
+              data:{
+                participantId: participant.id,
+                evaluationId: evaluation.id,
+                status: "PENDING"
+              }
+            })
+          }
 
         }
 
       }
 
-      // email
+      /* ======================
+      EMAIL
+      ====================== */
       if(email){
         try{
           await sendEvaluationEmail(
@@ -88,7 +139,7 @@ router.post("/", async (req,res)=>{
             token
           )
         }catch(e){
-          console.error("Error email:", email)
+          console.error("Error enviando email:", email)
         }
       }
 
@@ -101,12 +152,13 @@ router.post("/", async (req,res)=>{
       total: results.length
     })
 
-  }catch(error){
+  }catch(error:any){
 
     console.error(error)
 
     res.status(500).json({
-      error:"Error carga masiva"
+      error:"Error carga masiva",
+      detail: error.message
     })
 
   }

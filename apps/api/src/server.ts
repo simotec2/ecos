@@ -26,6 +26,7 @@ import evaluationAnswerRoutes from "./routes/evaluationAnswer"
 import historyRoutes from "./routes/history"
 import questionsRoutes from "./routes/questions"
 import debugRoutes from "./routes/debug"
+import templateRoutes from "./routes/template"
 
 const app = express()
 
@@ -67,6 +68,7 @@ app.use("/api/evaluationfinish", evaluationFinishRoutes)
 app.use("/api/history", historyRoutes)
 app.use("/api/questions", questionsRoutes)
 app.use("/api/debug", debugRoutes)
+app.use("/api/template", templateRoutes)
 
 /* =========================
 FINAL REPORT

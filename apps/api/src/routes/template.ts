@@ -1,28 +1,51 @@
 import { Router } from "express"
-import fs from "fs"
-import path from "path"
+import * as XLSX from "xlsx"
+import prisma from "../db"
 
 const router = Router()
 
-const templatePath = path.join(
-  process.cwd(),
-  "apps/api/src/templates/reportTemplate.html"
-)
+router.get("/", async (req,res)=>{
 
-/* GET TEMPLATE */
-router.get("/", (req,res)=>{
-  const html = fs.readFileSync(templatePath,"utf-8")
-  res.send(html)
-})
+  const evaluations = await prisma.evaluation.findMany()
 
-/* SAVE TEMPLATE */
-router.post("/", (req,res)=>{
+  const baseColumns = [
+    "nombre",
+    "apellido",
+    "rut",
+    "email",
+    "empresa",
+    "perfil"
+  ]
 
-  const { html } = req.body
+  const visibleMap:any = {
+    PETS: "Evaluacion Conductual",
+    ICOM: "Evaluacion Psicolaboral"
+  }
 
-  fs.writeFileSync(templatePath, html)
+  const dynamicColumns = evaluations.map(ev => {
+    return visibleMap[ev.type] || ev.name
+  })
 
-  res.json({ ok:true })
+  const columns = [...baseColumns, ...dynamicColumns]
+
+  const worksheet = XLSX.utils.json_to_sheet([])
+
+  XLSX.utils.sheet_add_aoa(worksheet, [columns])
+
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Plantilla")
+
+  const buffer = XLSX.write(workbook, {
+    type:"buffer",
+    bookType:"xlsx"
+  })
+
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=plantilla_ecos.xlsx"
+  )
+
+  res.send(buffer)
 
 })
 
