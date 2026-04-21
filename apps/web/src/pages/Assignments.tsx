@@ -16,10 +16,12 @@ export default function Assignments(){
   const [selected,setSelected] = useState<string[]>([])
   const [search,setSearch] = useState("")
 
+  const [sending,setSending] = useState(false)
+  const [message,setMessage] = useState("")
+
   useEffect(()=>{ load() },[])
 
   async function load(){
-
     const p = await apiFetch("/api/participants")
     const e = await apiFetch("/api/evaluations")
     const a = await apiFetch("/api/assignments")
@@ -31,87 +33,81 @@ export default function Assignments(){
     setParticipants(p || [])
     setEvaluations(clean)
     setAssignments(a || [])
-
   }
 
   function toggleEvaluation(id:string){
-
     if(selected.includes(id)){
       setSelected(selected.filter(s=>s!==id))
     }else{
       setSelected([...selected,id])
     }
-
   }
 
-  /* =========================
-  🔥 FORMATEO PROFESIONAL FINAL
-  ========================= */
   function formatName(name:string){
-
     if(!name) return ""
-
     const n = name.toLowerCase().trim()
 
-    // ICOM
-    if(n.includes("icom")){
-      return "Evaluación ICOM"
-    }
+    if(n.includes("icom")) return "Evaluación ICOM"
+    if(n.includes("pets")) return "Evaluación PETS"
 
-    // PETS
-    if(n.includes("pets")){
-      return "Evaluación PETS"
-    }
-
-    // SEGURIDAD (con subtipo dinámico)
     if(n.includes("seguridad")){
-
-      let label = name
-        .replace(/seguridad/i,"")
-        .trim()
-
-      // limpiar underscores
+      let label = name.replace(/seguridad/i,"").trim()
       label = label.split("_").join(" ")
-
-      // capitalizar palabras
-      label = label
-        .split(" ")
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-        .join(" ")
-
-      return label
-        ? `Evaluación SEGURIDAD - ${label}`
-        : "Evaluación SEGURIDAD"
+      label = label.split(" ").map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(" ")
+      return label ? `Evaluación SEGURIDAD - ${label}` : "Evaluación SEGURIDAD"
     }
 
-    // fallback
     return name
   }
 
   async function assign(){
 
     if(!participantId){
-      alert("Seleccione participante")
+      setMessage("Selecciona un participante")
       return
     }
 
     for(const evaluationId of selected){
-
       await apiFetch("/api/assignments",{
         method:"POST",
         body:{ participantId, evaluationId }
       })
-
     }
 
     setSelected([])
+    setMessage("Asignación realizada correctamente")
     load()
-
   }
 
   /* =========================
-  CARGA MASIVA
+  🔥 ENVÍO PRO
   ========================= */
+  async function sendInvitationsBulk(){
+
+    try{
+
+      if(sending) return
+
+      const ok = confirm("¿Enviar invitaciones pendientes?")
+      if(!ok) return
+
+      setSending(true)
+      setMessage("Enviando invitaciones...")
+
+      const res = await apiFetch("/api/send-invitation",{
+        method:"POST"
+      })
+
+      setMessage(`✔ Enviados: ${res.sent} | Omitidos: ${res.skipped}`)
+
+    }catch(err){
+      console.error(err)
+      setMessage("Error enviando invitaciones")
+    }
+
+    setSending(false)
+  }
+
   async function handleFile(e:any){
 
     const file = e.target.files[0]
@@ -123,18 +119,18 @@ export default function Assignments(){
 
       const base64 = evt.target.result.split(",")[1]
 
+      setMessage("Procesando archivo...")
+
       await apiFetch("/api/participants/bulk",{
         method:"POST",
         body:{ file: base64 }
       })
 
-      alert("Carga masiva completada")
+      setMessage("✔ Carga masiva completada")
       load()
-
     }
 
     reader.readAsDataURL(file)
-
   }
 
   function downloadTemplate(){
@@ -163,7 +159,6 @@ export default function Assignments(){
     XLSX.utils.book_append_sheet(wb, ws, "Plantilla")
 
     XLSX.writeFile(wb, "plantilla_participantes.xlsx")
-
   }
 
   function translateStatus(status:string){
@@ -190,16 +185,37 @@ export default function Assignments(){
 
     <PageContainer title="Asignaciones">
 
-      <Card title="Carga masiva">
+      {/* 🔥 MENSAJE PRO */}
+      {message && (
+        <div style={styles.message}>
+          {message}
+        </div>
+      )}
 
-        <button style={styles.downloadBtn} onClick={downloadTemplate}>
-          Descargar Plantilla Excel
-        </button>
+      <Card title="Gestión de asignaciones">
 
-        <label style={styles.uploadBtn}>
-          Subir Excel
-          <input type="file" accept=".xlsx" onChange={handleFile} hidden />
-        </label>
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+
+          <button style={styles.downloadBtn} onClick={downloadTemplate}>
+            Descargar plantilla
+          </button>
+
+          <label style={styles.uploadBtn}>
+            Subir Excel
+            <input type="file" accept=".xlsx" onChange={handleFile} hidden />
+          </label>
+
+          <button
+            style={{
+              ...styles.inviteBtn,
+              opacity:sending?0.6:1
+            }}
+            onClick={sendInvitationsBulk}
+          >
+            {sending ? "Enviando..." : "Enviar invitaciones"}
+          </button>
+
+        </div>
 
       </Card>
 
@@ -220,9 +236,7 @@ export default function Assignments(){
 
         <div style={styles.grid}>
           {evaluations.map(e=>{
-
             const isSelected = selected.includes(e.id)
-
             return(
               <div
                 key={e.id}
@@ -281,12 +295,18 @@ export default function Assignments(){
       </Card>
 
     </PageContainer>
-
   )
-
 }
 
 const styles:any={
+
+  message:{
+    marginBottom:15,
+    padding:"10px",
+    background:"#ecfeff",
+    border:"1px solid #06b6d4",
+    borderRadius:6
+  },
 
   select:{ padding:10, border:"1px solid #ddd", borderRadius:6 },
 
@@ -320,18 +340,28 @@ const styles:any={
   },
 
   downloadBtn:{
-    background:"#6b7280",
+    background:"#2563eb",
     color:"#fff",
-    padding:"10px",
-    marginRight:10,
-    borderRadius:6
+    padding:"10px 16px",
+    borderRadius:8,
+    border:"none",
+    cursor:"pointer"
   },
 
   uploadBtn:{
     background:"#16a34a",
     color:"#fff",
-    padding:"10px",
-    borderRadius:6,
+    padding:"10px 16px",
+    borderRadius:8,
+    cursor:"pointer"
+  },
+
+  inviteBtn:{
+    background:"#3826dc",
+    color:"#fff",
+    padding:"10px 16px",
+    borderRadius:8,
+    border:"none",
     cursor:"pointer"
   }
 

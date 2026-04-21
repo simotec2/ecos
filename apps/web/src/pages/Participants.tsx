@@ -175,37 +175,7 @@ export default function Participants(){
     <PageContainer title="Participantes">
 
       {/* BOTONES SUPERIORES */}
-      <div style={{ display:"flex", gap:10, marginBottom:15 }}>
-
-        <button
-          onClick={() => window.open("https://api.seguridad-simotec.com/api/template")}
-          style={{
-            padding:"10px 15px",
-            background:"#16a34a",
-            color:"#fff",
-            border:"none",
-            borderRadius:6,
-            cursor:"pointer"
-          }}
-        >
-          Descargar plantilla Excel
-        </button>
-
-        <button
-          onClick={sendInvitationsBulk}
-          style={{
-            padding:"10px 15px",
-            background:"#dc2626",
-            color:"#fff",
-            border:"none",
-            borderRadius:6,
-            cursor:"pointer"
-          }}
-        >
-          Enviar invitaciones (empresa)
-        </button>
-
-      </div>
+      
 
       {/* NUEVO PARTICIPANTE */}
       <Card title="Nuevo participante">
