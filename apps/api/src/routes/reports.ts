@@ -1,6 +1,8 @@
 import { Router } from "express"
 import prisma from "../db"
-import puppeteer from "puppeteer"
+
+import chromium from "@sparticuz/chromium"
+import puppeteer from "puppeteer-core"
 
 import { renderReportHTML } from "../services/reportRenderer"
 import { renderFinalReportHTML } from "../services/finalReportRenderer"
@@ -38,13 +40,14 @@ function normalizeResult(result:any){
 
 /*
 =====================================
-PDF ENGINE (CORREGIDO FINAL)
+PDF ENGINE (FINAL FUNCIONANDO)
 =====================================
 */
 async function generatePDF(html: string){
 
   const browser = await puppeteer.launch({
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: chromium.args,
+    executablePath: await chromium.executablePath(),
     headless: true
   })
 
