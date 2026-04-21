@@ -201,7 +201,8 @@ router.get("/:id/final/pdf", async (req, res) => {
     return res.status(500).json({
       error: "Error generando informe final",
       detail: error.message,
-      stack: error.stack
+      stack: error.stack,
+      raw: error
     })
   }
 })
