@@ -1,46 +1,55 @@
 import { Router } from "express"
 import prisma from "../db"
+
 import chromium from "@sparticuz/chromium"
 import puppeteer from "puppeteer-core"
+
 import fs from "fs"
 import path from "path"
+
 import { generateRadarImage } from "../services/radarGenerator"
 import { generateAIReport } from "../services/aiEngine"
 
 const router = Router()
+
+/* ======================================
+FORMATEAR ANALISIS
+====================================== */
 function formatAnalysisHTML(text:string){
 
   if(!text) return ""
 
   let html = text
 
-  /* TITULOS EN NEGRITA */
   html = html
     .replace(/Diagnóstico General:/gi, "<b>Diagnóstico General:</b><br/>")
     .replace(/Impacto en Desempeño y Riesgos:/gi, "<br/><b>Impacto en Desempeño y Riesgos:</b><br/>")
     .replace(/Recomendaciones:/gi, "<br/><b>Recomendaciones:</b><br/>")
     .replace(/Conclusión:/gi, "<br/><b>Conclusión:</b><br/>")
-    .replace(/Resultados:/gi, "<br/><b>Resultados:</b><br/>")
 
-  /* LISTAS */
   html = html.replace(/- (.*?)(\n|$)/g, "<li>$1</li>")
-
-  /* ENVOLVER LISTA */
   html = html.replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>")
-
-  /* SALTOS DE LINEA */
   html = html.replace(/\n/g, "<br/>")
 
   return html
 }
 
 /* ======================================
-UTILS
+SEMAFORO FINAL CORRECTO
 ====================================== */
-function calculateTraffic(score:number){
-  if(score >= 85) return { color:"VERDE", label:"RECOMENDABLE" }
-  if(score >= 55) return { color:"AMARILLO", label:"RECOMENDABLE CON OBSERVACIONES" }
-  return { color:"ROJO", label:"NO RECOMENDABLE" }
+function calculateFinalTraffic(results:any[]){
+
+  const colors = results.map(r => r.color)
+
+  if(colors.includes("ROJO")){
+    return { color:"ROJO", label:"NO RECOMENDABLE" }
+  }
+
+  if(colors.includes("AMARILLO")){
+    return { color:"AMARILLO", label:"RECOMENDABLE CON OBSERVACIONES" }
+  }
+
+  return { color:"VERDE", label:"RECOMENDABLE" }
 }
 
 function getColorHex(color:string){
@@ -50,38 +59,23 @@ function getColorHex(color:string){
 }
 
 /* ======================================
-IA FINAL PROFESIONAL
+IA FINAL
 ====================================== */
 async function buildFinalAnalysisIA(evaluations:any[], finalScore:number){
 
   const prompt = `
-Eres un psicólogo laboral senior experto en evaluación de competencias en minería.
+Eres un psicólogo laboral senior experto en minería.
 
-Redacta un INFORME EJECUTIVO PROFESIONAL.
+Genera un informe ejecutivo.
 
-REGLAS:
-- NO saludar
-- NO hacer preguntas
-- NO lenguaje conversacional
-- NO markdown
-- tono formal, técnico, ejecutivo
-- máximo 2 párrafos + 3 recomendaciones
-
-CONTEXTO:
 Evaluaciones:
 ${evaluations.map(e=>`${e.name}: ${e.score}%`).join("\n")}
 
 Puntaje final: ${finalScore}%
 
-OBJETIVO:
-- integrar resultados en un diagnóstico único
-- explicar impacto en desempeño y seguridad
-- identificar brechas de forma integrada
-- entregar recomendaciones accionables
-
-FORMATO:
-Párrafo 1: Diagnóstico  
-Párrafo 2: Impacto  
+Formato:
+Diagnóstico General:
+Impacto en Desempeño y Riesgos:
 Recomendaciones:
 - ...
 - ...
@@ -90,10 +84,7 @@ Recomendaciones:
 
   let text = await generateAIReport(prompt)
 
-  /* LIMPIEZA */
   text = text
-    .replace(/hola.*\n?/gi,"")
-    .replace(/¿.*\?/gi,"")
     .replace(/\*\*/g,"")
     .trim()
 
@@ -112,6 +103,7 @@ async function renderHTML(data:any){
 
   const logoPath = path.join(__dirname,"..","..","assets","logos","ecos.png")
   const logoBase64 = fs.readFileSync(logoPath).toString("base64")
+
   const logo = `<img src="data:image/png;base64,${logoBase64}" style="height:55px;" />`
 
   let radarHTML = ""
@@ -162,30 +154,48 @@ router.get("/:participantId/pdf", async (req,res)=>{
       return res.status(404).json({ error:"Sin resultados" })
     }
 
-    /* SOLO ÚLTIMO POR TIPO */
+    /* 🔥 SOLO ÚLTIMO POR TIPO */
     const map:any = {}
+
     for(const r of results){
       const type = r.evaluation.type
-      if(!map[type]) map[type] = r
+      if(!map[type]){
+        map[type] = r
+      }
     }
 
     const finalResults:any[] = Object.values(map)
 
+    /* 🔥 NORMALIZAR */
     const evaluations = finalResults.map((r:any)=>{
+
       const data = JSON.parse(r.resultJson || "{}")
+
+      const score = Math.round(data.score || 0)
+
+      const traffic = score >= 85
+        ? "VERDE"
+        : score >= 55
+        ? "AMARILLO"
+        : "ROJO"
+
       return{
-        name:r.evaluation.name,
-        score: Math.round(data.score || 0),
+        name: r.evaluation.name,
+        score,
+        traffic,
         competencies: data.competencies || data.competenciasDetalle || []
       }
     })
 
-    const scores = evaluations.map(e=>e.score)
-    const finalScore = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)
+    /* 🔥 SCORE PROMEDIO */
+    const finalScore = Math.round(
+      evaluations.reduce((acc:number,e:any)=>acc + e.score,0) / evaluations.length
+    )
 
-    const traffic = calculateTraffic(finalScore)
+    /* 🔥 SEMÁFORO CORRECTO */
+    const traffic = calculateFinalTraffic(evaluations)
 
-    /* CONSOLIDAR COMPETENCIAS */
+    /* 🔥 CONSOLIDAR COMPETENCIAS */
     const compMap:any = {}
 
     evaluations.forEach(e=>{
@@ -201,7 +211,7 @@ router.get("/:participantId/pdf", async (req,res)=>{
       score: Math.round(values.reduce((a:number,b:number)=>a+b,0)/values.length)
     }))
 
-    /* IA */
+    /* 🔥 IA */
     const analysis = await buildFinalAnalysisIA(evaluations, finalScore)
 
     const html = await renderHTML({
@@ -212,7 +222,19 @@ router.get("/:participantId/pdf", async (req,res)=>{
       analysis
     })
 
-    const browser = await puppeteer.launch({ headless:true })
+    /* 🔥 CHROMIUM (RENDER) */
+    const executablePath = await chromium.executablePath()
+
+    if(!executablePath){
+      throw new Error("Chromium no disponible")
+    }
+
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath,
+      headless: true
+    })
+
     const page = await browser.newPage()
 
     await page.setContent(html,{ waitUntil:"networkidle0" })
@@ -232,9 +254,14 @@ router.get("/:participantId/pdf", async (req,res)=>{
 
     res.send(pdf)
 
-  }catch(e){
-    console.error(e)
-    res.status(500).json({ error:"Error generando informe final" })
+  }catch(e:any){
+
+    console.error("❌ ERROR FINAL REPORT:", e)
+
+    res.status(500).json({
+      error:"Error generando informe final",
+      detail: e.message
+    })
   }
 
 })
