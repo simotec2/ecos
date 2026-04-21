@@ -5,7 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const db_1 = __importDefault(require("../db"));
-const puppeteer_1 = __importDefault(require("puppeteer"));
+const chromium_1 = __importDefault(require("@sparticuz/chromium"));
+const puppeteer_core_1 = __importDefault(require("puppeteer-core"));
 const reportRenderer_1 = require("../services/reportRenderer");
 const finalReportRenderer_1 = require("../services/finalReportRenderer");
 const router = (0, express_1.Router)();
@@ -37,12 +38,13 @@ function normalizeResult(result) {
 }
 /*
 =====================================
-PDF ENGINE (RENDER OK)
+PDF ENGINE (FINAL FUNCIONANDO)
 =====================================
 */
 async function generatePDF(html) {
-    const browser = await puppeteer_1.default.launch({
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    const browser = await puppeteer_core_1.default.launch({
+        args: chromium_1.default.args,
+        executablePath: await chromium_1.default.executablePath(),
         headless: true
     });
     const page = await browser.newPage();

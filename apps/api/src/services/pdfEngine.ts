@@ -1,4 +1,5 @@
-import puppeteer from "puppeteer"
+import chromium from "@sparticuz/chromium"
+import puppeteer from "puppeteer-core"
 import path from "path"
 import fs from "fs"
 import { renderReportHTML } from "./reportRenderer"
@@ -18,20 +19,29 @@ export async function generateReportPDF(report:any){
 
   const html = await renderReportHTML(report)
 
+  const executablePath = await chromium.executablePath()
+
+  if(!executablePath){
+    throw new Error("Chromium no disponible")
+  }
+
   const browser = await puppeteer.launch({
-    headless:true,
-    args:["--no-sandbox"]
+    args: chromium.args,
+    executablePath,
+    headless: true
   })
 
   const page = await browser.newPage()
 
-  await page.setContent(html)
+  await page.setContent(html, {
+    waitUntil: "networkidle0"
+  })
 
   await page.pdf({
-    path:filePath,
-    format:"Letter",
-    printBackground:true,
-    timeout:0,
+    path: filePath,
+    format: "Letter",
+    printBackground: true,
+    timeout: 0,
     margin:{
       top:"25mm",
       bottom:"25mm",

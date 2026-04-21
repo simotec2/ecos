@@ -1,6 +1,7 @@
 import { Router } from "express"
 import prisma from "../db"
-import puppeteer from "puppeteer"
+import chromium from "@sparticuz/chromium"
+import puppeteer from "puppeteer-core"
 import fs from "fs"
 import path from "path"
 import { generateRadarImage } from "../services/radarGenerator"

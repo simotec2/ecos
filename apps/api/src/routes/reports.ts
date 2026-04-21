@@ -40,14 +40,20 @@ function normalizeResult(result:any){
 
 /*
 =====================================
-PDF ENGINE (FINAL FUNCIONANDO)
+PDF ENGINE (CORREGIDO PARA RENDER)
 =====================================
 */
 async function generatePDF(html: string){
 
+  const executablePath = await chromium.executablePath()
+
+  if(!executablePath){
+    throw new Error("Chromium no disponible en este entorno")
+  }
+
   const browser = await puppeteer.launch({
     args: chromium.args,
-    executablePath: await chromium.executablePath(),
+    executablePath,
     headless: true
   })
 
@@ -157,7 +163,7 @@ router.get("/:id/final/pdf", async (req, res) => {
     console.error("❌ ERROR PDF FINAL:", error)
 
     return res.status(500).json({
-      error: "Error generando PDF final",
+      error: "Error generando informe final",
       detail: error.message
     })
   }
