@@ -32,7 +32,6 @@ function getColor(value:number){
 
 function formatName(name:string){
   if(!name) return ""
-
   const n = name.toLowerCase()
 
   if(n.includes("icom")) return "Evaluación Psicolaboral"
@@ -84,7 +83,6 @@ export default function Dashboard(){
   /* ================= COMPETENCIAS ================= */
 
   const competenciasEntries = Object.entries(data.competencias || {})
-
   const labels = competenciasEntries.map(([k])=>formatName(k))
   const values = competenciasEntries.map(([_,v]:any)=>v)
 
@@ -114,12 +112,12 @@ export default function Dashboard(){
         <Card>
           <h3 style={styles.title}>Nivel de Riesgo</h3>
 
-          <div style={{position:"relative", height:240}}>
+          <div style={styles.donutContainer}>
 
             <Doughnut
               data={pieData}
               options={{
-                cutout:"70%",
+                cutout: "75%",
                 plugins:{
                   legend:{ position:"bottom" },
                   tooltip:{
@@ -137,15 +135,8 @@ export default function Dashboard(){
             />
 
             {/* TEXTO CENTRADO */}
-            <div style={{
-              position:"absolute",
-              inset:0,
-              display:"flex",
-              alignItems:"center",
-              justifyContent:"center",
-              pointerEvents:"none"
-            }}>
-              <div style={{textAlign:"center"}}>
+            <div style={styles.centerOverlay}>
+              <div style={styles.centerContent}>
                 <div style={styles.bigNumber}>
                   {pct(data.semaforo.rojo)}%
                 </div>
@@ -173,7 +164,7 @@ export default function Dashboard(){
                 options={{
                   indexAxis:"y",
                   maintainAspectRatio:false,
-                  plugins:{ legend:{display:false} }
+                  plugins:{legend:{display:false}}
                 }}
               />
             </div>
@@ -290,6 +281,31 @@ const styles:any = {
   kpiValue:{
     fontSize:26,
     fontWeight:700
+  },
+
+  donutContainer:{
+    position:"relative",
+    width:"100%",
+    height:240,
+    display:"flex",
+    alignItems:"center",
+    justifyContent:"center"
+  },
+
+  centerOverlay:{
+    position:"absolute",
+    top:0,
+    left:0,
+    width:"100%",
+    height:"100%",
+    display:"flex",
+    alignItems:"center",
+    justifyContent:"center",
+    pointerEvents:"none"
+  },
+
+  centerContent:{
+    textAlign:"center"
   },
 
   bigNumber:{
