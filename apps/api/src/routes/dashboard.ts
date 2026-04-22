@@ -27,18 +27,16 @@ function consolidateResults(results:any[]){
 
     if(!type || isNaN(score)) return
 
-    // solo 1 por tipo (el más reciente ya viene primero)
     if(byType[type] === undefined){
       byType[type] = score
     }
   })
 
-  const scores = Object.values(byType) as number[]
+  const scores = Object.values(byType)
 
   if(scores.length === 0) return null
 
-  const sum = scores.reduce((acc:number, val:number)=> acc + val, 0)
-
+  const sum = scores.reduce((a,b)=>a+b,0)
   const finalScore = sum / scores.length
 
   let estado:"VERDE" | "AMARILLO" | "ROJO" = "VERDE"
@@ -52,28 +50,18 @@ function consolidateResults(results:any[]){
   }
 }
 
-/* ================= INSIGHT ================= */
-function generateInsight({semaforo, competencias, total}:any){
-
-  if(!total) return "Sin datos suficientes."
-
-  const rojoPct = Math.round((semaforo.rojo / total) * 100)
-
-  const entries = Object.entries(competencias || {})
-  const sorted = entries.sort((a:any,b:any)=> b[1] - a[1])
-
-  const top = sorted.slice(0,2).map((c:any)=>c[0])
-  const bottom = [...sorted].reverse().slice(0,2).map((c:any)=>c[0])
+/* ================= RECOMENDACIÓN EMPRESA ================= */
+function getCompanyRecommendation(rojoPct:number){
 
   if(rojoPct > 50){
-    return `Alto nivel de riesgo (${rojoPct}%). Brechas en ${bottom.join(" y ")}.`
+    return "Nivel crítico. Se recomienda intervención inmediata, reentrenamiento y supervisión operativa."
   }
 
   if(rojoPct > 25){
-    return `Riesgo moderado (${rojoPct}%). Atención en ${bottom.join(" y ")}.`
+    return "Riesgo moderado. Implementar refuerzo en competencias críticas."
   }
 
-  return `Riesgo controlado. Fortalezas en ${top.join(" y ")}.`
+  return "Nivel controlado. Mantener estándar operacional y monitoreo."
 }
 
 /* ================= ROUTE ================= */
@@ -94,16 +82,11 @@ router.get("/", async (req,res)=>{
     /* ================= PARTICIPANTES ================= */
 
     const participants = await prisma.participant.findMany({
-      where: companyFilter
+      where: companyFilter,
+      include:{ company:true }
     })
 
     const participantIds = participants.map(p=>p.id)
-
-    /* ================= EMPRESAS ================= */
-
-    const empresas = await prisma.company.findMany({
-      select:{ id:true, name:true }
-    })
 
     /* ================= RESULTADOS ================= */
 
@@ -113,7 +96,7 @@ router.get("/", async (req,res)=>{
       orderBy:{ createdAt:"desc" }
     })
 
-    /* ================= CONSOLIDAR POR PARTICIPANTE ================= */
+    /* ================= AGRUPAR POR PARTICIPANTE ================= */
 
     const grouped:any = {}
 
@@ -124,6 +107,8 @@ router.get("/", async (req,res)=>{
       grouped[r.participantId].push(r)
     })
 
+    /* ================= CONSOLIDADO ================= */
+
     const consolidated:any[] = []
 
     Object.entries(grouped).forEach(([participantId, results]:any)=>{
@@ -131,13 +116,17 @@ router.get("/", async (req,res)=>{
       const final = consolidateResults(results)
       if(!final) return
 
+      const participant = participants.find(p=>p.id === participantId)
+
       consolidated.push({
         participantId,
+        companyId: participant?.companyId,
+        companyName: participant?.company?.name,
         ...final
       })
     })
 
-    /* ================= SEMÁFORO ================= */
+    /* ================= DASHBOARD GLOBAL ================= */
 
     let verde = 0
     let amarillo = 0
@@ -149,81 +138,43 @@ router.get("/", async (req,res)=>{
       else rojo++
     })
 
-    /* ================= COMPETENCIAS ================= */
+    /* ================= DASHBOARD POR EMPRESA ================= */
 
-    const competenciasMap:any = {}
-
-    allResults.forEach(r=>{
-
-      try{
-
-        const json = typeof r.resultJson === "string"
-          ? JSON.parse(r.resultJson)
-          : r.resultJson
-
-        if(Array.isArray(json?.competencies)){
-          json.competencies.forEach((c:any)=>{
-            if(!c?.name) return
-
-            if(!competenciasMap[c.name]){
-              competenciasMap[c.name] = { total:0, count:0 }
-            }
-
-            competenciasMap[c.name].total += Number(c.score || 0)
-            competenciasMap[c.name].count++
-          })
-        }
-
-      }catch{}
-    })
-
-    let competencias:any = {}
-
-    Object.entries(competenciasMap).forEach(([k,v]:any)=>{
-      if(v.count > 0){
-        competencias[k] = Math.round(v.total / v.count)
-      }
-    })
-
-    /* fallback */
-    if(Object.keys(competencias).length === 0){
-      competencias = {
-        "Trabajo en equipo": 70,
-        "Comunicación": 65,
-        "Responsabilidad": 72
-      }
-    }
-
-    const entries = Object.entries(competencias)
-    const sorted = entries.sort((a:any,b:any)=> b[1] - a[1])
-
-    const mejores = sorted.slice(0,3)
-    const criticas = [...sorted].reverse().slice(0,3)
-
-    /* ================= RANKING ================= */
-
-    const ranking:any[] = []
+    const companyMap:any = {}
 
     consolidated.forEach(r=>{
 
-      const p = participants.find(x=>x.id === r.participantId)
-      if(!p) return
+      if(!r.companyId) return
 
-      ranking.push({
-        nombre: `${p.nombre} ${p.apellido}`,
-        score: r.score,
-        estado: r.estado
-      })
+      if(!companyMap[r.companyId]){
+        companyMap[r.companyId] = {
+          id: r.companyId,
+          name: r.companyName,
+          total: 0,
+          verde: 0,
+          amarillo: 0,
+          rojo: 0
+        }
+      }
+
+      companyMap[r.companyId].total++
+
+      if(r.estado === "VERDE") companyMap[r.companyId].verde++
+      else if(r.estado === "AMARILLO") companyMap[r.companyId].amarillo++
+      else companyMap[r.companyId].rojo++
     })
 
-    ranking.sort((a,b)=> a.score - b.score)
+    const companies = Object.values(companyMap).map((c:any)=>{
 
-    /* ================= INSIGHT ================= */
+      const rojoPct = c.total > 0
+        ? Math.round((c.rojo / c.total) * 100)
+        : 0
 
-    const insight = generateInsight({
-      semaforo:{ verde, amarillo, rojo },
-      competencias,
-      total: consolidated.length
+      return {
+        ...c,
+        riesgo: rojoPct,
+        recomendacion: getCompanyRecommendation(rojoPct)
+      }
     })
 
     /* ================= RESPONSE ================= */
@@ -233,12 +184,7 @@ router.get("/", async (req,res)=>{
       data:{
         participantes: consolidated.length,
         semaforo:{ verde, amarillo, rojo },
-        competencias,
-        mejores,
-        criticas,
-        empresas,
-        ranking,
-        insight
+        companies
       }
     })
 
@@ -247,8 +193,7 @@ router.get("/", async (req,res)=>{
     console.error(err)
 
     return res.status(500).json({
-      error:"Error dashboard",
-      detail:String(err)
+      error:"Error dashboard"
     })
   }
 
