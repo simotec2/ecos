@@ -29,6 +29,32 @@ function getColor(value:number){
   return "#dc2626"
 }
 
+/* ================= FORMATEO ================= */
+function formatName(name:string){
+
+  if(!name) return ""
+
+  const n = name.toLowerCase().trim()
+
+  if(n.includes("icom")) return "Evaluación Psicolaboral"
+  if(n.includes("pets")) return "Evaluación Conductual"
+
+  if(n.includes("seguridad")){
+    let label = name.replace(/seguridad/i,"").trim()
+    label = label.split("_").join(" ")
+    label = label
+      .split(" ")
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ")
+
+    return label
+      ? `Evaluación Seguridad - ${label}`
+      : "Evaluación Seguridad"
+  }
+
+  return name
+}
+
 export default function Dashboard(){
 
   const [data,setData] = useState<any>(null)
@@ -42,10 +68,14 @@ export default function Dashboard(){
   const loadData = async ()=>{
     try{
       setLoading(true)
+      setError("")
+
       const query = `?empresa=${empresa}&tipo=${tipo}&periodo=${periodo}`
       const res = await apiFetch(`/api/dashboard${query}`)
+
       setData(res.data)
-    }catch(err:any){
+
+    }catch(err){
       console.error(err)
       setError("Error cargando dashboard")
     }finally{
@@ -81,11 +111,10 @@ export default function Dashboard(){
   }
 
   /* ================= COMPETENCIAS ================= */
-  const labels = Object.keys(data.competencias || {})
-    .filter(k => !k.toLowerCase().includes("sumarse"))
-    .sort((a,b)=>data.competencias[b]-data.competencias[a])
+  const competenciasEntries = Object.entries(data.competencias || {})
 
-  const values = labels.map(l => data.competencias[l])
+  const labels = competenciasEntries.map(([k])=>formatName(k))
+  const values = competenciasEntries.map(([_,v]:any)=>v)
 
   const barData = {
     labels,
@@ -94,9 +123,6 @@ export default function Dashboard(){
       backgroundColor: values.map(v => getColor(v))
     }]
   }
-
-  const top5 = labels.slice(0,5)
-  const bottom5 = labels.slice(-5).reverse()
 
   return(
     <div style={styles.container}>
@@ -119,10 +145,13 @@ export default function Dashboard(){
 
       {/* FILTROS */}
       <div style={styles.filters}>
+
         <select value={empresa} onChange={e=>setEmpresa(e.target.value)}>
           <option value="">Todas las empresas</option>
-          {data.empresas?.map((e:any)=>(
-            <option key={e.id} value={e.id}>{e.name}</option>
+          {(data.empresas || []).map((e:any)=>(
+            <option key={e.id} value={e.id}>
+              {e.name}
+            </option>
           ))}
         </select>
 
@@ -138,6 +167,7 @@ export default function Dashboard(){
           <option value="30">30 días</option>
           <option value="90">90 días</option>
         </select>
+
       </div>
 
       {/* PRINCIPAL */}
@@ -146,10 +176,25 @@ export default function Dashboard(){
         <Card>
           <Title>Nivel de Riesgo</Title>
           <div style={{height:240}}>
-            <Doughnut data={pieData} options={{
-              cutout:"70%",
-              plugins:{legend:{position:"bottom"}}
-            }}/>
+            <Doughnut 
+              data={pieData} 
+              options={{
+                cutout:"70%",
+                plugins:{
+                  legend:{position:"bottom"},
+                  tooltip:{
+                    callbacks:{
+                      label:(ctx:any)=>{
+                        const total = ctx.dataset.data.reduce((a:number,b:number)=>a+b,0)
+                        const val = ctx.raw
+                        const pct = Math.round((val/total)*100)
+                        return `${ctx.label}: ${val} (${pct}%)`
+                      }
+                    }
+                  }
+                }
+              }}
+            />
           </div>
         </Card>
 
@@ -174,16 +219,24 @@ export default function Dashboard(){
 
         <Card>
           <Title>Fortalezas clave</Title>
-          {top5.map(k=>(
-            <Item key={k} text={k} color="#16a34a"/>
+
+          {data.mejores?.length === 0 ? (
+            <div style={{color:"#6b7280"}}>Sin datos</div>
+          ) : data.mejores.map(([name,value]:any)=>(
+            <Item key={name} text={`${formatName(name)} (${value}%)`} color="#16a34a"/>
           ))}
+
         </Card>
 
         <Card>
           <Title>Riesgos críticos</Title>
-          {bottom5.map(k=>(
-            <Item key={k} text={k} color="#dc2626"/>
+
+          {data.criticas?.length === 0 ? (
+            <div style={{color:"#6b7280"}}>Sin datos</div>
+          ) : data.criticas.map(([name,value]:any)=>(
+            <Item key={name} text={`${formatName(name)} (${value}%)`} color="#dc2626"/>
           ))}
+
         </Card>
 
       </div>
