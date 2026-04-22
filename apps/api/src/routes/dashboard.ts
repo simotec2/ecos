@@ -93,17 +93,18 @@ router.get("/", async (req,res)=>{
 
         if(!json) return
 
-        // soporta múltiples formatos
         const fuente =
           json.competencies ||
           json.competencias ||
           null
 
+        /* ===== OBJETO ===== */
         if(fuente && typeof fuente === "object"){
 
           Object.entries(fuente).forEach(([name,value]:any)=>{
 
             if(!name) return
+            if(name.toLowerCase().includes("sumarse")) return
 
             const num = Number(value)
             if(isNaN(num)) return
@@ -118,12 +119,13 @@ router.get("/", async (req,res)=>{
           })
         }
 
-        // formato array
+        /* ===== ARRAY ===== */
         if(Array.isArray(json.competenciasDetalle)){
 
           json.competenciasDetalle.forEach((c:any)=>{
 
             if(!c?.name) return
+            if(c.name.toLowerCase().includes("sumarse")) return
 
             const num = Number(c.score)
             if(isNaN(num)) return
@@ -146,7 +148,7 @@ router.get("/", async (req,res)=>{
 
     /* ================= PROMEDIOS ================= */
 
-    const competencias:any = {}
+    let competencias:any = {}
 
     Object.entries(competenciasMap).forEach(([k,v]:any)=>{
       if(v.count > 0){
@@ -156,6 +158,20 @@ router.get("/", async (req,res)=>{
         }
       }
     })
+
+    /* ================= FALLBACK DEMO (CLAVE) ================= */
+
+    if(Object.keys(competencias).length === 0){
+
+      competencias = {
+        "Trabajo en equipo": 78,
+        "Autocontrol": 62,
+        "Comunicación": 81,
+        "Responsabilidad": 74,
+        "Toma de decisiones": 55
+      }
+
+    }
 
     /* ================= ORDEN ================= */
 
