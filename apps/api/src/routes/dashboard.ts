@@ -98,7 +98,6 @@ router.get("/", async (req,res)=>{
           json.competencias ||
           null
 
-        /* ===== OBJETO ===== */
         if(fuente && typeof fuente === "object"){
 
           Object.entries(fuente).forEach(([name,value]:any)=>{
@@ -119,7 +118,6 @@ router.get("/", async (req,res)=>{
           })
         }
 
-        /* ===== ARRAY ===== */
         if(Array.isArray(json.competenciasDetalle)){
 
           json.competenciasDetalle.forEach((c:any)=>{
@@ -159,10 +157,9 @@ router.get("/", async (req,res)=>{
       }
     })
 
-    /* ================= FALLBACK DEMO (CLAVE) ================= */
+    /* ================= FALLBACK DEMO ================= */
 
     if(Object.keys(competencias).length === 0){
-
       competencias = {
         "Trabajo en equipo": 78,
         "Autocontrol": 62,
@@ -170,17 +167,40 @@ router.get("/", async (req,res)=>{
         "Responsabilidad": 74,
         "Toma de decisiones": 55
       }
-
     }
 
     /* ================= ORDEN ================= */
 
     const entries = Object.entries(competencias)
-
     const sorted = entries.sort((a:any,b:any)=> b[1] - a[1])
 
     const mejores = sorted.slice(0,5)
     const criticas = sorted.slice(-5).reverse()
+
+    /* ================= RANKING PERSONAS (NUEVO) ================= */
+
+    const ranking:any[] = []
+
+    results.forEach(r=>{
+
+      const participante = participants.find(p=>p.id === r.participantId)
+      if(!participante) return
+
+      let estado = "VERDE"
+
+      if(r.score < 55) estado = "ROJO"
+      else if(r.score < 85) estado = "AMARILLO"
+
+      ranking.push({
+        nombre: `${participante.nombre} ${participante.apellido}`,
+        score: Math.round(r.score || 0),
+        estado
+      })
+
+    })
+
+    // ordenar por peor desempeño
+    ranking.sort((a,b)=> a.score - b.score)
 
     /* ================= RESPONSE ================= */
 
@@ -194,7 +214,8 @@ router.get("/", async (req,res)=>{
         competencias,
         mejores,
         criticas,
-        empresas
+        empresas,
+        ranking
       }
     })
 
