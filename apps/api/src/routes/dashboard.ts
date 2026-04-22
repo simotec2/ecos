@@ -1,7 +1,6 @@
 import { Router } from "express"
 import prisma from "../db"
 import { verifyAccessToken } from "../utils/jwt"
-import { generateOrganizationalInsight } from "../services/aiOrganizationalInsight"
 
 const router = Router()
 
@@ -15,6 +14,30 @@ function getUser(req:any){
   }catch{
     return null
   }
+}
+
+/* ================= INSIGHT RÁPIDO ================= */
+function generateInsight({semaforo, competencias, total}:any){
+
+  if(!total) return "Sin datos suficientes."
+
+  const rojoPct = Math.round((semaforo.rojo / total) * 100)
+
+  const entries = Object.entries(competencias || {})
+  const sorted = entries.sort((a:any,b:any)=> b[1] - a[1])
+
+  const top = sorted.slice(0,2).map((c:any)=>c[0])
+  const bottom = [...sorted].reverse().slice(0,2).map((c:any)=>c[0])
+
+  if(rojoPct > 50){
+    return `Alto nivel de riesgo (${rojoPct}%). Brechas en ${bottom.join(" y ")}. Se recomienda intervención inmediata.`
+  }
+
+  if(rojoPct > 25){
+    return `Riesgo moderado (${rojoPct}%). Atención en ${bottom.join(" y ")}.`
+  }
+
+  return `Riesgo controlado. Fortalezas en ${top.join(" y ")}.`
 }
 
 /* ================= ROUTE ================= */
@@ -55,11 +78,25 @@ router.get("/", async (req,res)=>{
     const totalEvaluaciones = assignments.length
     const pendientes = assignments.filter(a=>a.status !== "COMPLETED").length
 
-    /* ================= RESULTADOS ================= */
+    /* ================= RESULTADOS (CORREGIDO) ================= */
 
-    const results = await prisma.evaluationResult.findMany({
-      where:{ participantId:{ in: participantIds } }
+    const allResults = await prisma.evaluationResult.findMany({
+      where:{ participantId:{ in: participantIds } },
+      orderBy:{ createdAt:"desc" }
     })
+
+    /* 🔥 SOLO 1 RESULTADO POR PARTICIPANTE */
+    const resultsMap:any = {}
+
+    allResults.forEach(r=>{
+      if(!resultsMap[r.participantId]){
+        resultsMap[r.participantId] = r
+      }
+    })
+
+    const results:any[] = Object.values(resultsMap)
+
+    /* ================= SEMÁFORO ================= */
 
     let verde = 0
     let amarillo = 0
@@ -83,7 +120,7 @@ router.get("/", async (req,res)=>{
           ? JSON.parse(r.resultJson)
           : r.resultJson
 
-        // 🔥 soporta ambos formatos
+        /* PETS (ARRAY) */
         if(Array.isArray(json?.competencies)){
           json.competencies.forEach((c:any)=>{
             if(!c?.name) return
@@ -97,13 +134,13 @@ router.get("/", async (req,res)=>{
           })
         }
 
+        /* ICOM / SECURITY (OBJETO) */
         const fuente = json?.competencies || json?.competencias
 
         if(fuente && typeof fuente === "object"){
           Object.entries(fuente).forEach(([name,value]:any)=>{
 
             if(!name) return
-            if(name.toLowerCase().includes("sumarse")) return
 
             const num = Number(value)
             if(isNaN(num)) return
@@ -118,7 +155,7 @@ router.get("/", async (req,res)=>{
         }
 
       }catch(e){
-        console.error("Error parseando competencias:", e)
+        console.error("Error competencias:", e)
       }
 
     })
@@ -127,26 +164,20 @@ router.get("/", async (req,res)=>{
 
     Object.entries(competenciasMap).forEach(([k,v]:any)=>{
       if(v.count > 0){
-        const avg = v.total / v.count
-        if(!isNaN(avg)){
-          competencias[k] = Math.round(avg)
-        }
+        competencias[k] = Math.round(v.total / v.count)
       }
     })
 
-    /* ================= FALLBACK ================= */
-
+    /* fallback */
     if(Object.keys(competencias).length === 0){
       competencias = {
-        "Trabajo en equipo": 78,
-        "Autocontrol": 62,
-        "Comunicación": 81,
-        "Responsabilidad": 74,
-        "Toma de decisiones": 55
+        "Trabajo en equipo": 70,
+        "Comunicación": 65,
+        "Responsabilidad": 72
       }
     }
 
-    /* ================= ORDEN ================= */
+    /* ================= TOP 3 ================= */
 
     const entries = Object.entries(competencias)
     const sorted = entries.sort((a:any,b:any)=> b[1] - a[1])
@@ -177,9 +208,9 @@ router.get("/", async (req,res)=>{
 
     ranking.sort((a,b)=> a.score - b.score)
 
-    /* ================= INSIGHT IA ================= */
+    /* ================= INSIGHT ================= */
 
-    const insight = await generateOrganizationalInsight({
+    const insight = generateInsight({
       semaforo:{ verde, amarillo, rojo },
       competencias,
       total: results.length
@@ -190,7 +221,7 @@ router.get("/", async (req,res)=>{
     return res.json({
       ok:true,
       data:{
-        participantes: participants.length,
+        participantes: results.length, // 🔥 ahora correcto
         evaluaciones: totalEvaluaciones,
         pendientes,
         semaforo:{ verde, amarillo, rojo },
