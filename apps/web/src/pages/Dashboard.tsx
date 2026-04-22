@@ -5,18 +5,37 @@ import {
   Chart as ChartJS,
   ArcElement,
   Tooltip,
-  Legend
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement
 } from "chart.js"
 
-import { Doughnut } from "react-chartjs-2"
+import { Doughnut, Bar } from "react-chartjs-2"
 
-ChartJS.register(ArcElement, Tooltip, Legend)
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement
+)
+
+/* ================= UTILS ================= */
+
+function getColor(value:number){
+  if(value >= 70) return "#16a34a"
+  if(value >= 50) return "#f59e0b"
+  return "#dc2626"
+}
+
+/* ================= COMPONENT ================= */
 
 export default function Dashboard(){
 
   const [data,setData] = useState<any>(null)
   const [loading,setLoading] = useState(true)
-  const [error,setError] = useState("")
 
   useEffect(()=>{
     load()
@@ -24,19 +43,16 @@ export default function Dashboard(){
 
   async function load(){
     try{
-      setLoading(true)
       const res = await apiFetch("/api/dashboard")
       setData(res.data)
-    }catch(e:any){
+    }catch(e){
       console.error(e)
-      setError("Error cargando dashboard")
     }finally{
       setLoading(false)
     }
   }
 
-  if(loading) return <div style={{padding:20}}>Cargando...</div>
-  if(error) return <div style={{padding:20,color:"red"}}>{error}</div>
+  if(loading) return <div style={{padding:20}}>Cargando dashboard...</div>
   if(!data) return <div style={{padding:20}}>Sin datos</div>
 
   const total =
@@ -46,7 +62,9 @@ export default function Dashboard(){
 
   const pct = (v:number)=> Math.round((v/total)*100)
 
-  const pieData = {
+  /* ================= DONUT ================= */
+
+  const donutData = {
     labels:["Verde","Amarillo","Rojo"],
     datasets:[{
       data:[
@@ -59,51 +77,149 @@ export default function Dashboard(){
     }]
   }
 
+  /* ================= COMPETENCIAS ================= */
+
+  const labels = Object.keys(data.competencias || {})
+  const values = Object.values(data.competencias || {})
+
+  const barData = {
+    labels,
+    datasets:[{
+      data: values,
+      backgroundColor: values.map((v:any)=>getColor(v))
+    }]
+  }
+
   return(
     <div style={styles.container}>
 
-      <h2>Dashboard Ejecutivo</h2>
+      {/* HEADER */}
+      <div>
+        <h2 style={{margin:0}}>Dashboard Ejecutivo</h2>
+        <p style={{margin:0,color:"#6b7280"}}>
+          Resultados generales de evaluación
+        </p>
+      </div>
 
-      <div style={styles.card}>
+      {/* KPI */}
+      <div style={styles.kpiGrid}>
+        <MiniCard title="Evaluados" value={total}/>
+        <MiniCard title="Recomendables" value={`${pct(data.semaforo.verde)}%`} color="#16a34a"/>
+        <MiniCard title="Observaciones" value={`${pct(data.semaforo.amarillo)}%`} color="#f59e0b"/>
+        <MiniCard title="Críticos" value={`${pct(data.semaforo.rojo)}%`} color="#dc2626"/>
+      </div>
 
-        <h3>Nivel de Riesgo</h3>
+      {/* BLOQUE PRINCIPAL */}
+      <div style={styles.grid}>
 
-        <div style={styles.donutContainer}>
+        {/* DONUT */}
+        <Card>
+          <h3 style={styles.title}>Nivel de Riesgo</h3>
 
-          <Doughnut
-            data={pieData}
-            options={{
-              cutout:"75%",
-              plugins:{
-                legend:{ position:"bottom" }
-              }
-            }}
-          />
+          <div style={styles.donutContainer}>
 
-          <div style={styles.centerOverlay}>
-            <div style={styles.centerContent}>
-              <div style={styles.bigNumber}>
-                {pct(data.semaforo.rojo)}%
-              </div>
-              <div style={styles.subText}>
-                Riesgo crítico
+            <Doughnut
+              data={donutData}
+              options={{
+                cutout:"75%",
+                plugins:{
+                  legend:{ position:"bottom" }
+                }
+              }}
+            />
+
+            <div style={styles.centerOverlay}>
+              <div style={styles.centerContent}>
+                <div style={styles.bigNumber}>
+                  {pct(data.semaforo.rojo)}%
+                </div>
+                <div style={styles.subText}>
+                  Riesgo crítico
+                </div>
               </div>
             </div>
+
           </div>
 
-        </div>
+        </Card>
+
+        {/* COMPETENCIAS */}
+        <Card>
+          <h3 style={styles.title}>Competencias</h3>
+
+          {values.length === 0 ? (
+            <div style={styles.empty}>Sin datos</div>
+          ) : (
+            <div style={{height:250}}>
+              <Bar
+                data={barData}
+                options={{
+                  indexAxis:"y",
+                  maintainAspectRatio:false,
+                  plugins:{legend:{display:false}}
+                }}
+              />
+            </div>
+          )}
+
+        </Card>
 
       </div>
 
-      <div style={styles.card}>
-        <h3>Datos</h3>
+      {/* FORTALEZAS / RIESGOS */}
+      <div style={styles.grid}>
 
-        <pre style={{fontSize:12}}>
-          {JSON.stringify(data, null, 2)}
-        </pre>
+        <Card>
+          <h3 style={styles.title}>Fortalezas clave</h3>
+
+          {data.mejores.map((m:any)=>(
+            <Row key={m[0]} label={m[0]} value={m[1]} color="#16a34a"/>
+          ))}
+
+        </Card>
+
+        <Card>
+          <h3 style={styles.title}>Riesgos críticos</h3>
+
+          {data.criticas.map((c:any)=>(
+            <Row key={c[0]} label={c[0]} value={c[1]} color="#dc2626"/>
+          ))}
+
+        </Card>
 
       </div>
 
+    </div>
+  )
+}
+
+/* ================= COMPONENTES UI ================= */
+
+function Card({children}:any){
+  return <div style={styles.card}>{children}</div>
+}
+
+function MiniCard({title,value,color}:any){
+  return(
+    <div style={{
+      ...styles.card,
+      borderTop:`4px solid ${color || "#ddd"}`
+    }}>
+      <div style={styles.kpiTitle}>{title}</div>
+      <div style={{...styles.kpiValue, color:color || "#111"}}>
+        {value}
+      </div>
+    </div>
+  )
+}
+
+function Row({label,value,color}:any){
+  return(
+    <div style={styles.row}>
+      <span>{label}</span>
+      <strong style={{color}}>
+        {value}%
+      </strong>
     </div>
   )
 }
@@ -115,13 +231,42 @@ const styles:any = {
   container:{
     padding:20,
     display:"grid",
+    gap:20,
+    background:"#f9fafb"
+  },
+
+  kpiGrid:{
+    display:"grid",
+    gridTemplateColumns:"repeat(4,1fr)",
+    gap:15
+  },
+
+  grid:{
+    display:"grid",
+    gridTemplateColumns:"1fr 1fr",
     gap:20
   },
 
   card:{
     background:"#fff",
     padding:20,
-    borderRadius:12
+    borderRadius:14,
+    boxShadow:"0 8px 20px rgba(0,0,0,0.05)"
+  },
+
+  title:{
+    marginBottom:10,
+    fontWeight:600
+  },
+
+  kpiTitle:{
+    fontSize:12,
+    color:"#6b7280"
+  },
+
+  kpiValue:{
+    fontSize:26,
+    fontWeight:700
   },
 
   donutContainer:{
@@ -135,8 +280,7 @@ const styles:any = {
     inset:0,
     display:"flex",
     alignItems:"center",
-    justifyContent:"center",
-    pointerEvents:"none"
+    justifyContent:"center"
   },
 
   centerContent:{
@@ -151,6 +295,21 @@ const styles:any = {
   subText:{
     fontSize:12,
     color:"#9ca3af"
+  },
+
+  empty:{
+    height:250,
+    display:"flex",
+    alignItems:"center",
+    justifyContent:"center",
+    color:"#9ca3af"
+  },
+
+  row:{
+    display:"flex",
+    justifyContent:"space-between",
+    padding:"8px 0",
+    borderBottom:"1px solid #eee"
   }
 
 }
