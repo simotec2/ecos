@@ -8,13 +8,7 @@ function getColor(value:number){
   return "#16a34a"
 }
 
-/* ================= LABEL ================= */
-function getLabel(value:number){
-  if(value >= 50) return "Crítico"
-  if(value >= 25) return "Moderado"
-  return "Controlado"
-}
-
+/* ================= COMPONENTE ================= */
 export default function Dashboard(){
 
   const [data,setData] = useState<any>({
@@ -65,7 +59,14 @@ export default function Dashboard(){
     return <div style={{padding:20,color:"red"}}>{error}</div>
   }
 
-  /* ================= UI ================= */
+  const companies = data.companies || []
+
+  /* ================= EMPRESA MÁS CRÍTICA ================= */
+
+  const topCompany =
+    companies.length > 0
+      ? [...companies].sort((a:any,b:any)=> b.riesgo - a.riesgo)[0]
+      : null
 
   return(
     <div style={styles.container}>
@@ -86,76 +87,119 @@ export default function Dashboard(){
         <KPI title="Rojo" value={data.semaforo.rojo} color="#dc2626"/>
       </div>
 
-      {/* EMPRESAS */}
-      <div style={styles.card}>
-        <h3 style={styles.sectionTitle}>Empresas</h3>
+      {/* EMPRESA CRÍTICA */}
+      {topCompany && (
+        <div style={styles.card}>
+          <h3 style={styles.sectionTitle}>Empresa con mayor riesgo</h3>
 
-        {data.companies.length === 0 && (
-          <div style={{padding:20,color:"#6b7280"}}>
-            Sin datos disponibles
+          <div style={styles.topRow}>
+            <div>
+              <div style={styles.companyName}>
+                {topCompany.name}
+              </div>
+              <div style={styles.companySub}>
+                {topCompany.total} evaluados
+              </div>
+            </div>
+
+            <div style={{
+              fontSize:32,
+              fontWeight:700,
+              color: getColor(topCompany.riesgo)
+            }}>
+              {topCompany.riesgo}%
+            </div>
           </div>
-        )}
 
-        {data.companies.length > 0 && (
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>Empresa</th>
-                <th style={styles.th}>Evaluados</th>
-                <th style={styles.th}>Críticos</th>
-                <th style={styles.th}>Riesgo</th>
-                <th style={styles.th}>Recomendación</th>
+          <div style={{
+            marginTop:10,
+            color:"#6b7280",
+            fontSize:13
+          }}>
+            {topCompany.recomendacion}
+          </div>
+        </div>
+      )}
+
+      {/* TARJETAS EMPRESAS */}
+      <div style={styles.grid}>
+
+        {companies.map((c:any)=>{
+
+          const color = getColor(c.riesgo)
+
+          return(
+            <div key={c.id} style={{
+              ...styles.card,
+              borderTop:`4px solid ${color}`
+            }}>
+
+              <div style={styles.companyName}>
+                {c.name}
+              </div>
+
+              <div style={styles.companySub}>
+                {c.total} evaluados
+              </div>
+
+              <div style={{
+                fontSize:26,
+                fontWeight:700,
+                color,
+                marginTop:10
+              }}>
+                {c.riesgo}%
+              </div>
+
+              <div style={{
+                marginTop:10,
+                fontSize:12,
+                color:"#6b7280"
+              }}>
+                {c.recomendacion}
+              </div>
+
+            </div>
+          )
+        })}
+
+      </div>
+
+      {/* TABLA */}
+      <div style={styles.card}>
+        <h3 style={styles.sectionTitle}>Detalle por empresa</h3>
+
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={styles.th}>Empresa</th>
+              <th style={styles.th}>Evaluados</th>
+              <th style={styles.th}>Críticos</th>
+              <th style={styles.th}>Riesgo</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {companies.map((c:any)=>(
+              <tr key={c.id}>
+                <td style={styles.td}>{c.name}</td>
+                <td style={styles.td}>{c.total}</td>
+                <td style={styles.td}>
+                  <span style={styles.badge}>
+                    {c.rojo}
+                  </span>
+                </td>
+                <td style={{
+                  ...styles.td,
+                  color:getColor(c.riesgo),
+                  fontWeight:600
+                }}>
+                  {c.riesgo}%
+                </td>
               </tr>
-            </thead>
-
-            <tbody>
-              {data.companies.map((c:any)=>{
-
-                const riesgo = Number(c.riesgo || 0)
-                const color = getColor(riesgo)
-
-                return(
-                  <tr key={c.id}>
-                    <td style={styles.td}>{c.name || "-"}</td>
-
-                    <td style={styles.td}>
-                      {c.total || 0}
-                    </td>
-
-                    <td style={styles.td}>
-                      <span style={{
-                        ...styles.badge,
-                        background:"#dc2626"
-                      }}>
-                        {c.rojo || 0}
-                      </span>
-                    </td>
-
-                    <td style={styles.td}>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}>
-                        <div style={{
-                          ...styles.riskBar,
-                          background: color,
-                          width: `${riesgo}%`
-                        }}/>
-                        <span style={{color,fontWeight:600}}>
-                          {riesgo}%
-                        </span>
-                      </div>
-                    </td>
-
-                    <td style={styles.td}>
-                      <span style={{color}}>
-                        {c.recomendacion || "-"}
-                      </span>
-                    </td>
-
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
 
       </div>
 
@@ -215,6 +259,12 @@ const styles:any = {
     gap:15
   },
 
+  grid:{
+    display:"grid",
+    gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))",
+    gap:20
+  },
+
   card:{
     background:"#fff",
     padding:"20px",
@@ -226,6 +276,22 @@ const styles:any = {
     marginBottom:10,
     fontSize:15,
     fontWeight:600
+  },
+
+  topRow:{
+    display:"flex",
+    justifyContent:"space-between",
+    alignItems:"center"
+  },
+
+  companyName:{
+    fontWeight:600,
+    fontSize:16
+  },
+
+  companySub:{
+    fontSize:12,
+    color:"#6b7280"
   },
 
   table:{
@@ -247,15 +313,11 @@ const styles:any = {
   },
 
   badge:{
+    background:"#dc2626",
     color:"#fff",
     padding:"4px 10px",
     borderRadius:6,
     fontSize:12
-  },
-
-  riskBar:{
-    height:8,
-    borderRadius:6
   }
 
 }
