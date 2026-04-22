@@ -1,343 +1,182 @@
-import { useEffect, useState } from "react"
-import { apiFetch } from "../api"
+import { Router } from "express"
+import prisma from "../db"
+import { verifyAccessToken } from "../utils/jwt"
 
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement
-} from "chart.js"
+const router = Router()
 
-import { Doughnut, Bar } from "react-chartjs-2"
-
-ChartJS.register(
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement
-)
-
-/* ================= UTIL ================= */
-
-function getColor(value:number){
-  if(value >= 70) return "#16a34a"
-  if(value >= 50) return "#f59e0b"
-  return "#dc2626"
+function getUser(req:any){
+  try{
+    const auth = req.headers.authorization || ""
+    if(!auth.startsWith("Bearer ")) return null
+    const token = auth.replace("Bearer ","")
+    return verifyAccessToken(token)
+  }catch{
+    return null
+  }
 }
 
-function formatName(name:string){
-  if(!name) return ""
-  const n = name.toLowerCase()
+router.get("/", async (req,res)=>{
 
-  if(n.includes("icom")) return "Evaluación Psicolaboral"
-  if(n.includes("pets")) return "Evaluación Conductual"
-  if(n.includes("seguridad")) return "Evaluación Seguridad"
+  try{
 
-  return name
-}
+    const user:any = getUser(req)
 
-/* ================= COMPONENT ================= */
+    if(!user){
+      return res.status(401).json({ error:"No autorizado" })
+    }
 
-export default function Dashboard(){
+    const companyFilter = user.role === "COMPANY_ADMIN"
+      ? { companyId: user.companyId }
+      : {}
 
-  const [data,setData] = useState<any>(null)
+    /* ================= PARTICIPANTES ================= */
 
-  useEffect(()=>{
-    load()
-  },[])
+    const participants = await prisma.participant.findMany({
+      where: companyFilter
+    })
 
-  async function load(){
-    const res = await apiFetch("/api/dashboard")
-    setData(res.data)
+    const participantIds = participants.map(p=>p.id)
+
+    /* ================= EMPRESAS ================= */
+
+    let empresas:any[] = []
+    try{
+      empresas = await prisma.company.findMany({
+        select:{ id:true, name:true }
+      })
+    }catch(e){
+      console.error("Error empresas:", e)
+    }
+
+    /* ================= ASIGNACIONES ================= */
+
+    const assignments = await prisma.assignment.findMany({
+      where:{
+        participantId:{ in: participantIds }
+      }
+    })
+
+    const totalEvaluaciones = assignments.length
+    const pendientes = assignments.filter(a=>a.status !== "COMPLETED").length
+
+    /* ================= RESULTADOS ================= */
+
+    const results = await prisma.evaluationResult.findMany({
+      where:{
+        participantId:{ in: participantIds }
+      }
+    })
+
+    let verde = 0
+    let amarillo = 0
+    let rojo = 0
+
+    results.forEach(r=>{
+      if(r.score >= 85) verde++
+      else if(r.score >= 55) amarillo++
+      else rojo++
+    })
+
+    /* ================= COMPETENCIAS SEGURAS ================= */
+
+    const competencias:any = {}
+    const competenciasMap:any = {}
+
+    results.forEach(r=>{
+
+      try{
+
+        const json = typeof r.resultJson === "string"
+          ? JSON.parse(r.resultJson)
+          : r.resultJson
+
+        if(!json) return
+
+        const fuente =
+          json.competencies ||
+          json.competencias ||
+          null
+
+        if(fuente && typeof fuente === "object"){
+
+          Object.entries(fuente).forEach(([name,value]:any)=>{
+
+            if(!name) return
+            if(typeof value !== "number") return
+
+            if(!competenciasMap[name]){
+              competenciasMap[name] = { total:0, count:0 }
+            }
+
+            competenciasMap[name].total += value
+            competenciasMap[name].count++
+
+          })
+        }
+
+        if(Array.isArray(json.competenciasDetalle)){
+
+          json.competenciasDetalle.forEach((c:any)=>{
+
+            if(!c?.name) return
+            if(typeof c.score !== "number") return
+
+            if(!competenciasMap[c.name]){
+              competenciasMap[c.name] = { total:0, count:0 }
+            }
+
+            competenciasMap[c.name].total += c.score
+            competenciasMap[c.name].count++
+
+          })
+        }
+
+      }catch(e){
+        console.error("Error parsing resultJson:", e)
+      }
+
+    })
+
+    Object.entries(competenciasMap).forEach(([k,v]:any)=>{
+      if(v.count > 0){
+        const avg = v.total / v.count
+        if(!isNaN(avg)){
+          competencias[k] = Math.round(avg)
+        }
+      }
+    })
+
+    const entries = Object.entries(competencias)
+
+    const sorted = entries.sort((a:any,b:any)=> b[1] - a[1])
+
+    const mejores = sorted.slice(0,5)
+    const criticas = sorted.slice(-5).reverse()
+
+    /* ================= RESPUESTA ================= */
+
+    return res.json({
+      ok:true,
+      data:{
+        participantes: participants.length,
+        evaluaciones: totalEvaluaciones,
+        pendientes,
+        semaforo:{ verde, amarillo, rojo },
+        competencias,
+        mejores,
+        criticas,
+        empresas
+      }
+    })
+
+  }catch(err){
+    console.error("ERROR DASHBOARD:", err)
+    return res.status(500).json({
+      error:"Error dashboard",
+      detail:String(err)
+    })
   }
 
-  if(!data) return <div style={{padding:20}}>Cargando...</div>
+})
 
-  const total =
-    data.semaforo.verde +
-    data.semaforo.amarillo +
-    data.semaforo.rojo || 1
-
-  const pct = (v:number)=> total > 0 ? Math.round((v/total)*100) : 0
-
-  /* ================= DONUT ================= */
-
-  const pieData = {
-    labels:["Verde","Amarillo","Rojo"],
-    datasets:[{
-      data:[
-        data.semaforo.verde,
-        data.semaforo.amarillo,
-        data.semaforo.rojo
-      ],
-      backgroundColor:["#16a34a","#f59e0b","#dc2626"],
-      borderWidth:0
-    }]
-  }
-
-  /* ================= COMPETENCIAS ================= */
-
-  const competenciasEntries = Object.entries(data.competencias || {})
-  const labels = competenciasEntries.map(([k])=>formatName(k))
-  const values = competenciasEntries.map(([_,v]:any)=>v)
-
-  const barData = {
-    labels,
-    datasets:[{
-      data: values,
-      backgroundColor: values.map(v => getColor(v))
-    }]
-  }
-
-  return (
-    <div style={styles.container}>
-
-      {/* KPI */}
-      <div style={styles.kpiGrid}>
-        <MiniCard title="Evaluados" value={total}/>
-        <MiniCard title="Recomendables" value={`${pct(data.semaforo.verde)}%`} color="#16a34a"/>
-        <MiniCard title="Observaciones" value={`${pct(data.semaforo.amarillo)}%`} color="#f59e0b"/>
-        <MiniCard title="Críticos" value={`${pct(data.semaforo.rojo)}%`} color="#dc2626"/>
-      </div>
-
-      {/* MAIN */}
-      <div style={styles.grid}>
-
-        {/* DONUT */}
-        <Card>
-          <h3 style={styles.title}>Nivel de Riesgo</h3>
-
-          <div style={styles.donutContainer}>
-
-            <Doughnut
-              data={pieData}
-              options={{
-                cutout: "75%",
-                plugins:{
-                  legend:{ position:"bottom" },
-                  tooltip:{
-                    callbacks:{
-                      label:(ctx:any)=>{
-                        const total = ctx.dataset.data.reduce((a:number,b:number)=>a+b,0)
-                        const val = ctx.raw
-                        const pct = total ? Math.round((val/total)*100) : 0
-                        return `${ctx.label}: ${val} (${pct}%)`
-                      }
-                    }
-                  }
-                }
-              }}
-            />
-
-            {/* TEXTO CENTRADO */}
-            <div style={styles.centerOverlay}>
-              <div style={styles.centerContent}>
-                <div style={styles.bigNumber}>
-                  {pct(data.semaforo.rojo)}%
-                </div>
-                <div style={styles.subText}>
-                  Riesgo crítico
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </Card>
-
-        {/* COMPETENCIAS */}
-        <Card>
-          <h3 style={styles.title}>Competencias</h3>
-
-          {values.length === 0 ? (
-            <div style={styles.empty}>
-              Sin datos suficientes
-            </div>
-          ) : (
-            <div style={{height:240}}>
-              <Bar
-                data={barData}
-                options={{
-                  indexAxis:"y",
-                  maintainAspectRatio:false,
-                  plugins:{legend:{display:false}}
-                }}
-              />
-            </div>
-          )}
-
-        </Card>
-
-      </div>
-
-      {/* LISTAS */}
-      <div style={styles.grid}>
-
-        <Card>
-          <h3 style={styles.title}>Fortalezas</h3>
-
-          {data.mejores?.length === 0 ? (
-            <div style={styles.empty}>Sin datos</div>
-          ) : data.mejores.map(([name,value]:any)=>(
-            <Item key={name} text={`${formatName(name)} (${value}%)`} color="#16a34a"/>
-          ))}
-
-        </Card>
-
-        <Card>
-          <h3 style={styles.title}>Riesgos</h3>
-
-          {data.criticas?.length === 0 ? (
-            <div style={styles.empty}>Sin datos</div>
-          ) : data.criticas.map(([name,value]:any)=>(
-            <Item key={name} text={`${formatName(name)} (${value}%)`} color="#dc2626"/>
-          ))}
-
-        </Card>
-
-      </div>
-
-    </div>
-  )
-}
-
-/* ================= UI ================= */
-
-function Card({children}:any){
-  return (
-    <div style={styles.card}>
-      {children}
-    </div>
-  )
-}
-
-function MiniCard({title,value,color}:any){
-  return (
-    <div style={{
-      ...styles.card,
-      borderTop:`4px solid ${color || "#ddd"}`
-    }}>
-      <div style={styles.kpiTitle}>{title}</div>
-      <div style={{...styles.kpiValue, color:color || "#111"}}>
-        {value}
-      </div>
-    </div>
-  )
-}
-
-function Item({text,color}:any){
-  return (
-    <div style={styles.item}>
-      <div style={{...styles.dot, background:color}} />
-      {text}
-    </div>
-  )
-}
-
-/* ================= ESTILOS ================= */
-
-const styles:any = {
-
-  container:{
-    padding:20,
-    display:"grid",
-    gap:20,
-    background:"#f9fafb"
-  },
-
-  kpiGrid:{
-    display:"grid",
-    gridTemplateColumns:"repeat(4,1fr)",
-    gap:15
-  },
-
-  grid:{
-    display:"grid",
-    gridTemplateColumns:"1fr 1fr",
-    gap:20
-  },
-
-  card:{
-    background:"#fff",
-    padding:20,
-    borderRadius:14,
-    boxShadow:"0 8px 20px rgba(0,0,0,0.05)"
-  },
-
-  title:{
-    marginBottom:10,
-    fontWeight:600
-  },
-
-  kpiTitle:{
-    fontSize:12,
-    color:"#6b7280"
-  },
-
-  kpiValue:{
-    fontSize:26,
-    fontWeight:700
-  },
-
-  donutContainer:{
-    position:"relative",
-    width:"100%",
-    height:240,
-    display:"flex",
-    alignItems:"center",
-    justifyContent:"center"
-  },
-
-  centerOverlay:{
-    position:"absolute",
-    top:0,
-    left:0,
-    width:"100%",
-    height:"100%",
-    display:"flex",
-    alignItems:"center",
-    justifyContent:"center",
-    pointerEvents:"none"
-  },
-
-  centerContent:{
-    textAlign:"center"
-  },
-
-  bigNumber:{
-    fontSize:32,
-    fontWeight:800,
-    color:"#111827"
-  },
-
-  subText:{
-    fontSize:12,
-    color:"#9ca3af"
-  },
-
-  empty:{
-    height:240,
-    display:"flex",
-    alignItems:"center",
-    justifyContent:"center",
-    color:"#9ca3af"
-  },
-
-  item:{
-    display:"flex",
-    gap:8,
-    marginBottom:6,
-    alignItems:"center"
-  },
-
-  dot:{
-    width:8,
-    height:8,
-    borderRadius:"50%"
-  }
-
-}
+export default router

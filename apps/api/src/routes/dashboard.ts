@@ -4,13 +4,19 @@ import { verifyAccessToken } from "../utils/jwt"
 
 const router = Router()
 
+/* ================= AUTH ================= */
 function getUser(req:any){
-  const auth = req.headers.authorization || ""
-  if(!auth.startsWith("Bearer ")) return null
-  const token = auth.replace("Bearer ","")
-  return verifyAccessToken(token)
+  try{
+    const auth = req.headers.authorization || ""
+    if(!auth.startsWith("Bearer ")) return null
+    const token = auth.replace("Bearer ","")
+    return verifyAccessToken(token)
+  }catch{
+    return null
+  }
 }
 
+/* ================= ROUTE ================= */
 router.get("/", async (req,res)=>{
 
   try{
@@ -25,45 +31,41 @@ router.get("/", async (req,res)=>{
       ? { companyId: user.companyId }
       : {}
 
-    /* ===============================
-    PARTICIPANTES
-    =============================== */
+    /* ================= PARTICIPANTES ================= */
 
     const participants = await prisma.participant.findMany({
-      where: companyFilter,
-      include:{ company:true }
+      where: companyFilter
     })
 
     const participantIds = participants.map(p=>p.id)
 
-    /* ===============================
-    EMPRESAS
-    =============================== */
+    /* ================= EMPRESAS ================= */
 
-    const empresas = await prisma.company.findMany({
-      select:{ id:true, name:true }
-    })
+    let empresas:any[] = []
+    try{
+      empresas = await prisma.company.findMany({
+        select:{ id:true, name:true }
+      })
+    }catch(e){
+      console.error("Error empresas:", e)
+    }
 
-    /* ===============================
-    ASIGNACIONES
-    =============================== */
+    /* ================= ASIGNACIONES ================= */
 
     const assignments = await prisma.assignment.findMany({
       where:{
-        participantId: { in: participantIds }
+        participantId:{ in: participantIds }
       }
     })
 
     const totalEvaluaciones = assignments.length
     const pendientes = assignments.filter(a=>a.status !== "COMPLETED").length
 
-    /* ===============================
-    RESULTADOS
-    =============================== */
+    /* ================= RESULTADOS ================= */
 
     const results = await prisma.evaluationResult.findMany({
       where:{
-        participantId: { in: participantIds }
+        participantId:{ in: participantIds }
       }
     })
 
@@ -77,9 +79,7 @@ router.get("/", async (req,res)=>{
       else rojo++
     })
 
-    /* ===============================
-    COMPETENCIAS ROBUSTAS
-    =============================== */
+    /* ================= COMPETENCIAS ================= */
 
     const competenciasMap:any = {}
 
@@ -91,22 +91,21 @@ router.get("/", async (req,res)=>{
           ? JSON.parse(r.resultJson)
           : r.resultJson
 
-        /* ===== SOPORTA TODAS LAS VARIANTES ===== */
+        if(!json) return
 
-        const competenciasObj =
-          json?.competencies ||
-          json?.competencias ||
+        // soporta múltiples formatos
+        const fuente =
+          json.competencies ||
+          json.competencias ||
           null
 
-        if(competenciasObj && typeof competenciasObj === "object"){
+        if(fuente && typeof fuente === "object"){
 
-          Object.entries(competenciasObj).forEach(([name,value]:any)=>{
+          Object.entries(fuente).forEach(([name,value]:any)=>{
 
             if(!name) return
-            if(name.toLowerCase().includes("sumarse")) return
 
             const num = Number(value)
-
             if(isNaN(num)) return
 
             if(!competenciasMap[name]){
@@ -119,25 +118,22 @@ router.get("/", async (req,res)=>{
           })
         }
 
-        /* ===== ARRAY ===== */
-
-        if(Array.isArray(json?.competenciasDetalle)){
+        // formato array
+        if(Array.isArray(json.competenciasDetalle)){
 
           json.competenciasDetalle.forEach((c:any)=>{
 
-            const name = c.name
-            const num = Number(c.score)
+            if(!c?.name) return
 
-            if(!name) return
-            if(name.toLowerCase().includes("sumarse")) return
+            const num = Number(c.score)
             if(isNaN(num)) return
 
-            if(!competenciasMap[name]){
-              competenciasMap[name] = { total:0, count:0 }
+            if(!competenciasMap[c.name]){
+              competenciasMap[c.name] = { total:0, count:0 }
             }
 
-            competenciasMap[name].total += num
-            competenciasMap[name].count++
+            competenciasMap[c.name].total += num
+            competenciasMap[c.name].count++
 
           })
         }
@@ -148,48 +144,32 @@ router.get("/", async (req,res)=>{
 
     })
 
-    /* ===============================
-    PROMEDIOS LIMPIOS
-    =============================== */
+    /* ================= PROMEDIOS ================= */
 
     const competencias:any = {}
 
     Object.entries(competenciasMap).forEach(([k,v]:any)=>{
-
-      if(!k) return
-      if(v.count === 0) return
-
-      const avg = v.total / v.count
-
-      if(isNaN(avg)) return
-
-      competencias[k] = Math.round(avg)
-
+      if(v.count > 0){
+        const avg = v.total / v.count
+        if(!isNaN(avg)){
+          competencias[k] = Math.round(avg)
+        }
+      }
     })
 
-    /* ===============================
-    ORDENAMIENTO SEGURO
-    =============================== */
+    /* ================= ORDEN ================= */
 
-    const validEntries = Object.entries(competencias)
-      .filter(([name,value]:any)=>
-        typeof name === "string" &&
-        typeof value === "number" &&
-        !isNaN(value)
-      )
+    const entries = Object.entries(competencias)
 
-    const sorted = validEntries.sort((a:any,b:any)=> b[1] - a[1])
+    const sorted = entries.sort((a:any,b:any)=> b[1] - a[1])
 
     const mejores = sorted.slice(0,5)
     const criticas = sorted.slice(-5).reverse()
 
-    /* ===============================
-    RESPUESTA FINAL
-    =============================== */
+    /* ================= RESPONSE ================= */
 
     return res.json({
       ok:true,
-      role:user.role,
       data:{
         participantes: participants.length,
         evaluaciones: totalEvaluaciones,
@@ -203,8 +183,13 @@ router.get("/", async (req,res)=>{
     })
 
   }catch(err){
-    console.error(err)
-    res.status(500).json({ error:"Error dashboard" })
+
+    console.error("ERROR DASHBOARD:", err)
+
+    return res.status(500).json({
+      error:"Error dashboard",
+      detail:String(err)
+    })
   }
 
 })
