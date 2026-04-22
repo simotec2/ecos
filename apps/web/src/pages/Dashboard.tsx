@@ -1,134 +1,161 @@
 import { useEffect, useState } from "react"
 import { apiFetch } from "../api"
 
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend
-} from "chart.js"
+/* ================= COLOR ================= */
+function getColor(value:number){
+  if(value >= 50) return "#dc2626"
+  if(value >= 25) return "#f59e0b"
+  return "#16a34a"
+}
 
-import { Doughnut } from "react-chartjs-2"
-
-ChartJS.register(ArcElement, Tooltip, Legend)
+/* ================= LABEL ================= */
+function getLabel(value:number){
+  if(value >= 50) return "Crítico"
+  if(value >= 25) return "Moderado"
+  return "Controlado"
+}
 
 export default function Dashboard(){
 
-  const [data,setData] = useState<any>(null)
+  const [data,setData] = useState<any>({
+    participantes: 0,
+    semaforo: { verde:0, amarillo:0, rojo:0 },
+    companies: []
+  })
+
+  const [loading,setLoading] = useState(true)
+  const [error,setError] = useState("")
 
   useEffect(()=>{
     load()
   },[])
 
   async function load(){
-    const res = await apiFetch("/api/dashboard")
-    setData(res.data)
+    try{
+      setLoading(true)
+      setError("")
+
+      const res = await apiFetch("/api/dashboard")
+
+      if(!res?.data){
+        throw new Error("Respuesta inválida")
+      }
+
+      setData({
+        participantes: res.data.participantes || 0,
+        semaforo: res.data.semaforo || { verde:0, amarillo:0, rojo:0 },
+        companies: res.data.companies || []
+      })
+
+    }catch(err:any){
+      console.error(err)
+      setError("Error cargando dashboard")
+    }finally{
+      setLoading(false)
+    }
   }
 
-  if(!data) return <div style={{padding:20}}>Cargando...</div>
+  /* ================= ESTADOS ================= */
 
-  const total =
-    data.semaforo.verde +
-    data.semaforo.amarillo +
-    data.semaforo.rojo || 1
-
-  const pct = (v:number)=> Math.round((v/total)*100)
-
-  /* ================= COMPETENCIAS ================= */
-
-  const entries = Object.entries(data.competencias || {})
-  const sorted = [...entries].sort((a:any,b:any)=> b[1] - a[1])
-
-  const top3 = sorted.slice(0,3)
-  const bottom3 = [...sorted].reverse().slice(0,3)
-
-  /* ================= CRÍTICOS ================= */
-
-  const criticos = data.ranking
-    .filter((p:any)=>p.estado === "ROJO")
-    .slice(0,5)
-
-  /* ================= DONUT ================= */
-
-  const donutData = {
-    labels:["Verde","Amarillo","Rojo"],
-    datasets:[{
-      data:[
-        data.semaforo.verde,
-        data.semaforo.amarillo,
-        data.semaforo.rojo
-      ],
-      backgroundColor:["#16a34a","#f59e0b","#dc2626"],
-      borderWidth:0
-    }]
+  if(loading){
+    return <div style={{padding:20}}>Cargando dashboard...</div>
   }
+
+  if(error){
+    return <div style={{padding:20,color:"red"}}>{error}</div>
+  }
+
+  /* ================= UI ================= */
 
   return(
     <div style={styles.container}>
 
-      <h2 style={styles.title}>Dashboard Ejecutivo</h2>
+      {/* HEADER */}
+      <div>
+        <h2 style={styles.title}>Dashboard Ejecutivo</h2>
+        <p style={styles.subtitle}>
+          Estado de riesgo por empresa
+        </p>
+      </div>
 
       {/* KPI */}
       <div style={styles.kpiGrid}>
-        <KPI title="Evaluados" value={total}/>
-        <KPI title="Recomendables" value={`${pct(data.semaforo.verde)}%`} color="#16a34a"/>
-        <KPI title="Observaciones" value={`${pct(data.semaforo.amarillo)}%`} color="#f59e0b"/>
-        <KPI title="Críticos" value={`${pct(data.semaforo.rojo)}%`} color="#dc2626"/>
+        <KPI title="Evaluados" value={data.participantes}/>
+        <KPI title="Verde" value={data.semaforo.verde} color="#16a34a"/>
+        <KPI title="Amarillo" value={data.semaforo.amarillo} color="#f59e0b"/>
+        <KPI title="Rojo" value={data.semaforo.rojo} color="#dc2626"/>
       </div>
 
-      {/* RIESGO */}
+      {/* EMPRESAS */}
       <div style={styles.card}>
-        <h3 style={styles.subtitle}>Nivel de riesgo</h3>
+        <h3 style={styles.sectionTitle}>Empresas</h3>
 
-        <div style={styles.donutWrap}>
-          <Doughnut data={donutData}/>
-          <div style={styles.center}>
-            {pct(data.semaforo.rojo)}%
-            <span style={styles.centerLabel}>riesgo crítico</span>
+        {data.companies.length === 0 && (
+          <div style={{padding:20,color:"#6b7280"}}>
+            Sin datos disponibles
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* COMPETENCIAS */}
-      <div style={styles.grid}>
+        {data.companies.length > 0 && (
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>Empresa</th>
+                <th style={styles.th}>Evaluados</th>
+                <th style={styles.th}>Críticos</th>
+                <th style={styles.th}>Riesgo</th>
+                <th style={styles.th}>Recomendación</th>
+              </tr>
+            </thead>
 
-        <div style={styles.card}>
-          <h3 style={styles.subtitle}>Fortalezas</h3>
-          {top3.map((c:any)=>(
-            <Row key={c[0]} label={c[0]} value={c[1]} color="#16a34a"/>
-          ))}
-        </div>
+            <tbody>
+              {data.companies.map((c:any)=>{
 
-        <div style={styles.card}>
-          <h3 style={styles.subtitle}>Brechas críticas</h3>
-          {bottom3.map((c:any)=>(
-            <Row key={c[0]} label={c[0]} value={c[1]} color="#dc2626"/>
-          ))}
-        </div>
+                const riesgo = Number(c.riesgo || 0)
+                const color = getColor(riesgo)
 
-      </div>
+                return(
+                  <tr key={c.id}>
+                    <td style={styles.td}>{c.name || "-"}</td>
 
-      {/* INSIGHT (CORTO Y LIMPIO) */}
-      <div style={styles.insight}>
-        {data.insight}
-      </div>
+                    <td style={styles.td}>
+                      {c.total || 0}
+                    </td>
 
-      {/* FOCO */}
-      <div style={styles.card}>
-        <h3 style={styles.subtitle}>Foco de intervención</h3>
+                    <td style={styles.td}>
+                      <span style={{
+                        ...styles.badge,
+                        background:"#dc2626"
+                      }}>
+                        {c.rojo || 0}
+                      </span>
+                    </td>
 
-        <p style={styles.note}>
-          {criticos.length} trabajadores en condición crítica
-        </p>
+                    <td style={styles.td}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <div style={{
+                          ...styles.riskBar,
+                          background: color,
+                          width: `${riesgo}%`
+                        }}/>
+                        <span style={{color,fontWeight:600}}>
+                          {riesgo}%
+                        </span>
+                      </div>
+                    </td>
 
-        {criticos.map((p:any, i:number)=>(
-          <div key={i} style={styles.row}>
-            <span>{p.nombre}</span>
-            <strong style={{color:"#dc2626"}}>
-              {p.score}%
-            </strong>
-          </div>
-        ))}
+                    <td style={styles.td}>
+                      <span style={{color}}>
+                        {c.recomendacion || "-"}
+                      </span>
+                    </td>
+
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
 
       </div>
 
@@ -136,53 +163,50 @@ export default function Dashboard(){
   )
 }
 
-/* ================= COMPONENTES ================= */
-
+/* ================= KPI ================= */
 function KPI({title,value,color}:any){
   return(
     <div style={{
-      ...styles.kpi,
-      borderTop:`4px solid ${color || "#e5e7eb"}`
+      background:"#fff",
+      padding:"18px",
+      borderRadius:"16px",
+      boxShadow:"0 8px 25px rgba(0,0,0,0.05)",
+      borderLeft:`5px solid ${color || "#ddd"}`
     }}>
-      <span style={styles.kpiLabel}>{title}</span>
-      <strong style={{color}}>
+      <div style={{fontSize:12,color:"#6b7280"}}>
+        {title}
+      </div>
+      <div style={{
+        fontSize:28,
+        fontWeight:700,
+        color:color || "#111"
+      }}>
         {value}
-      </strong>
-    </div>
-  )
-}
-
-function Row({label,value,color}:any){
-  return(
-    <div style={styles.row}>
-      <span>{label}</span>
-      <strong style={{color}}>
-        {value}%
-      </strong>
+      </div>
     </div>
   )
 }
 
 /* ================= ESTILOS ================= */
-
 const styles:any = {
 
   container:{
-    padding:20,
+    padding:"20px",
     background:"#f9fafb",
+    minHeight:"100vh",
     display:"grid",
     gap:20
   },
 
   title:{
-    fontSize:20,
+    margin:0,
     fontWeight:700
   },
 
   subtitle:{
-    fontSize:14,
-    fontWeight:600,
-    marginBottom:10
+    margin:0,
+    color:"#6b7280",
+    fontSize:13
   },
 
   kpiGrid:{
@@ -191,75 +215,47 @@ const styles:any = {
     gap:15
   },
 
-  kpi:{
-    background:"#fff",
-    padding:15,
-    borderRadius:10,
-    display:"flex",
-    flexDirection:"column",
-    gap:5
-  },
-
-  kpiLabel:{
-    fontSize:12,
-    color:"#6b7280"
-  },
-
   card:{
     background:"#fff",
-    padding:20,
-    borderRadius:12
+    padding:"20px",
+    borderRadius:"16px",
+    boxShadow:"0 8px 25px rgba(0,0,0,0.05)"
   },
 
-  grid:{
-    display:"grid",
-    gridTemplateColumns:"1fr 1fr",
-    gap:20
+  sectionTitle:{
+    marginBottom:10,
+    fontSize:15,
+    fontWeight:600
   },
 
-  donutWrap:{
-    position:"relative",
-    height:220,
-    display:"flex",
-    alignItems:"center",
-    justifyContent:"center"
+  table:{
+    width:"100%",
+    borderCollapse:"collapse"
   },
 
-  center:{
-    position:"absolute",
-    textAlign:"center",
-    fontSize:28,
-    fontWeight:700
-  },
-
-  centerLabel:{
-    display:"block",
-    fontSize:12,
-    fontWeight:400,
+  th:{
+    textAlign:"left",
+    padding:"10px",
+    borderBottom:"1px solid #e5e7eb",
+    fontSize:13,
     color:"#6b7280"
   },
 
-  insight:{
-    background:"#fff",
-    padding:16,
-    borderRadius:12,
-    fontSize:14,
-    color:"#374151",
-    lineHeight:1.4,
-    borderLeft:"4px solid #2563eb"
+  td:{
+    padding:"12px",
+    borderBottom:"1px solid #f1f5f9"
   },
 
-  note:{
-    fontSize:13,
-    color:"#6b7280",
-    marginBottom:10
+  badge:{
+    color:"#fff",
+    padding:"4px 10px",
+    borderRadius:6,
+    fontSize:12
   },
 
-  row:{
-    display:"flex",
-    justifyContent:"space-between",
-    padding:"8px 0",
-    borderBottom:"1px solid #eee"
+  riskBar:{
+    height:8,
+    borderRadius:6
   }
 
 }

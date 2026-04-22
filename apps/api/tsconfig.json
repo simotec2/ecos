@@ -6,11 +6,12 @@
     "outDir": "./dist",
     "esModuleInterop": true,
     "strict": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"],
   "exclude": [
-    "node_modules",
-    "src/scripts/**/*"
+    "node_modules"
   ]
 }
