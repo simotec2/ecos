@@ -16,7 +16,43 @@ function getUser(req:any){
   }
 }
 
-/* ================= INSIGHT RÁPIDO ================= */
+/* ================= CONSOLIDADOR ================= */
+function consolidateResults(results:any[]){
+
+  const byType:Record<string, number> = {}
+
+  results.forEach(r=>{
+    const type = r.evaluation?.type
+    const score = Number(r.score)
+
+    if(!type || isNaN(score)) return
+
+    // solo 1 por tipo (el más reciente ya viene primero)
+    if(byType[type] === undefined){
+      byType[type] = score
+    }
+  })
+
+  const scores = Object.values(byType) as number[]
+
+  if(scores.length === 0) return null
+
+  const sum = scores.reduce((acc:number, val:number)=> acc + val, 0)
+
+  const finalScore = sum / scores.length
+
+  let estado:"VERDE" | "AMARILLO" | "ROJO" = "VERDE"
+
+  if(finalScore < 55) estado = "ROJO"
+  else if(finalScore < 85) estado = "AMARILLO"
+
+  return {
+    score: Math.round(finalScore),
+    estado
+  }
+}
+
+/* ================= INSIGHT ================= */
 function generateInsight({semaforo, competencias, total}:any){
 
   if(!total) return "Sin datos suficientes."
@@ -30,7 +66,7 @@ function generateInsight({semaforo, competencias, total}:any){
   const bottom = [...sorted].reverse().slice(0,2).map((c:any)=>c[0])
 
   if(rojoPct > 50){
-    return `Alto nivel de riesgo (${rojoPct}%). Brechas en ${bottom.join(" y ")}. Se recomienda intervención inmediata.`
+    return `Alto nivel de riesgo (${rojoPct}%). Brechas en ${bottom.join(" y ")}.`
   }
 
   if(rojoPct > 25){
@@ -69,32 +105,37 @@ router.get("/", async (req,res)=>{
       select:{ id:true, name:true }
     })
 
-    /* ================= ASIGNACIONES ================= */
-
-    const assignments = await prisma.assignment.findMany({
-      where:{ participantId:{ in: participantIds } }
-    })
-
-    const totalEvaluaciones = assignments.length
-    const pendientes = assignments.filter(a=>a.status !== "COMPLETED").length
-
-    /* ================= RESULTADOS (CORREGIDO) ================= */
+    /* ================= RESULTADOS ================= */
 
     const allResults = await prisma.evaluationResult.findMany({
       where:{ participantId:{ in: participantIds } },
+      include:{ evaluation:true },
       orderBy:{ createdAt:"desc" }
     })
 
-    /* 🔥 SOLO 1 RESULTADO POR PARTICIPANTE */
-    const resultsMap:any = {}
+    /* ================= CONSOLIDAR POR PARTICIPANTE ================= */
+
+    const grouped:any = {}
 
     allResults.forEach(r=>{
-      if(!resultsMap[r.participantId]){
-        resultsMap[r.participantId] = r
+      if(!grouped[r.participantId]){
+        grouped[r.participantId] = []
       }
+      grouped[r.participantId].push(r)
     })
 
-    const results:any[] = Object.values(resultsMap)
+    const consolidated:any[] = []
+
+    Object.entries(grouped).forEach(([participantId, results]:any)=>{
+
+      const final = consolidateResults(results)
+      if(!final) return
+
+      consolidated.push({
+        participantId,
+        ...final
+      })
+    })
 
     /* ================= SEMÁFORO ================= */
 
@@ -102,9 +143,9 @@ router.get("/", async (req,res)=>{
     let amarillo = 0
     let rojo = 0
 
-    results.forEach(r=>{
-      if(r.score >= 85) verde++
-      else if(r.score >= 55) amarillo++
+    consolidated.forEach(r=>{
+      if(r.estado === "VERDE") verde++
+      else if(r.estado === "AMARILLO") amarillo++
       else rojo++
     })
 
@@ -112,7 +153,7 @@ router.get("/", async (req,res)=>{
 
     const competenciasMap:any = {}
 
-    results.forEach(r=>{
+    allResults.forEach(r=>{
 
       try{
 
@@ -120,7 +161,6 @@ router.get("/", async (req,res)=>{
           ? JSON.parse(r.resultJson)
           : r.resultJson
 
-        /* PETS (ARRAY) */
         if(Array.isArray(json?.competencies)){
           json.competencies.forEach((c:any)=>{
             if(!c?.name) return
@@ -134,30 +174,7 @@ router.get("/", async (req,res)=>{
           })
         }
 
-        /* ICOM / SECURITY (OBJETO) */
-        const fuente = json?.competencies || json?.competencias
-
-        if(fuente && typeof fuente === "object"){
-          Object.entries(fuente).forEach(([name,value]:any)=>{
-
-            if(!name) return
-
-            const num = Number(value)
-            if(isNaN(num)) return
-
-            if(!competenciasMap[name]){
-              competenciasMap[name] = { total:0, count:0 }
-            }
-
-            competenciasMap[name].total += num
-            competenciasMap[name].count++
-          })
-        }
-
-      }catch(e){
-        console.error("Error competencias:", e)
-      }
-
+      }catch{}
     })
 
     let competencias:any = {}
@@ -177,8 +194,6 @@ router.get("/", async (req,res)=>{
       }
     }
 
-    /* ================= TOP 3 ================= */
-
     const entries = Object.entries(competencias)
     const sorted = entries.sort((a:any,b:any)=> b[1] - a[1])
 
@@ -189,21 +204,16 @@ router.get("/", async (req,res)=>{
 
     const ranking:any[] = []
 
-    results.forEach(r=>{
+    consolidated.forEach(r=>{
 
-      const participante = participants.find(p=>p.id === r.participantId)
-      if(!participante) return
-
-      let estado = "VERDE"
-      if(r.score < 55) estado = "ROJO"
-      else if(r.score < 85) estado = "AMARILLO"
+      const p = participants.find(x=>x.id === r.participantId)
+      if(!p) return
 
       ranking.push({
-        nombre: `${participante.nombre} ${participante.apellido}`,
-        score: Math.round(r.score || 0),
-        estado
+        nombre: `${p.nombre} ${p.apellido}`,
+        score: r.score,
+        estado: r.estado
       })
-
     })
 
     ranking.sort((a,b)=> a.score - b.score)
@@ -213,7 +223,7 @@ router.get("/", async (req,res)=>{
     const insight = generateInsight({
       semaforo:{ verde, amarillo, rojo },
       competencias,
-      total: results.length
+      total: consolidated.length
     })
 
     /* ================= RESPONSE ================= */
@@ -221,9 +231,7 @@ router.get("/", async (req,res)=>{
     return res.json({
       ok:true,
       data:{
-        participantes: results.length, // 🔥 ahora correcto
-        evaluaciones: totalEvaluaciones,
-        pendientes,
+        participantes: consolidated.length,
         semaforo:{ verde, amarillo, rojo },
         competencias,
         mejores,
@@ -236,7 +244,7 @@ router.get("/", async (req,res)=>{
 
   }catch(err){
 
-    console.error("ERROR DASHBOARD:", err)
+    console.error(err)
 
     return res.status(500).json({
       error:"Error dashboard",
