@@ -1,6 +1,27 @@
 import { useEffect, useState } from "react"
 import { apiFetch } from "../api"
 
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement
+} from "chart.js"
+
+import { Doughnut, Bar } from "react-chartjs-2"
+
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement
+)
+
 /* ================= COLOR ================= */
 function getColor(value:number){
   if(value >= 50) return "#dc2626"
@@ -8,17 +29,16 @@ function getColor(value:number){
   return "#16a34a"
 }
 
-/* ================= COMPONENTE ================= */
 export default function Dashboard(){
 
   const [data,setData] = useState<any>({
     participantes: 0,
     semaforo: { verde:0, amarillo:0, rojo:0 },
-    companies: []
+    companies: [],
+    brechas: {}
   })
 
   const [loading,setLoading] = useState(true)
-  const [error,setError] = useState("")
 
   useEffect(()=>{
     load()
@@ -26,47 +46,69 @@ export default function Dashboard(){
 
   async function load(){
     try{
-      setLoading(true)
-      setError("")
-
       const res = await apiFetch("/api/dashboard")
-
-      if(!res?.data){
-        throw new Error("Respuesta inválida")
-      }
 
       setData({
         participantes: res.data.participantes || 0,
         semaforo: res.data.semaforo || { verde:0, amarillo:0, rojo:0 },
-        companies: res.data.companies || []
+        companies: res.data.companies || [],
+        brechas: res.data.competencias || {}
       })
 
-    }catch(err:any){
+    }catch(err){
       console.error(err)
-      setError("Error cargando dashboard")
     }finally{
       setLoading(false)
     }
   }
 
-  /* ================= ESTADOS ================= */
-
   if(loading){
     return <div style={{padding:20}}>Cargando dashboard...</div>
   }
 
-  if(error){
-    return <div style={{padding:20,color:"red"}}>{error}</div>
-  }
-
   const companies = data.companies || []
 
-  /* ================= EMPRESA MÁS CRÍTICA ================= */
+  /* ================= DONUT ================= */
+  const donutData = {
+    labels:["Verde","Amarillo","Rojo"],
+    datasets:[{
+      data:[
+        data.semaforo.verde,
+        data.semaforo.amarillo,
+        data.semaforo.rojo
+      ],
+      backgroundColor:["#16a34a","#f59e0b","#dc2626"]
+    }]
+  }
 
-  const topCompany =
-    companies.length > 0
-      ? [...companies].sort((a:any,b:any)=> b.riesgo - a.riesgo)[0]
-      : null
+  /* ================= RANKING EMPRESAS ================= */
+  const sortedCompanies = [...companies]
+    .sort((a:any,b:any)=> b.riesgo - a.riesgo)
+    .slice(0,5)
+
+  const rankingData = {
+    labels: sortedCompanies.map((c:any)=>c.name),
+    datasets:[{
+      data: sortedCompanies.map((c:any)=>c.riesgo),
+      backgroundColor: sortedCompanies.map((c:any)=>getColor(c.riesgo))
+    }]
+  }
+
+  /* ================= BRECHAS ================= */
+  const brechasEntries = Object.entries(data.brechas || {})
+    .sort((a:any,b:any)=> a[1] - b[1])
+    .slice(0,4)
+
+  const brechasData = {
+    labels: brechasEntries.map((b:any)=>b[0]),
+    datasets:[{
+      data: brechasEntries.map((b:any)=>b[1]),
+      backgroundColor:"#dc2626"
+    }]
+  }
+
+  /* ================= ALERTA ================= */
+  const worst = sortedCompanies[0]
 
   return(
     <div style={styles.container}>
@@ -75,7 +117,7 @@ export default function Dashboard(){
       <div>
         <h2 style={styles.title}>Dashboard Ejecutivo</h2>
         <p style={styles.subtitle}>
-          Estado de riesgo por empresa
+          Gestión de riesgo operacional
         </p>
       </div>
 
@@ -87,41 +129,52 @@ export default function Dashboard(){
         <KPI title="Rojo" value={data.semaforo.rojo} color="#dc2626"/>
       </div>
 
-      {/* EMPRESA CRÍTICA */}
-      {topCompany && (
-        <div style={styles.card}>
-          <h3 style={styles.sectionTitle}>Empresa con mayor riesgo</h3>
-
-          <div style={styles.topRow}>
-            <div>
-              <div style={styles.companyName}>
-                {topCompany.name}
-              </div>
-              <div style={styles.companySub}>
-                {topCompany.total} evaluados
-              </div>
-            </div>
-
-            <div style={{
-              fontSize:32,
-              fontWeight:700,
-              color: getColor(topCompany.riesgo)
-            }}>
-              {topCompany.riesgo}%
-            </div>
-          </div>
-
-          <div style={{
-            marginTop:10,
-            color:"#6b7280",
-            fontSize:13
-          }}>
-            {topCompany.recomendacion}
-          </div>
+      {/* ALERTA */}
+      {worst && worst.riesgo >= 25 && (
+        <div style={{
+          background: worst.riesgo >= 50 ? "#fee2e2" : "#fef3c7",
+          borderLeft: `6px solid ${getColor(worst.riesgo)}`,
+          padding: "16px",
+          borderRadius: "12px"
+        }}>
+          ⚠ {worst.name} presenta un riesgo de {worst.riesgo}%
         </div>
       )}
 
-      {/* TARJETAS EMPRESAS */}
+      {/* GRÁFICOS PRINCIPALES */}
+      <div style={styles.grid2}>
+
+        {/* DONUT */}
+        <Card title="Estado general">
+          <div style={{height:250}}>
+            <Doughnut data={donutData} options={{maintainAspectRatio:false}}/>
+          </div>
+        </Card>
+
+        {/* RANKING */}
+        <Card title="Empresas con mayor riesgo">
+          <div style={{height:250}}>
+            <Bar data={rankingData} options={{
+              maintainAspectRatio:false,
+              plugins:{legend:{display:false}}
+            }}/>
+          </div>
+        </Card>
+
+      </div>
+
+      {/* BRECHAS */}
+      <Card title="Brechas críticas del sistema">
+        <div style={{height:250}}>
+          <Bar data={brechasData} options={{
+            indexAxis:"y",
+            maintainAspectRatio:false,
+            plugins:{legend:{display:false}}
+          }}/>
+        </div>
+      </Card>
+
+      {/* TARJETAS EMPRESA */}
       <div style={styles.grid}>
 
         {companies.map((c:any)=>{
@@ -151,55 +204,9 @@ export default function Dashboard(){
                 {c.riesgo}%
               </div>
 
-              <div style={{
-                marginTop:10,
-                fontSize:12,
-                color:"#6b7280"
-              }}>
-                {c.recomendacion}
-              </div>
-
             </div>
           )
         })}
-
-      </div>
-
-      {/* TABLA */}
-      <div style={styles.card}>
-        <h3 style={styles.sectionTitle}>Detalle por empresa</h3>
-
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>Empresa</th>
-              <th style={styles.th}>Evaluados</th>
-              <th style={styles.th}>Críticos</th>
-              <th style={styles.th}>Riesgo</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {companies.map((c:any)=>(
-              <tr key={c.id}>
-                <td style={styles.td}>{c.name}</td>
-                <td style={styles.td}>{c.total}</td>
-                <td style={styles.td}>
-                  <span style={styles.badge}>
-                    {c.rojo}
-                  </span>
-                </td>
-                <td style={{
-                  ...styles.td,
-                  color:getColor(c.riesgo),
-                  fontWeight:600
-                }}>
-                  {c.riesgo}%
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
 
       </div>
 
@@ -207,7 +214,8 @@ export default function Dashboard(){
   )
 }
 
-/* ================= KPI ================= */
+/* ================= COMPONENTES ================= */
+
 function KPI({title,value,color}:any){
   return(
     <div style={{
@@ -231,7 +239,24 @@ function KPI({title,value,color}:any){
   )
 }
 
+function Card({title,children}:any){
+  return(
+    <div style={{
+      background:"#fff",
+      padding:"20px",
+      borderRadius:"16px",
+      boxShadow:"0 8px 25px rgba(0,0,0,0.05)"
+    }}>
+      <h3 style={{marginBottom:10,fontSize:15,fontWeight:600}}>
+        {title}
+      </h3>
+      {children}
+    </div>
+  )
+}
+
 /* ================= ESTILOS ================= */
+
 const styles:any = {
 
   container:{
@@ -265,23 +290,17 @@ const styles:any = {
     gap:20
   },
 
+  grid2:{
+    display:"grid",
+    gridTemplateColumns:"1fr 1fr",
+    gap:20
+  },
+
   card:{
     background:"#fff",
     padding:"20px",
     borderRadius:"16px",
     boxShadow:"0 8px 25px rgba(0,0,0,0.05)"
-  },
-
-  sectionTitle:{
-    marginBottom:10,
-    fontSize:15,
-    fontWeight:600
-  },
-
-  topRow:{
-    display:"flex",
-    justifyContent:"space-between",
-    alignItems:"center"
   },
 
   companyName:{
@@ -292,32 +311,6 @@ const styles:any = {
   companySub:{
     fontSize:12,
     color:"#6b7280"
-  },
-
-  table:{
-    width:"100%",
-    borderCollapse:"collapse"
-  },
-
-  th:{
-    textAlign:"left",
-    padding:"10px",
-    borderBottom:"1px solid #e5e7eb",
-    fontSize:13,
-    color:"#6b7280"
-  },
-
-  td:{
-    padding:"12px",
-    borderBottom:"1px solid #f1f5f9"
-  },
-
-  badge:{
-    background:"#dc2626",
-    color:"#fff",
-    padding:"4px 10px",
-    borderRadius:6,
-    fontSize:12
   }
 
 }
