@@ -26,7 +26,7 @@ router.get("/", async (req,res)=>{
       : {}
 
     /* ===============================
-    🔥 PARTICIPANTES
+    PARTICIPANTES
     =============================== */
 
     const participants = await prisma.participant.findMany({
@@ -37,7 +37,7 @@ router.get("/", async (req,res)=>{
     const participantIds = participants.map(p=>p.id)
 
     /* ===============================
-    🔥 EMPRESAS (NUEVO)
+    EMPRESAS
     =============================== */
 
     const empresas = await prisma.company.findMany({
@@ -45,7 +45,7 @@ router.get("/", async (req,res)=>{
     })
 
     /* ===============================
-    🔥 ASIGNACIONES
+    ASIGNACIONES
     =============================== */
 
     const assignments = await prisma.assignment.findMany({
@@ -58,7 +58,7 @@ router.get("/", async (req,res)=>{
     const pendientes = assignments.filter(a=>a.status !== "COMPLETED").length
 
     /* ===============================
-    🔥 RESULTADOS
+    RESULTADOS
     =============================== */
 
     const results = await prisma.evaluationResult.findMany({
@@ -78,7 +78,7 @@ router.get("/", async (req,res)=>{
     })
 
     /* ===============================
-    🔥 COMPETENCIAS (ROBUSTO)
+    COMPETENCIAS ROBUSTAS
     =============================== */
 
     const competenciasMap:any = {}
@@ -91,38 +91,52 @@ router.get("/", async (req,res)=>{
           ? JSON.parse(r.resultJson)
           : r.resultJson
 
-        // OBJETO
-        if(json?.competencies){
+        /* ===== SOPORTA TODAS LAS VARIANTES ===== */
 
-          Object.entries(json.competencies).forEach(([name,value]:any)=>{
+        const competenciasObj =
+          json?.competencies ||
+          json?.competencias ||
+          null
 
-            if(!name || name.toLowerCase().includes("sumarse")) return
+        if(competenciasObj && typeof competenciasObj === "object"){
+
+          Object.entries(competenciasObj).forEach(([name,value]:any)=>{
+
+            if(!name) return
+            if(name.toLowerCase().includes("sumarse")) return
+
+            const num = Number(value)
+
+            if(isNaN(num)) return
 
             if(!competenciasMap[name]){
               competenciasMap[name] = { total:0, count:0 }
             }
 
-            competenciasMap[name].total += Number(value)
+            competenciasMap[name].total += num
             competenciasMap[name].count++
 
           })
         }
 
-        // ARRAY
+        /* ===== ARRAY ===== */
+
         if(Array.isArray(json?.competenciasDetalle)){
 
           json.competenciasDetalle.forEach((c:any)=>{
 
             const name = c.name
-            const score = Number(c.score || 0)
+            const num = Number(c.score)
 
-            if(!name || name.toLowerCase().includes("sumarse")) return
+            if(!name) return
+            if(name.toLowerCase().includes("sumarse")) return
+            if(isNaN(num)) return
 
             if(!competenciasMap[name]){
               competenciasMap[name] = { total:0, count:0 }
             }
 
-            competenciasMap[name].total += score
+            competenciasMap[name].total += num
             competenciasMap[name].count++
 
           })
@@ -134,22 +148,43 @@ router.get("/", async (req,res)=>{
 
     })
 
+    /* ===============================
+    PROMEDIOS LIMPIOS
+    =============================== */
+
     const competencias:any = {}
 
     Object.entries(competenciasMap).forEach(([k,v]:any)=>{
-      if(v.count > 0){
-        competencias[k] = Math.round(v.total / v.count)
-      }
+
+      if(!k) return
+      if(v.count === 0) return
+
+      const avg = v.total / v.count
+
+      if(isNaN(avg)) return
+
+      competencias[k] = Math.round(avg)
+
     })
 
-    const sorted = Object.entries(competencias)
-      .sort((a:any,b:any)=> b[1] - a[1])
+    /* ===============================
+    ORDENAMIENTO SEGURO
+    =============================== */
+
+    const validEntries = Object.entries(competencias)
+      .filter(([name,value]:any)=>
+        typeof name === "string" &&
+        typeof value === "number" &&
+        !isNaN(value)
+      )
+
+    const sorted = validEntries.sort((a:any,b:any)=> b[1] - a[1])
 
     const mejores = sorted.slice(0,5)
     const criticas = sorted.slice(-5).reverse()
 
     /* ===============================
-    🔥 RESPUESTA FINAL
+    RESPUESTA FINAL
     =============================== */
 
     return res.json({

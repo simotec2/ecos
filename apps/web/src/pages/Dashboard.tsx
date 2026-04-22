@@ -177,24 +177,41 @@ export default function Dashboard(){
           <Title>Nivel de Riesgo</Title>
           <div style={{height:240}}>
             <Doughnut 
-              data={pieData} 
-              options={{
-                cutout:"70%",
-                plugins:{
-                  legend:{position:"bottom"},
-                  tooltip:{
-                    callbacks:{
-                      label:(ctx:any)=>{
-                        const total = ctx.dataset.data.reduce((a:number,b:number)=>a+b,0)
-                        const val = ctx.raw
-                        const pct = Math.round((val/total)*100)
-                        return `${ctx.label}: ${val} (${pct}%)`
-                      }
+            data={pieData} 
+            options={{
+              cutout:"70%",
+              plugins:{
+                legend:{ position:"bottom" },
+                tooltip:{
+                  callbacks:{
+                    label:(ctx:any)=>{
+                      const total = ctx.dataset.data.reduce((a:number,b:number)=>a+b,0)
+                      const val = ctx.raw
+                      const pct = total > 0 ? Math.round((val/total)*100) : 0
+                      return `${ctx.label}: ${val} (${pct}%)`
                     }
                   }
                 }
-              }}
-            />
+              }
+            }}
+          />
+           {/* TEXTO CENTRAL */}
+  <div style={{
+    position:"absolute",
+    top:"50%",
+    left:"50%",
+    transform:"translate(-50%, -50%)",
+    textAlign:"center"
+  }}>
+    <div style={{fontSize:26,fontWeight:700}}>
+      {porcentajeCritico}%
+    </div>
+    <div style={{fontSize:12,color:"#6b7280"}}>
+      Riesgo crítico
+    </div>
+  </div>
+
+</div>
           </div>
         </Card>
 
