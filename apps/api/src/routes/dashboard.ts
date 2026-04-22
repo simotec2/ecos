@@ -25,11 +25,28 @@ router.get("/", async (req,res)=>{
       ? { companyId: user.companyId }
       : {}
 
+    /* ===============================
+    🔥 PARTICIPANTES
+    =============================== */
+
     const participants = await prisma.participant.findMany({
-      where: companyFilter
+      where: companyFilter,
+      include:{ company:true }
     })
 
     const participantIds = participants.map(p=>p.id)
+
+    /* ===============================
+    🔥 EMPRESAS (NUEVO)
+    =============================== */
+
+    const empresas = await prisma.company.findMany({
+      select:{ id:true, name:true }
+    })
+
+    /* ===============================
+    🔥 ASIGNACIONES
+    =============================== */
 
     const assignments = await prisma.assignment.findMany({
       where:{
@@ -39,6 +56,10 @@ router.get("/", async (req,res)=>{
 
     const totalEvaluaciones = assignments.length
     const pendientes = assignments.filter(a=>a.status !== "COMPLETED").length
+
+    /* ===============================
+    🔥 RESULTADOS
+    =============================== */
 
     const results = await prisma.evaluationResult.findMany({
       where:{
@@ -57,7 +78,7 @@ router.get("/", async (req,res)=>{
     })
 
     /* ===============================
-    🔥 COMPETENCIAS (CORREGIDO REAL)
+    🔥 COMPETENCIAS (ROBUSTO)
     =============================== */
 
     const competenciasMap:any = {}
@@ -70,10 +91,12 @@ router.get("/", async (req,res)=>{
           ? JSON.parse(r.resultJson)
           : r.resultJson
 
-        /* ===== CASO 1: OBJETO ===== */
-        if(json?.competencias && typeof json.competencias === "object"){
+        // OBJETO
+        if(json?.competencies){
 
-          Object.entries(json.competencias).forEach(([name,value]:any)=>{
+          Object.entries(json.competencies).forEach(([name,value]:any)=>{
+
+            if(!name || name.toLowerCase().includes("sumarse")) return
 
             if(!competenciasMap[name]){
               competenciasMap[name] = { total:0, count:0 }
@@ -85,13 +108,15 @@ router.get("/", async (req,res)=>{
           })
         }
 
-        /* ===== CASO 2: ARRAY ===== */
-        else if(Array.isArray(json?.competenciasDetalle)){
+        // ARRAY
+        if(Array.isArray(json?.competenciasDetalle)){
 
           json.competenciasDetalle.forEach((c:any)=>{
 
             const name = c.name
             const score = Number(c.score || 0)
+
+            if(!name || name.toLowerCase().includes("sumarse")) return
 
             if(!competenciasMap[name]){
               competenciasMap[name] = { total:0, count:0 }
@@ -112,14 +137,20 @@ router.get("/", async (req,res)=>{
     const competencias:any = {}
 
     Object.entries(competenciasMap).forEach(([k,v]:any)=>{
-      competencias[k] = Math.round(v.total / v.count)
+      if(v.count > 0){
+        competencias[k] = Math.round(v.total / v.count)
+      }
     })
 
     const sorted = Object.entries(competencias)
-      .sort((a:any,b:any)=> a[1]-b[1])
+      .sort((a:any,b:any)=> b[1] - a[1])
 
-    const criticas = sorted.slice(0,5)
-    const mejores = sorted.slice(-5).reverse()
+    const mejores = sorted.slice(0,5)
+    const criticas = sorted.slice(-5).reverse()
+
+    /* ===============================
+    🔥 RESPUESTA FINAL
+    =============================== */
 
     return res.json({
       ok:true,
@@ -130,8 +161,9 @@ router.get("/", async (req,res)=>{
         pendientes,
         semaforo:{ verde, amarillo, rojo },
         competencias,
+        mejores,
         criticas,
-        mejores
+        empresas
       }
     })
 
