@@ -30,6 +30,12 @@ function getColor(value:number){
   return "#dc2626"
 }
 
+function estadoColor(estado:string){
+  if(estado === "ROJO") return "#dc2626"
+  if(estado === "AMARILLO") return "#f59e0b"
+  return "#16a34a"
+}
+
 /* ================= COMPONENT ================= */
 
 export default function Dashboard(){
@@ -109,7 +115,7 @@ export default function Dashboard(){
         <MiniCard title="Críticos" value={`${pct(data.semaforo.rojo)}%`} color="#dc2626"/>
       </div>
 
-      {/* BLOQUE PRINCIPAL */}
+      {/* GRID PRINCIPAL */}
       <div style={styles.grid}>
 
         {/* DONUT */}
@@ -140,7 +146,6 @@ export default function Dashboard(){
             </div>
 
           </div>
-
         </Card>
 
         {/* COMPETENCIAS */}
@@ -188,6 +193,47 @@ export default function Dashboard(){
         </Card>
 
       </div>
+
+      {/* 🔥 NUEVO: RANKING */}
+      <Card>
+        <h3 style={styles.title}>Trabajadores críticos</h3>
+
+        <div style={{marginTop:10}}>
+
+          {data.ranking.slice(0,10).map((p:any, i:number)=>(
+            <div key={i} style={styles.rowRanking}>
+
+              <span style={{fontWeight:500}}>
+                {p.nombre}
+              </span>
+
+              <div style={{display:"flex", gap:10, alignItems:"center"}}>
+
+                <span style={{
+                  fontWeight:700,
+                  color: estadoColor(p.estado)
+                }}>
+                  {p.score}%
+                </span>
+
+                <span style={{
+                  fontSize:12,
+                  padding:"4px 8px",
+                  borderRadius:6,
+                  background:estadoColor(p.estado),
+                  color:"#fff"
+                }}>
+                  {p.estado}
+                </span>
+
+              </div>
+
+            </div>
+          ))}
+
+        </div>
+
+      </Card>
 
     </div>
   )
@@ -310,6 +356,13 @@ const styles:any = {
     justifyContent:"space-between",
     padding:"8px 0",
     borderBottom:"1px solid #eee"
+  },
+
+  rowRanking:{
+    display:"flex",
+    justifyContent:"space-between",
+    padding:"10px 0",
+    borderBottom:"1px solid #f1f5f9"
   }
 
 }
