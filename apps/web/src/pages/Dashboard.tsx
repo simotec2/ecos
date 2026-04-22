@@ -22,72 +22,41 @@ ChartJS.register(
   BarElement
 )
 
-/* ================= COLOR ================= */
+/* ================= UTIL ================= */
+
 function getColor(value:number){
   if(value >= 70) return "#16a34a"
   if(value >= 50) return "#f59e0b"
   return "#dc2626"
 }
 
-/* ================= FORMATEO ================= */
 function formatName(name:string){
-
   if(!name) return ""
-
-  const n = name.toLowerCase().trim()
+  const n = name.toLowerCase()
 
   if(n.includes("icom")) return "Evaluación Psicolaboral"
   if(n.includes("pets")) return "Evaluación Conductual"
-
-  if(n.includes("seguridad")){
-    let label = name.replace(/seguridad/i,"").trim()
-    label = label.split("_").join(" ")
-    label = label
-      .split(" ")
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(" ")
-
-    return label
-      ? `Evaluación Seguridad - ${label}`
-      : "Evaluación Seguridad"
-  }
+  if(n.includes("seguridad")) return "Evaluación Seguridad"
 
   return name
 }
 
+/* ================= COMPONENT ================= */
+
 export default function Dashboard(){
 
   const [data,setData] = useState<any>(null)
-  const [loading,setLoading] = useState(true)
-  const [error,setError] = useState("")
 
-  const [empresa,setEmpresa] = useState("")
-  const [tipo,setTipo] = useState("")
-  const [periodo,setPeriodo] = useState("30")
+  useEffect(()=>{
+    load()
+  },[])
 
-  const loadData = async ()=>{
-    try{
-      setLoading(true)
-      setError("")
-
-      const query = `?empresa=${empresa}&tipo=${tipo}&periodo=${periodo}`
-      const res = await apiFetch(`/api/dashboard${query}`)
-
-      setData(res.data)
-
-    }catch(err){
-      console.error(err)
-      setError("Error cargando dashboard")
-    }finally{
-      setLoading(false)
-    }
+  async function load(){
+    const res = await apiFetch("/api/dashboard")
+    setData(res.data)
   }
 
-  useEffect(()=>{ loadData() },[empresa,tipo,periodo])
-
-  if(loading) return <div style={{padding:20}}>Cargando dashboard...</div>
-  if(error) return <div style={{padding:20,color:"red"}}>{error}</div>
-  if(!data) return <div style={{padding:20}}>Sin datos</div>
+  if(!data) return <div style={{padding:20}}>Cargando...</div>
 
   const total =
     data.semaforo.verde +
@@ -96,7 +65,6 @@ export default function Dashboard(){
 
   const pct = (v:number)=> Math.round((v/total)*100)
 
-  /* ================= DONUT ================= */
   const pieData = {
     labels:["Verde","Amarillo","Rojo"],
     datasets:[{
@@ -105,12 +73,10 @@ export default function Dashboard(){
         data.semaforo.amarillo,
         data.semaforo.rojo
       ],
-      backgroundColor:["#16a34a","#f59e0b","#dc2626"],
-      borderWidth:0
+      backgroundColor:["#16a34a","#f59e0b","#dc2626"]
     }]
   }
 
-  /* ================= COMPETENCIAS ================= */
   const competenciasEntries = Object.entries(data.competencias || {})
 
   const labels = competenciasEntries.map(([k])=>formatName(k))
@@ -124,99 +90,66 @@ export default function Dashboard(){
     }]
   }
 
-  return(
-    <div style={styles.container}>
-
-      {/* HEADER */}
-      <div>
-        <h2 style={styles.title}>Dashboard Ejecutivo</h2>
-        <p style={styles.subtitle}>
-          Visión general de riesgo y desempeño
-        </p>
-      </div>
+  return (
+    <div style={{padding:20, display:"grid", gap:20}}>
 
       {/* KPI */}
-      <div style={styles.kpiGrid}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:15}}>
         <MiniCard title="Evaluados" value={total}/>
-        <MiniCard title="Recomendables" value={`${pct(data.semaforo.verde)}%`} sub={data.semaforo.verde} color="#16a34a"/>
-        <MiniCard title="Observaciones" value={`${pct(data.semaforo.amarillo)}%`} sub={data.semaforo.amarillo} color="#f59e0b"/>
-        <MiniCard title="Críticos" value={`${pct(data.semaforo.rojo)}%`} sub={data.semaforo.rojo} color="#dc2626"/>
+        <MiniCard title="Recomendables" value={`${pct(data.semaforo.verde)}%`} color="#16a34a"/>
+        <MiniCard title="Observaciones" value={`${pct(data.semaforo.amarillo)}%`} color="#f59e0b"/>
+        <MiniCard title="Críticos" value={`${pct(data.semaforo.rojo)}%`} color="#dc2626"/>
       </div>
 
-      {/* FILTROS */}
-      <div style={styles.filters}>
-
-        <select value={empresa} onChange={e=>setEmpresa(e.target.value)}>
-          <option value="">Todas las empresas</option>
-          {(data.empresas || []).map((e:any)=>(
-            <option key={e.id} value={e.id}>
-              {e.name}
-            </option>
-          ))}
-        </select>
-
-        <select value={tipo} onChange={e=>setTipo(e.target.value)}>
-          <option value="">Todas</option>
-          <option value="PETS">PETS</option>
-          <option value="ICOM">ICOM</option>
-          <option value="SECURITY">SEGURIDAD</option>
-        </select>
-
-        <select value={periodo} onChange={e=>setPeriodo(e.target.value)}>
-          <option value="7">7 días</option>
-          <option value="30">30 días</option>
-          <option value="90">90 días</option>
-        </select>
-
-      </div>
-
-      {/* PRINCIPAL */}
-      <div style={styles.grid}>
+      {/* GRÁFICOS */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
 
         <Card>
-          <Title>Nivel de Riesgo</Title>
-          <div style={{height:240}}>
+          <h3>Nivel de Riesgo</h3>
+
+          <div style={{position:"relative", height:240}}>
+
             <Doughnut 
-            data={pieData} 
-            options={{
-              cutout:"70%",
-              plugins:{
-                legend:{ position:"bottom" },
-                tooltip:{
-                  callbacks:{
-                    label:(ctx:any)=>{
-                      const total = ctx.dataset.data.reduce((a:number,b:number)=>a+b,0)
-                      const val = ctx.raw
-                      const pct = total > 0 ? Math.round((val/total)*100) : 0
-                      return `${ctx.label}: ${val} (${pct}%)`
+              data={pieData}
+              options={{
+                cutout:"70%",
+                plugins:{
+                  legend:{position:"bottom"},
+                  tooltip:{
+                    callbacks:{
+                      label:(ctx:any)=>{
+                        const total = ctx.dataset.data.reduce((a:number,b:number)=>a+b,0)
+                        const val = ctx.raw
+                        const pct = total ? Math.round((val/total)*100) : 0
+                        return `${ctx.label}: ${val} (${pct}%)`
+                      }
                     }
                   }
                 }
-              }
-            }}
-          />
-           {/* TEXTO CENTRAL */}
-  <div style={{
-    position:"absolute",
-    top:"50%",
-    left:"50%",
-    transform:"translate(-50%, -50%)",
-    textAlign:"center"
-  }}>
-    <div style={{fontSize:26,fontWeight:700}}>
-      {porcentajeCritico}%
-    </div>
-    <div style={{fontSize:12,color:"#6b7280"}}>
-      Riesgo crítico
-    </div>
-  </div>
+              }}
+            />
 
-</div>
+            <div style={{
+              position:"absolute",
+              top:"50%",
+              left:"50%",
+              transform:"translate(-50%,-50%)",
+              textAlign:"center"
+            }}>
+              <div style={{fontSize:28,fontWeight:700}}>
+                {pct(data.semaforo.rojo)}%
+              </div>
+              <div style={{fontSize:12,color:"#6b7280"}}>
+                Riesgo crítico
+              </div>
+            </div>
+
           </div>
         </Card>
 
         <Card>
-          <Title>Competencias</Title>
+          <h3>Competencias</h3>
+
           <div style={{height:240}}>
             <Bar
               data={barData}
@@ -231,29 +164,23 @@ export default function Dashboard(){
 
       </div>
 
-      {/* FORTALEZAS / RIESGOS */}
-      <div style={styles.grid}>
+      {/* LISTAS */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
 
         <Card>
-          <Title>Fortalezas clave</Title>
+          <h3>Fortalezas</h3>
 
-          {data.mejores?.length === 0 ? (
-            <div style={{color:"#6b7280"}}>Sin datos</div>
-          ) : data.mejores.map(([name,value]:any)=>(
+          {(data.mejores || []).map(([name,value]:any)=>(
             <Item key={name} text={`${formatName(name)} (${value}%)`} color="#16a34a"/>
           ))}
-
         </Card>
 
         <Card>
-          <Title>Riesgos críticos</Title>
+          <h3>Riesgos</h3>
 
-          {data.criticas?.length === 0 ? (
-            <div style={{color:"#6b7280"}}>Sin datos</div>
-          ) : data.criticas.map(([name,value]:any)=>(
+          {(data.criticas || []).map(([name,value]:any)=>(
             <Item key={name} text={`${formatName(name)} (${value}%)`} color="#dc2626"/>
           ))}
-
         </Card>
 
       </div>
@@ -262,112 +189,46 @@ export default function Dashboard(){
   )
 }
 
-/* COMPONENTES */
+/* ================= UI ================= */
 
-function MiniCard({title,value,sub,color}:any){
-  return(
+function Card({children}:any){
+  return (
     <div style={{
-      ...styles.card,
+      background:"#fff",
+      padding:20,
+      borderRadius:12,
+      boxShadow:"0 8px 20px rgba(0,0,0,0.05)"
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function MiniCard({title,value,color}:any){
+  return (
+    <div style={{
+      background:"#fff",
+      padding:15,
+      borderRadius:12,
       borderTop:`4px solid ${color || "#ddd"}`
     }}>
-      <div style={styles.kpiTitle}>{title}</div>
-      <div style={{...styles.kpiValue,color:color || "#111"}}>
-        {value}
-      </div>
-      {sub !== undefined && (
-        <div style={styles.kpiSub}>{sub} personas</div>
-      )}
+      <div style={{fontSize:12,color:"#6b7280"}}>{title}</div>
+      <div style={{fontSize:26,fontWeight:700,color:color || "#111"}}>{value}</div>
     </div>
   )
 }
 
 function Item({text,color}:any){
-  return(
-    <div style={{
-      padding:"6px 0",
-      display:"flex",
-      alignItems:"center",
-      gap:8
-    }}>
+  return (
+    <div style={{display:"flex",gap:8,marginBottom:6}}>
       <div style={{
         width:8,
         height:8,
         borderRadius:"50%",
-        background:color
+        background:color,
+        marginTop:6
       }}/>
       {text}
     </div>
   )
-}
-
-function Title({children}:any){
-  return <h3 style={{marginBottom:10}}>{children}</h3>
-}
-
-function Card({children}:any){
-  return <div style={styles.card}>{children}</div>
-}
-
-/* ================= ESTILOS ================= */
-
-const styles:any = {
-
-  container:{
-    padding:20,
-    display:"grid",
-    gap:20,
-    background:"#f9fafb"
-  },
-
-  title:{
-    margin:0,
-    fontWeight:700
-  },
-
-  subtitle:{
-    margin:0,
-    color:"#6b7280",
-    fontSize:13
-  },
-
-  kpiGrid:{
-    display:"grid",
-    gridTemplateColumns:"repeat(4,1fr)",
-    gap:15
-  },
-
-  filters:{
-    display:"grid",
-    gridTemplateColumns:"1fr 1fr 1fr",
-    gap:10
-  },
-
-  grid:{
-    display:"grid",
-    gridTemplateColumns:"1fr 1fr",
-    gap:20
-  },
-
-  card:{
-    background:"#fff",
-    padding:18,
-    borderRadius:16,
-    boxShadow:"0 8px 25px rgba(0,0,0,0.05)"
-  },
-
-  kpiTitle:{
-    fontSize:12,
-    color:"#6b7280"
-  },
-
-  kpiValue:{
-    fontSize:28,
-    fontWeight:700
-  },
-
-  kpiSub:{
-    fontSize:12,
-    color:"#6b7280"
-  }
-
 }
