@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { apiFetch } from "../api"
 
-/* ================= COLOR ================= */
 function getColor(value:number){
   if(value >= 50) return "#dc2626"
   if(value >= 25) return "#f59e0b"
@@ -42,13 +41,17 @@ export default function Dashboard(){
   }
 
   if(loading){
-    return <div style={{padding:20}}>Cargando...</div>
+    return <div style={{padding:30}}>Cargando...</div>
   }
 
-  const total = data.participantes || 1
-  const riesgoGlobal = Math.round((data.semaforo.rojo / total) * 100)
+  const total = data.participantes
+  const empresas = data.companies.length
 
-  const companies = [...data.companies]
+  const riesgoGlobal = total > 0
+    ? Math.round((data.semaforo.rojo / total) * 100)
+    : null
+
+  const topCompanies = [...data.companies]
     .sort((a:any,b:any)=> b.riesgo - a.riesgo)
     .slice(0,3)
 
@@ -59,44 +62,58 @@ export default function Dashboard(){
   return(
     <div style={styles.container}>
 
-      {/* ================= HERO ================= */}
+      {/* HERO */}
       <div style={styles.hero}>
 
         <div>
-          <div style={styles.heroLabel}>RIESGO DEL SISTEMA</div>
+
+          <div style={styles.heroLabel}>
+            {total < 5 ? "SISTEMA ACTIVO" : "RIESGO GLOBAL"}
+          </div>
 
           <div style={{
             ...styles.heroValue,
-            color:getColor(riesgoGlobal)
+            color: riesgoGlobal === null ? "#22c55e" : getColor(riesgoGlobal)
           }}>
-            {riesgoGlobal}%
+            {riesgoGlobal === null ? "OK" : `${riesgoGlobal}%`}
           </div>
 
           <div style={styles.heroSub}>
-            {riesgoGlobal >= 50
+            {total < 5
+              ? "Esperando volumen de datos"
+              : riesgoGlobal! >= 50
               ? "Nivel crítico"
-              : riesgoGlobal >= 25
+              : riesgoGlobal! >= 25
               ? "Nivel moderado"
               : "Nivel controlado"}
           </div>
+
         </div>
 
-        <div style={styles.heroRight}>
-          <Stat title="Empresas" value={data.companies.length}/>
-          <Stat title="Evaluados" value={data.participantes}/>
+        <div style={styles.stats}>
+
+          <Stat title="Empresas" value={empresas}/>
+          <Stat title="Evaluados" value={total}/>
           <Stat title="Críticos" value={data.semaforo.rojo}/>
+
         </div>
 
       </div>
 
-      {/* ================= TOP EMPRESAS ================= */}
+      {/* EMPRESAS */}
       <div style={styles.card}>
 
-        <div style={styles.sectionTitle}>
+        <div style={styles.title}>
           Empresas con mayor riesgo
         </div>
 
-        {companies.map((c:any, i:number)=>{
+        {topCompanies.length === 0 && (
+          <div style={styles.empty}>
+            Sin datos suficientes
+          </div>
+        )}
+
+        {topCompanies.map((c:any,i:number)=>{
 
           const color = getColor(c.riesgo)
 
@@ -113,11 +130,11 @@ export default function Dashboard(){
               </div>
 
               <div style={{
-                fontWeight:700,
-                fontSize:20,
+                fontWeight:800,
+                fontSize:22,
                 color
               }}>
-                {c.riesgo}%
+                {total < 5 ? "-" : `${c.riesgo}%`}
               </div>
 
             </div>
@@ -126,17 +143,23 @@ export default function Dashboard(){
 
       </div>
 
-      {/* ================= BRECHAS ================= */}
+      {/* BRECHAS */}
       <div style={styles.card}>
 
-        <div style={styles.sectionTitle}>
-          Principales brechas del sistema
+        <div style={styles.title}>
+          Principales brechas
         </div>
 
-        {brechas.map((b:any, i:number)=>{
+        {brechas.length === 0 && (
+          <div style={styles.empty}>
+            Se activará con mayor volumen de datos
+          </div>
+        )}
 
-          const value = Number(b[1])
-          const color = getColor(value)
+        {brechas.map((b:any,i:number)=>{
+
+          const val = Number(b[1])
+          const color = getColor(val)
 
           return(
             <div key={i} style={styles.row}>
@@ -149,7 +172,7 @@ export default function Dashboard(){
                 fontWeight:700,
                 color
               }}>
-                {value}%
+                {val}%
               </div>
 
             </div>
@@ -158,7 +181,7 @@ export default function Dashboard(){
 
       </div>
 
-      {/* ================= EMPRESAS GRID ================= */}
+      {/* GRID EMPRESAS */}
       <div style={styles.grid}>
 
         {data.companies.map((c:any)=>{
@@ -167,8 +190,8 @@ export default function Dashboard(){
 
           return(
             <div key={c.id} style={{
-              ...styles.companyCard,
-              borderTop:`5px solid ${color}`
+              ...styles.company,
+              borderTop:`4px solid ${color}`
             }}>
 
               <div style={styles.companyName}>
@@ -181,11 +204,10 @@ export default function Dashboard(){
 
               <div style={{
                 fontSize:26,
-                fontWeight:700,
-                color,
-                marginTop:10
+                fontWeight:800,
+                color
               }}>
-                {c.riesgo}%
+                {total < 5 ? "-" : `${c.riesgo}%`}
               </div>
 
             </div>
@@ -198,7 +220,7 @@ export default function Dashboard(){
   )
 }
 
-/* ================= COMPONENTES ================= */
+/* COMPONENTES */
 
 function Stat({title,value}:any){
   return(
@@ -209,70 +231,45 @@ function Stat({title,value}:any){
   )
 }
 
-/* ================= ESTILOS ================= */
+/* ESTILOS */
 
 const styles:any = {
 
   container:{
-    padding:"30px",
-    background:"#f8fafc",
-    minHeight:"100vh",
+    padding:30,
     display:"grid",
-    gap:25
+    gap:20,
+    background:"#f1f5f9",
+    minHeight:"100vh"
   },
 
   hero:{
     background:"#fff",
-    padding:"30px",
-    borderRadius:"20px",
+    padding:30,
+    borderRadius:20,
     display:"flex",
     justifyContent:"space-between",
-    alignItems:"center",
-    boxShadow:"0 10px 30px rgba(0,0,0,0.08)"
+    boxShadow:"0 10px 25px rgba(0,0,0,0.08)"
   },
 
-  heroLabel:{
-    fontSize:12,
-    color:"#6b7280"
-  },
+  heroLabel:{fontSize:12,color:"#6b7280"},
+  heroValue:{fontSize:60,fontWeight:800},
+  heroSub:{fontSize:14,color:"#6b7280"},
 
-  heroValue:{
-    fontSize:64,
-    fontWeight:800
-  },
+  stats:{display:"flex",gap:20},
 
-  heroSub:{
-    fontSize:14,
-    color:"#6b7280"
-  },
-
-  heroRight:{
-    display:"flex",
-    gap:20
-  },
-
-  stat:{
-    textAlign:"center"
-  },
-
-  statLabel:{
-    fontSize:12,
-    color:"#6b7280"
-  },
-
-  statValue:{
-    fontSize:22,
-    fontWeight:700
-  },
+  stat:{textAlign:"center"},
+  statLabel:{fontSize:12,color:"#6b7280"},
+  statValue:{fontSize:20,fontWeight:700},
 
   card:{
     background:"#fff",
-    padding:"20px",
-    borderRadius:"16px",
-    boxShadow:"0 10px 25px rgba(0,0,0,0.05)"
+    padding:20,
+    borderRadius:16,
+    boxShadow:"0 10px 20px rgba(0,0,0,0.05)"
   },
 
-  sectionTitle:{
+  title:{
     fontWeight:600,
     marginBottom:10
   },
@@ -281,33 +278,31 @@ const styles:any = {
     display:"flex",
     justifyContent:"space-between",
     padding:"10px 0",
-    borderBottom:"1px solid #f1f5f9"
+    borderBottom:"1px solid #e5e7eb"
   },
 
-  rank:{
-    fontWeight:600
-  },
+  rank:{fontWeight:600},
+  sub:{fontSize:12,color:"#6b7280"},
 
-  sub:{
-    fontSize:12,
-    color:"#6b7280"
+  empty:{
+    color:"#6b7280",
+    fontSize:13,
+    padding:10
   },
 
   grid:{
     display:"grid",
-    gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))",
-    gap:20
+    gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",
+    gap:15
   },
 
-  companyCard:{
+  company:{
     background:"#fff",
-    padding:"20px",
-    borderRadius:"16px",
-    boxShadow:"0 10px 25px rgba(0,0,0,0.05)"
+    padding:20,
+    borderRadius:16,
+    boxShadow:"0 10px 20px rgba(0,0,0,0.05)"
   },
 
-  companyName:{
-    fontWeight:600
-  }
+  companyName:{fontWeight:600}
 
 }
