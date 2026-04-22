@@ -194,44 +194,30 @@ export default function Dashboard(){
 
       </div>
 
-      {/* 🔥 NUEVO: RANKING */}
+      {/* 🔥 RANKING + RECOMENDACIONES */}
       <Card>
         <h3 style={styles.title}>Trabajadores críticos</h3>
 
-        <div style={{marginTop:10}}>
+        {data.ranking.slice(0,10).map((p:any, i:number)=>(
+          <div key={i} style={styles.cardPersona}>
 
-          {data.ranking.slice(0,10).map((p:any, i:number)=>(
-            <div key={i} style={styles.rowRanking}>
-
-              <span style={{fontWeight:500}}>
-                {p.nombre}
-              </span>
-
-              <div style={{display:"flex", gap:10, alignItems:"center"}}>
-
-                <span style={{
-                  fontWeight:700,
-                  color: estadoColor(p.estado)
-                }}>
-                  {p.score}%
-                </span>
-
-                <span style={{
-                  fontSize:12,
-                  padding:"4px 8px",
-                  borderRadius:6,
-                  background:estadoColor(p.estado),
-                  color:"#fff"
-                }}>
-                  {p.estado}
-                </span>
-
-              </div>
-
+            <div style={styles.rowTop}>
+              <span style={{fontWeight:500}}>{p.nombre}</span>
+              <strong style={{color: estadoColor(p.estado)}}>
+                {p.score}%
+              </strong>
             </div>
-          ))}
 
-        </div>
+            <div style={styles.badge}>
+              {p.estado}
+            </div>
+
+            <div style={styles.recomendacion}>
+              {p.recomendacion}
+            </div>
+
+          </div>
+        ))}
 
       </Card>
 
@@ -358,11 +344,30 @@ const styles:any = {
     borderBottom:"1px solid #eee"
   },
 
-  rowRanking:{
+  cardPersona:{
+    padding:"12px 0",
+    borderBottom:"1px solid #f1f5f9"
+  },
+
+  rowTop:{
     display:"flex",
     justifyContent:"space-between",
-    padding:"10px 0",
-    borderBottom:"1px solid #f1f5f9"
+    marginBottom:4
+  },
+
+  badge:{
+    display:"inline-block",
+    fontSize:11,
+    padding:"3px 6px",
+    borderRadius:6,
+    background:"#111",
+    color:"#fff",
+    marginBottom:6
+  },
+
+  recomendacion:{
+    fontSize:13,
+    color:"#6b7280"
   }
 
 }

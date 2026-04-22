@@ -4,7 +4,6 @@ import { verifyAccessToken } from "../utils/jwt"
 
 const router = Router()
 
-/* ================= AUTH ================= */
 function getUser(req:any){
   try{
     const auth = req.headers.authorization || ""
@@ -14,6 +13,24 @@ function getUser(req:any){
   }catch{
     return null
   }
+}
+
+/* ================= REGLAS DE RECOMENDACIÓN ================= */
+function getRecommendation(score:number){
+
+  if(score < 55){
+    return "Reentrenamiento inmediato en tareas críticas y supervisión directa en operación."
+  }
+
+  if(score < 70){
+    return "Refuerzo en toma de decisiones y control de riesgos en terreno."
+  }
+
+  if(score < 85){
+    return "Seguimiento preventivo y reforzamiento de conductas seguras."
+  }
+
+  return "Apto para operación. Mantener estándar y buenas prácticas."
 }
 
 /* ================= ROUTE ================= */
@@ -31,42 +48,25 @@ router.get("/", async (req,res)=>{
       ? { companyId: user.companyId }
       : {}
 
-    /* ================= PARTICIPANTES ================= */
-
     const participants = await prisma.participant.findMany({
       where: companyFilter
     })
 
     const participantIds = participants.map(p=>p.id)
 
-    /* ================= EMPRESAS ================= */
-
-    let empresas:any[] = []
-    try{
-      empresas = await prisma.company.findMany({
-        select:{ id:true, name:true }
-      })
-    }catch(e){
-      console.error("Error empresas:", e)
-    }
-
-    /* ================= ASIGNACIONES ================= */
+    const empresas = await prisma.company.findMany({
+      select:{ id:true, name:true }
+    })
 
     const assignments = await prisma.assignment.findMany({
-      where:{
-        participantId:{ in: participantIds }
-      }
+      where:{ participantId:{ in: participantIds } }
     })
 
     const totalEvaluaciones = assignments.length
     const pendientes = assignments.filter(a=>a.status !== "COMPLETED").length
 
-    /* ================= RESULTADOS ================= */
-
     const results = await prisma.evaluationResult.findMany({
-      where:{
-        participantId:{ in: participantIds }
-      }
+      where:{ participantId:{ in: participantIds } }
     })
 
     let verde = 0
@@ -91,20 +91,10 @@ router.get("/", async (req,res)=>{
           ? JSON.parse(r.resultJson)
           : r.resultJson
 
-        if(!json) return
+        const fuente = json?.competencies || json?.competencias
 
-        const fuente =
-          json.competencies ||
-          json.competencias ||
-          null
-
-        if(fuente && typeof fuente === "object"){
-
+        if(fuente){
           Object.entries(fuente).forEach(([name,value]:any)=>{
-
-            if(!name) return
-            if(name.toLowerCase().includes("sumarse")) return
-
             const num = Number(value)
             if(isNaN(num)) return
 
@@ -114,50 +104,19 @@ router.get("/", async (req,res)=>{
 
             competenciasMap[name].total += num
             competenciasMap[name].count++
-
           })
         }
 
-        if(Array.isArray(json.competenciasDetalle)){
-
-          json.competenciasDetalle.forEach((c:any)=>{
-
-            if(!c?.name) return
-            if(c.name.toLowerCase().includes("sumarse")) return
-
-            const num = Number(c.score)
-            if(isNaN(num)) return
-
-            if(!competenciasMap[c.name]){
-              competenciasMap[c.name] = { total:0, count:0 }
-            }
-
-            competenciasMap[c.name].total += num
-            competenciasMap[c.name].count++
-
-          })
-        }
-
-      }catch(e){
-        console.error("Error parsing resultJson:", e)
-      }
-
+      }catch{}
     })
-
-    /* ================= PROMEDIOS ================= */
 
     let competencias:any = {}
 
     Object.entries(competenciasMap).forEach(([k,v]:any)=>{
       if(v.count > 0){
-        const avg = v.total / v.count
-        if(!isNaN(avg)){
-          competencias[k] = Math.round(avg)
-        }
+        competencias[k] = Math.round(v.total / v.count)
       }
     })
-
-    /* ================= FALLBACK DEMO ================= */
 
     if(Object.keys(competencias).length === 0){
       competencias = {
@@ -169,15 +128,13 @@ router.get("/", async (req,res)=>{
       }
     }
 
-    /* ================= ORDEN ================= */
-
     const entries = Object.entries(competencias)
     const sorted = entries.sort((a:any,b:any)=> b[1] - a[1])
 
     const mejores = sorted.slice(0,5)
     const criticas = sorted.slice(-5).reverse()
 
-    /* ================= RANKING PERSONAS (NUEVO) ================= */
+    /* ================= RANKING + RECOMENDACIÓN ================= */
 
     const ranking:any[] = []
 
@@ -187,22 +144,19 @@ router.get("/", async (req,res)=>{
       if(!participante) return
 
       let estado = "VERDE"
-
       if(r.score < 55) estado = "ROJO"
       else if(r.score < 85) estado = "AMARILLO"
 
       ranking.push({
         nombre: `${participante.nombre} ${participante.apellido}`,
         score: Math.round(r.score || 0),
-        estado
+        estado,
+        recomendacion: getRecommendation(r.score)
       })
 
     })
 
-    // ordenar por peor desempeño
     ranking.sort((a,b)=> a.score - b.score)
-
-    /* ================= RESPONSE ================= */
 
     return res.json({
       ok:true,
@@ -221,11 +175,10 @@ router.get("/", async (req,res)=>{
 
   }catch(err){
 
-    console.error("ERROR DASHBOARD:", err)
+    console.error(err)
 
     return res.status(500).json({
-      error:"Error dashboard",
-      detail:String(err)
+      error:"Error dashboard"
     })
   }
 
