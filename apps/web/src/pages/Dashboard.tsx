@@ -38,7 +38,6 @@ export default function Dashboard(){
 
       setParticipants(p || [])
       setResults(r || [])
-
     }catch(err){
       console.error(err)
     }
@@ -50,41 +49,65 @@ export default function Dashboard(){
       : r.resultJson
   }
 
+  /* ===============================
+  KPI CONSOLIDADO POR PARTICIPANTE
+  =============================== */
   function getKPIs(){
+
+    const map:any = {}
+
+    results.forEach(r=>{
+
+      const pid = r.participantId
+
+      if(!map[pid]) map[pid] = []
+
+      const raw = parse(r)
+      map[pid].push(raw?.traffic?.color)
+
+    })
 
     let verde = 0
     let amarillo = 0
     let rojo = 0
 
-    results.forEach(r=>{
-      const raw = parse(r)
-      const c = raw?.traffic?.color
+    Object.values(map).forEach((colors:any)=>{
 
-      if(c==="VERDE") verde++
-      else if(c==="AMARILLO") amarillo++
-      else if(c==="ROJO") rojo++
+      if(colors.includes("ROJO")) rojo++
+      else if(colors.includes("AMARILLO")) amarillo++
+      else verde++
+
     })
 
-    const rendidos = results.length
     const total = participants.length
+    const rendidos = Object.keys(map).length
     const pendientes = total - rendidos
 
     return { total, rendidos, pendientes, verde, amarillo, rojo }
   }
 
+  /* ===============================
+  COMPETENCIAS (PROMEDIO GLOBAL)
+  =============================== */
   function getCompetencias(){
 
     const map:any = {}
 
     results.forEach(r=>{
+
       const raw = parse(r)
       const comps = raw?.competencies || []
 
       comps.forEach((c:any)=>{
+
         if(!c?.name) return
+
         if(!map[c.name]) map[c.name] = []
+
         map[c.name].push(c.score)
+
       })
+
     })
 
     const avg = Object.entries(map).map(([name,arr]:any)=>({
@@ -103,6 +126,9 @@ export default function Dashboard(){
   const kpi = getKPIs()
   const comp = getCompetencias()
 
+  /* ===============================
+  DATA GRAFICOS
+  =============================== */
   const pieData = {
     labels:["Verde","Amarillo","Rojo"],
     datasets:[{
@@ -128,11 +154,12 @@ export default function Dashboard(){
   }
 
   return (
+
     <div style={{ padding:20 }}>
 
       <h1>Dashboard ECOS</h1>
 
-      {/* KPIs */}
+      {/* KPI */}
       <div style={styles.kpiGrid}>
 
         <KPI title="Total" value={kpi.total} />
@@ -145,31 +172,32 @@ export default function Dashboard(){
 
       </div>
 
-      {/* GRÁFICOS */}
+      {/* GRAFICOS */}
       <div style={styles.grid}>
 
-        <div style={styles.cardSmall}>
+        <div style={styles.card}>
           <h3>Semáforo</h3>
           <Pie data={pieData} />
         </div>
 
-        <div style={styles.cardSmall}>
+        <div style={styles.card}>
           <h3>Top Competencias</h3>
-          <Bar data={topBar} options={smallBarOptions}/>
+          <Bar data={topBar} options={chartOptions}/>
         </div>
 
-        <div style={styles.cardSmall}>
+        <div style={styles.card}>
           <h3>Brechas (Bottom)</h3>
-          <Bar data={bottomBar} options={smallBarOptions}/>
+          <Bar data={bottomBar} options={chartOptions}/>
         </div>
 
       </div>
 
     </div>
+
   )
 }
 
-/* COMPONENTE KPI */
+/* KPI COMPONENT */
 function KPI({title,value,color="#2563eb"}:any){
   return(
     <div style={{...styles.kpi, borderTop:`4px solid ${color}`}}>
@@ -179,17 +207,15 @@ function KPI({title,value,color="#2563eb"}:any){
   )
 }
 
-/* OPCIONES PARA REDUCIR ALTURA */
-const smallBarOptions = {
+/* CHART OPTIONS */
+const chartOptions = {
   responsive:true,
   maintainAspectRatio:false,
   plugins:{ legend:{ display:false } },
-  scales:{
-    y:{ beginAtZero:true }
-  }
+  scales:{ y:{ beginAtZero:true } }
 }
 
-/* ESTILOS */
+/* STYLES */
 const styles:any = {
 
   kpiGrid:{
@@ -217,7 +243,7 @@ const styles:any = {
     marginTop:20
   },
 
-  cardSmall:{
+  card:{
     background:"#fff",
     padding:12,
     borderRadius:8,
