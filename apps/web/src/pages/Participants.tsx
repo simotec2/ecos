@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react"
 import { apiFetch } from "../api"
-import { useNavigate } from "react-router-dom"
-
 import PageContainer from "../components/PageContainer"
 import Card from "../components/Card"
 import FormGrid from "../components/FormGrid"
 import SearchBox from "../components/SearchBox"
 
 export default function Participants(){
-
-  const navigate = useNavigate()
 
   const [participants,setParticipants] = useState<any[]>([])
   const [companies,setCompanies] = useState<any[]>([])
@@ -25,6 +21,8 @@ export default function Participants(){
   const [perfil,setPerfil] = useState("")
   const [email,setEmail] = useState("")
 
+  const [editing,setEditing] = useState<any>(null)
+
   useEffect(()=>{
     loadParticipants()
     loadCompanies()
@@ -35,8 +33,7 @@ export default function Participants(){
     try{
       const data = await apiFetch("/api/participants")
       setParticipants(data || [])
-    }catch(err){
-      console.error(err)
+    }catch{
       alert("Error cargando participantes")
     }
   }
@@ -48,8 +45,7 @@ export default function Participants(){
       if(data?.length){
         setCompanyId(data[0].id)
       }
-    }catch(err){
-      console.error(err)
+    }catch{
       alert("Error cargando empresas")
     }
   }
@@ -57,17 +53,8 @@ export default function Participants(){
   async function loadEvaluations(){
     try{
       const data = await apiFetch("/api/evaluations")
-
-      const clean = (data || []).filter((e:any)=>
-        e.name &&
-        e.name.trim() !== "" &&
-        e.name.length > 2
-      )
-
-      setEvaluations(clean)
-
-    }catch(err){
-      console.error(err)
+      setEvaluations(data || [])
+    }catch{
       alert("Error cargando evaluaciones")
     }
   }
@@ -80,20 +67,14 @@ export default function Participants(){
     }
   }
 
-  function getDisplayName(e:any){
-    if(e.type === "PETS") return "Evaluacion Conductual"
-    if(e.type === "ICOM") return "Evaluacion Psicolaboral"
-    return e.name
-  }
-
   async function createParticipant(){
 
-    try{
+    if(!nombre || !apellido || !rut){
+      alert("Completa nombre, apellido y rut")
+      return
+    }
 
-      if(!nombre || !apellido || !rut){
-        alert("Completa nombre, apellido y rut")
-        return
-      }
+    try{
 
       const participant = await apiFetch("/api/participants",{
         method:"POST",
@@ -126,58 +107,60 @@ export default function Participants(){
 
       await loadParticipants()
 
-      alert("Participante creado correctamente")
+      alert("Participante creado")
 
-    }catch(err){
-      console.error(err)
+    }catch{
       alert("Error creando participante")
     }
   }
 
-  /* ======================================
-  🔥 ENVÍO MASIVO POR EMPRESA
-  ====================================== */
-  async function sendInvitationsBulk(){
+  async function updateParticipant(){
 
     try{
 
-      if(!companyId){
-        alert("Selecciona empresa")
-        return
-      }
-
-      if(!confirm("¿Enviar invitaciones SOLO a pendientes de esta empresa?")){
-        return
-      }
-
-      const res = await apiFetch("/api/send-invitation",{
-        method:"POST",
-        body:{ companyId }
+      await apiFetch(`/api/participants/${editing.id}`,{
+        method:"PUT",
+        body:{
+          nombre:editing.nombre,
+          apellido:editing.apellido,
+          rut:editing.rut,
+          email:editing.email,
+          companyId:editing.companyId
+        }
       })
 
-      alert(`Enviados: ${res.sent} | Omitidos: ${res.skipped}`)
+      setEditing(null)
+      await loadParticipants()
 
-    }catch(err){
-      console.error(err)
-      alert("Error envío masivo")
+      alert("Actualizado correctamente")
+
+    }catch{
+      alert("Error actualizando")
     }
-
   }
 
-  const filteredParticipants=participants.filter((p:any)=>
-    `${p.nombre} ${p.apellido} ${p.rut} ${p.perfil || ""}`
-    .toLowerCase()
-    .includes(search.toLowerCase())
+  async function resendInvitation(id:string){
+
+    if(!confirm("¿Reenviar invitación?")) return
+
+    try{
+      await apiFetch(`/api/participants/${id}/resend`,{
+        method:"POST"
+      })
+      alert("Invitación reenviada")
+    }catch{
+      alert("Error reenviando")
+    }
+  }
+
+  const filtered = participants.filter((p:any)=>
+    `${p.nombre} ${p.apellido} ${p.rut}`.toLowerCase().includes(search.toLowerCase())
   )
 
   return(
 
     <PageContainer title="Participantes">
 
-      {/* BOTONES SUPERIORES */}
-      
-
-      {/* NUEVO PARTICIPANTE */}
       <Card title="Nuevo participante">
 
         <select value={companyId} onChange={(e)=>setCompanyId(e.target.value)}>
@@ -187,39 +170,12 @@ export default function Participants(){
         </select>
 
         <FormGrid>
-          <input placeholder="Nombre" value={nombre} onChange={(e)=>setNombre(e.target.value)}/>
-          <input placeholder="Apellido" value={apellido} onChange={(e)=>setApellido(e.target.value)}/>
-          <input placeholder="RUT" value={rut} onChange={(e)=>setRut(e.target.value)}/>
-          <input placeholder="Perfil" value={perfil} onChange={(e)=>setPerfil(e.target.value)}/>
-          <input placeholder="Email" value={email} onChange={(e)=>setEmail(e.target.value)}/>
+          <input placeholder="Nombre" value={nombre} onChange={e=>setNombre(e.target.value)} />
+          <input placeholder="Apellido" value={apellido} onChange={e=>setApellido(e.target.value)} />
+          <input placeholder="RUT" value={rut} onChange={e=>setRut(e.target.value)} />
+          <input placeholder="Perfil" value={perfil} onChange={e=>setPerfil(e.target.value)} />
+          <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
         </FormGrid>
-
-        <h4>Evaluaciones</h4>
-
-        <div style={styles.grid}>
-          {evaluations.map((e:any)=>{
-
-            const selected = selectedEvaluations.includes(e.id)
-
-            return(
-              <div
-                key={e.id}
-                onClick={()=>toggleEvaluation(e.id)}
-                style={{
-                  ...styles.card,
-                  background:selected ? "#2563eb" : "#f8fafc",
-                  color:selected ? "#fff" : "#111",
-                  border:selected ? "1px solid #2563eb" : "1px solid #e5e7eb"
-                }}
-              >
-                <input type="checkbox" checked={selected} readOnly />
-                <span style={styles.cardText}>
-                  {getDisplayName(e)}
-                </span>
-              </div>
-            )
-          })}
-        </div>
 
         <button style={styles.button} onClick={createParticipant}>
           Crear participante
@@ -227,77 +183,80 @@ export default function Participants(){
 
       </Card>
 
-      {/* LISTADO */}
       <Card title="Listado de participantes">
 
-        <SearchBox
-          value={search}
-          onChange={setSearch}
-          placeholder="Buscar por nombre, rut o perfil"
-        />
+        <SearchBox value={search} onChange={setSearch} placeholder="Buscar..." />
 
         <table style={styles.table}>
           <thead>
             <tr>
               <th style={styles.th}>Nombre</th>
               <th style={styles.th}>RUT</th>
-              <th style={styles.th}>Perfil</th>
               <th style={styles.th}>Email</th>
               <th style={styles.th}>Empresa</th>
+              <th style={styles.th}>Acciones</th>
             </tr>
           </thead>
 
           <tbody>
-            {filteredParticipants.map((p:any)=>(
+            {filtered.map((p:any)=>(
               <tr key={p.id}>
                 <td style={styles.td}>{p.nombre} {p.apellido}</td>
                 <td style={styles.td}>{p.rut}</td>
-                <td style={styles.td}>{p.perfil || "-"}</td>
                 <td style={styles.td}>{p.email || "-"}</td>
                 <td style={styles.td}>{p.company?.name || "-"}</td>
+
+                <td style={styles.td}>
+                  <button style={styles.editBtn} onClick={()=>setEditing(p)}>
+                    Editar
+                  </button>
+
+                  <button style={styles.resendBtn} onClick={()=>resendInvitation(p.id)}>
+                    Reenviar
+                  </button>
+                </td>
+
               </tr>
             ))}
           </tbody>
-
         </table>
 
       </Card>
+
+      {editing && (
+        <div style={styles.modal}>
+          <div style={styles.modalBox}>
+
+            <h3>Editar participante</h3>
+
+            <input value={editing.nombre} onChange={e=>setEditing({...editing,nombre:e.target.value})}/>
+            <input value={editing.apellido} onChange={e=>setEditing({...editing,apellido:e.target.value})}/>
+            <input value={editing.rut} onChange={e=>setEditing({...editing,rut:e.target.value})}/>
+            <input value={editing.email || ""} onChange={e=>setEditing({...editing,email:e.target.value})}/>
+
+            <div style={{display:"flex", gap:10, marginTop:10}}>
+              <button onClick={updateParticipant}>Guardar</button>
+              <button onClick={()=>setEditing(null)}>Cancelar</button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </PageContainer>
   )
 }
 
-const styles:any={
+const styles:any = {
 
   button:{
-    marginTop:20,
+    marginTop:15,
     padding:"10px 18px",
     background:"#2563eb",
     color:"#fff",
     border:"none",
     borderRadius:6,
     cursor:"pointer"
-  },
-
-  grid:{
-    display:"grid",
-    gridTemplateColumns:"repeat(2, 1fr)",
-    gap:12,
-    marginTop:10
-  },
-
-  card:{
-    display:"flex",
-    alignItems:"center",
-    gap:10,
-    padding:"12px",
-    borderRadius:8,
-    cursor:"pointer"
-  },
-
-  cardText:{
-    flex:1,
-    fontWeight:500
   },
 
   table:{
@@ -315,6 +274,47 @@ const styles:any={
   td:{
     padding:"10px",
     borderBottom:"1px solid #f1f5f9"
+  },
+
+  editBtn:{
+    marginRight:6,
+    padding:"6px 10px",
+    background:"#2563eb",
+    color:"#fff",
+    border:"none",
+    borderRadius:4,
+    cursor:"pointer"
+  },
+
+  resendBtn:{
+    padding:"6px 10px",
+    background:"#16a34a",
+    color:"#fff",
+    border:"none",
+    borderRadius:4,
+    cursor:"pointer"
+  },
+
+  modal:{
+    position:"fixed",
+    top:0,
+    left:0,
+    right:0,
+    bottom:0,
+    background:"rgba(0,0,0,0.4)",
+    display:"flex",
+    alignItems:"center",
+    justifyContent:"center"
+  },
+
+  modalBox:{
+    background:"#fff",
+    padding:20,
+    borderRadius:8,
+    width:300,
+    display:"flex",
+    flexDirection:"column",
+    gap:10
   }
 
 }

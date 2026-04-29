@@ -55,7 +55,7 @@ router.get("/", async (req, res) => {
 })
 
 /* ======================================
-CREAR PARTICIPANTE (PRO REAL)
+CREAR PARTICIPANTE
 ====================================== */
 router.post("/", async (req, res) => {
 
@@ -77,9 +77,6 @@ router.post("/", async (req, res) => {
 
     const cleanRut = normalizeRut(rut)
 
-    /* =========================
-    VALIDAR DUPLICADO
-    ========================= */
     const existing = await prisma.participant.findFirst({
       where:{
         rut: cleanRut,
@@ -95,9 +92,6 @@ router.post("/", async (req, res) => {
 
     const token = randomUUID()
 
-    /* =========================
-    CREAR PARTICIPANTE
-    ========================= */
     const participant = await prisma.participant.create({
       data:{
         nombre,
@@ -109,14 +103,8 @@ router.post("/", async (req, res) => {
       }
     })
 
-    /* =========================
-    RESPONDER INMEDIATO (CLAVE UX)
-    ========================= */
     res.json(participant)
 
-    /* =========================
-    EMAIL NO BLOQUEANTE (CLAVE)
-    ========================= */
     if(email){
       sendEvaluationEmail(
         email,
@@ -162,9 +150,6 @@ router.put("/:id", async (req, res) => {
 
     const cleanRut = normalizeRut(rut)
 
-    /* =========================
-    VALIDAR DUPLICADO
-    ========================= */
     const existing = await prisma.participant.findFirst({
       where:{
         rut: cleanRut,
@@ -198,6 +183,64 @@ router.put("/:id", async (req, res) => {
 
     res.status(500).json({
       error:"Error actualizando participante"
+    })
+
+  }
+
+})
+
+/* ======================================
+REENVIAR INVITACIÓN
+====================================== */
+router.post("/:id/resend", async (req, res) => {
+
+  try {
+
+    const id = req.params.id
+
+    const participant = await prisma.participant.findUnique({
+      where:{ id }
+    })
+
+    if(!participant){
+      return res.status(404).json({
+        error:"Participante no encontrado"
+      })
+    }
+
+    if(!participant.email){
+      return res.status(400).json({
+        error:"El participante no tiene email"
+      })
+    }
+
+    let token = participant.accessToken
+
+    if(!token){
+
+      token = randomUUID()
+
+      await prisma.participant.update({
+        where:{ id },
+        data:{ accessToken: token }
+      })
+
+    }
+
+    await sendEvaluationEmail(
+      participant.email,
+      `${participant.nombre} ${participant.apellido}`,
+      token
+    )
+
+    res.json({ success:true })
+
+  } catch (error:any) {
+
+    console.error("RESEND ERROR:", error?.message, error)
+
+    res.status(500).json({
+      error:"Error reenviando invitación"
     })
 
   }
