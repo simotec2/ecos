@@ -38,8 +38,8 @@ body{
 }
 
 .compact{
-  font-size:11.5px;
-  line-height:1.3;
+  font-size:11.2px;
+  line-height:1.35;
 }
 
 .page-break{
@@ -117,7 +117,7 @@ body{
 
   </div>
 
-  <!-- SALTO -->
+  <!-- SALTO CONTROLADO -->
   <div class="page-break"></div>
 
   <!-- ANALISIS EN 2 COLUMNAS -->
@@ -125,50 +125,56 @@ body{
 
     <b style="font-size:13px;">Conclusión General</b>
 
-    <table style="width:100%; margin-top:8px; font-size:11.5px;">
-
+    <table style="width:100%; margin-top:8px; font-size:11.2px; line-height:1.4;">
       <tr>
 
-        <!-- COLUMNA IZQUIERDA -->
+        <!-- COLUMNA 1 -->
         <td style="width:50%; vertical-align:top; padding-right:8px;">
-
-          <b>Análisis</b>
-
-          <div style="margin-top:4px;">
-            {{analysis}}
-          </div>
-
+          {{analysis}}
         </td>
 
-        <!-- COLUMNA DERECHA -->
+        <!-- COLUMNA 2 (vacía para balance PDF real) -->
         <td style="width:50%; vertical-align:top; padding-left:8px;">
-
-          <b style="color:#dc2626;">Brechas Críticas</b>
-
-          <div style="margin-top:4px;">
-            {{bottom}}
-          </div>
-
-          <div style="
-            margin-top:6px;
-            font-size:10.5px;
-            color:#6b7280;
-          ">
-            Requiere intervención directa y seguimiento en terreno.
-          </div>
-
-          <div style="margin-top:12px;">
-            <b style="color:#16a34a;">Fortalezas Clave</b>
-          </div>
-
-          <div style="margin-top:4px;">
-            {{top}}
-          </div>
-
         </td>
 
       </tr>
+    </table>
 
+  </div>
+
+  <!-- BRECHAS Y FORTALEZAS AL FINAL -->
+  <div class="card compact">
+
+    <table style="width:100%; font-size:11.2px;">
+      <tr>
+
+        <!-- BRECHAS -->
+        <td style="width:50%; vertical-align:top; padding-right:8px;">
+          <b style="color:#dc2626;">Brechas Críticas</b>
+
+          <div style="margin-top:5px;">
+            {{bottom}}
+          </div>
+
+          <div style="margin-top:6px; font-size:10.5px; color:#6b7280;">
+            Requiere intervención directa y seguimiento en terreno.
+          </div>
+        </td>
+
+        <!-- FORTALEZAS -->
+        <td style="width:50%; vertical-align:top; padding-left:8px;">
+          <b style="color:#16a34a;">Fortalezas Clave</b>
+
+          <div style="margin-top:5px;">
+            {{top}}
+          </div>
+
+          <div style="margin-top:6px; font-size:10.5px; color:#6b7280;">
+            Base adecuada para desarrollo y desempeño en el rol.
+          </div>
+        </td>
+
+      </tr>
     </table>
 
   </div>
