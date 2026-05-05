@@ -49,9 +49,6 @@ export async function renderReportHTML(data:any){
     data.evaluationName ||
     ""
 
-  /* ======================
-  FECHA
-  ====================== */
   const today = new Date().toLocaleDateString("es-CL")
 
   /* ======================
@@ -67,11 +64,11 @@ export async function renderReportHTML(data:any){
   let radarHTML = ""
   if(competencies.length > 0){
     const radar = await generateRadarImage(competencies)
-    radarHTML = `<img src="${radar}" style="width:280px;margin:auto;display:block;" />`
+    radarHTML = `<img src="${radar}" style="width:260px;margin:auto;display:block;" />`
   }
 
   /* ======================
-  ORDEN COMPETENCIAS (FIX REAL)
+  ORDEN COMPETENCIAS
   ====================== */
   const sorted = [...competencies].sort((a,b)=>b.score - a.score)
 
@@ -84,11 +81,11 @@ export async function renderReportHTML(data:any){
     .slice(0,3)
 
   const topHTML = top.map(c=>`
-    <div style="color:#16a34a;">${c.name} (${Math.round(c.score)}%)</div>
+    <div style="color:#16a34a;">• ${c.name} (${Math.round(c.score)}%)</div>
   `).join("")
 
   const bottomHTML = bottom.map(c=>`
-    <div style="color:#dc2626;">${c.name} (${Math.round(c.score)}%)</div>
+    <div style="color:#dc2626;">• ${c.name} (${Math.round(c.score)}%)</div>
   `).join("")
 
   /* ======================
@@ -99,15 +96,15 @@ export async function renderReportHTML(data:any){
   const decision = getDecision(score)
 
   const kpiHTML = `
-    <div style="display:flex;gap:12px;">
+    <div style="display:flex;gap:10px;">
 
-      <div style="flex:1;background:#f3f4f6;padding:10px;border-radius:6px;text-align:center;">
-        <div style="font-size:12px;">Puntaje</div>
-        <div style="font-size:20px;font-weight:bold;">${score}%</div>
+      <div style="flex:1;background:#f3f4f6;padding:8px;border-radius:6px;text-align:center;">
+        <div style="font-size:11px;">Puntaje</div>
+        <div style="font-size:18px;font-weight:bold;">${score}%</div>
       </div>
 
-      <div style="flex:1;background:#f3f4f6;padding:10px;border-radius:6px;text-align:center;">
-        <div style="font-size:12px;">Resultado</div>
+      <div style="flex:1;background:#f3f4f6;padding:8px;border-radius:6px;text-align:center;">
+        <div style="font-size:11px;">Resultado</div>
         <div style="font-weight:bold;color:${getColor(data.traffic?.color)};">
           ${result}
         </div>
@@ -116,27 +113,16 @@ export async function renderReportHTML(data:any){
     </div>
 
     <div style="
-      margin-top:10px;
-      padding:8px;
+      margin-top:8px;
+      padding:6px;
       border-radius:6px;
       text-align:center;
       font-weight:bold;
-      font-size:13px;
+      font-size:12px;
       color:white;
       background:${decision.color};
     ">
-      DECISIÓN: ${decision.text}
-    </div>
-  `
-
-  /* ======================
-  PERFIL (YA NO SE USA EN TEMPLATE NUEVO)
-  ====================== */
-  const perfilHTML = `
-    <div style="font-size:13px;">
-      <b>${participant.nombre || ""} ${participant.apellido || ""}</b><br/>
-      ${evaluationName}<br/>
-      ${participant.company?.name || ""}
+      ${decision.text}
     </div>
   `
 
@@ -144,19 +130,22 @@ export async function renderReportHTML(data:any){
   RESUMEN
   ====================== */
   const resumenHTML = `
-    <div style="margin-bottom:5px;">
+    <div style="margin-bottom:4px;">
       <b>Desempeño general:</b> ${score}%
     </div>
 
     <div style="margin-bottom:3px;">
-      <b>Fortalezas clave:</b> ${top.map(t=>t.name).join(", ")}
+      <b>Fortalezas:</b> ${top.map(t=>t.name).join(", ")}
     </div>
 
     <div>
-      <b>Principales brechas:</b> ${bottom.map(b=>b.name).join(", ")}
+      <b>Brechas:</b> ${bottom.map(b=>b.name).join(", ")}
     </div>
   `
 
+  /* ======================
+  ANALISIS
+  ====================== */
   const analysis = clean(data.analysis || data.aiText || "")
 
   /* ======================
@@ -164,7 +153,6 @@ export async function renderReportHTML(data:any){
   ====================== */
   html = html
     .replace(/{{logo}}/g, logo)
-    .replace(/{{perfil}}/g, perfilHTML)
     .replace(/{{participant}}/g, `${participant.nombre || ""} ${participant.apellido || ""}`)
     .replace(/{{company}}/g, participant.company?.name || "")
     .replace(/{{evaluation}}/g, evaluationName)
@@ -176,7 +164,12 @@ export async function renderReportHTML(data:any){
     .replace(/{{radar}}/g, radarHTML)
     .replace(/{{top}}/g, topHTML)
     .replace(/{{bottom}}/g, bottomHTML)
-    .replace(/{{analysis}}/g, `<div style="line-height:1.5;">${analysis}</div>`)
+    .replace(/{{analysis}}/g, `<div style="line-height:1.6;font-size:11.5px;text-align:justify;">${analysis}</div>`)
+
+  /* ======================
+  LIMPIEZA FINAL (CLAVE)
+  ====================== */
+  html = html.replace(/{{.*?}}/g, "")
 
   return html
-  }
+}
