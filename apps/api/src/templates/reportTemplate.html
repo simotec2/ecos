@@ -33,7 +33,7 @@ body{
 
 .card{
   padding:6px;
-  margin-bottom:6px;
+  margin-bottom:8px;
   page-break-inside: avoid;
 }
 
@@ -72,31 +72,30 @@ body{
     {{perfil}}
   </div>
 
-  <!-- DECISION + KPI -->
+  <!-- DECISION PRINCIPAL -->
   <div class="card compact">
 
     <div style="
-      margin-bottom:8px;
-      padding:10px;
-      border-radius:8px;
+      padding:12px;
+      border-radius:10px;
       text-align:center;
       font-weight:bold;
-      font-size:14px;
+      font-size:16px;
       color:white;
-      background:#1e3a8a;
+      background:{{color}};
     ">
-      DECISIÓN OPERACIONAL
+      {{result}}
     </div>
 
     {{kpi}}
 
     <div style="
-      margin-top:8px;
+      margin-top:6px;
       padding:8px;
       border-radius:6px;
       background:#f3f4f6;
       text-align:center;
-      font-size:11.5px;
+      font-size:11px;
     ">
       Evaluación basada en competencias críticas para desempeño seguro en contexto operacional.
     </div>
@@ -106,25 +105,23 @@ body{
   <!-- RESUMEN EJECUTIVO -->
   <div class="card compact section">
 
-    <b>Resumen Ejecutivo</b>
+    <b style="font-size:13px;">Resumen Ejecutivo</b>
 
-    <div style="margin-top:5px;">
+    <div style="margin-top:4px;">
       {{resumen}}
     </div>
 
     <div style="
       margin-top:6px;
-      padding:6px;
-      background:#f9fafb;
-      border-radius:6px;
-      font-size:11px;
+      font-weight:bold;
+      font-size:11.5px;
     ">
-      Este informe identifica brechas críticas y propone acciones concretas para mejorar el desempeño del participante en entornos de alta exigencia.
+      Nivel de desempeño: {{result}} | Riesgo operacional: {{result}}
     </div>
 
   </div>
 
-  <!-- RADAR + TOP/BOTTOM -->
+  <!-- RADAR + COMPETENCIAS -->
   <div class="card section no-break">
 
     <div style="text-align:center;margin-bottom:6px;">
@@ -134,14 +131,14 @@ body{
     <table style="width:100%; font-size:11.5px;">
       <tr>
 
-        <td style="width:50%; vertical-align:top; text-align:left;">
+        <td style="width:50%; vertical-align:top;">
           <b style="color:#16a34a;">Fortalezas</b>
           <div style="margin-top:4px;">
             {{top}}
           </div>
         </td>
 
-        <td style="width:50%; vertical-align:top; text-align:left;">
+        <td style="width:50%; vertical-align:top;">
           <b style="color:#dc2626;">Brechas</b>
           <div style="margin-top:4px;">
             {{bottom}}
@@ -153,7 +150,7 @@ body{
 
   </div>
 
-  <!-- SALTO CONTROLADO -->
+  <!-- SALTO -->
   <div class="page-break"></div>
 
   <!-- ANALISIS PREMIUM -->
@@ -223,6 +220,16 @@ body{
       </tr>
     </table>
 
+  </div>
+
+  <!-- FIRMA -->
+  <div style="
+    margin-top:12px;
+    font-size:10px;
+    text-align:center;
+    color:#6b7280;
+  ">
+    Informe generado por ECOS – Plataforma de Evaluación de Competencias en Seguridad
   </div>
 
 </div>
