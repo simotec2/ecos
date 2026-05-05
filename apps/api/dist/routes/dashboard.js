@@ -7,13 +7,57 @@ const express_1 = require("express");
 const db_1 = __importDefault(require("../db"));
 const jwt_1 = require("../utils/jwt");
 const router = (0, express_1.Router)();
+/* ================= AUTH ================= */
 function getUser(req) {
-    const auth = req.headers.authorization || "";
-    if (!auth.startsWith("Bearer "))
+    try {
+        const auth = req.headers.authorization || "";
+        if (!auth.startsWith("Bearer "))
+            return null;
+        const token = auth.replace("Bearer ", "");
+        return (0, jwt_1.verifyAccessToken)(token);
+    }
+    catch {
         return null;
-    const token = auth.replace("Bearer ", "");
-    return (0, jwt_1.verifyAccessToken)(token);
+    }
 }
+/* ================= CONSOLIDADOR ================= */
+function consolidateResults(results) {
+    const byType = {};
+    results.forEach(r => {
+        const type = r.evaluation?.type;
+        const score = Number(r.score);
+        if (!type || isNaN(score))
+            return;
+        if (byType[type] === undefined) {
+            byType[type] = score;
+        }
+    });
+    const scores = Object.values(byType);
+    if (scores.length === 0)
+        return null;
+    const sum = scores.reduce((a, b) => a + b, 0);
+    const finalScore = sum / scores.length;
+    let estado = "VERDE";
+    if (finalScore < 55)
+        estado = "ROJO";
+    else if (finalScore < 85)
+        estado = "AMARILLO";
+    return {
+        score: Math.round(finalScore),
+        estado
+    };
+}
+/* ================= RECOMENDACIÓN EMPRESA ================= */
+function getCompanyRecommendation(rojoPct) {
+    if (rojoPct > 50) {
+        return "Nivel crítico. Se recomienda intervención inmediata, reentrenamiento y supervisión operativa.";
+    }
+    if (rojoPct > 25) {
+        return "Riesgo moderado. Implementar refuerzo en competencias críticas.";
+    }
+    return "Nivel controlado. Mantener estándar operacional y monitoreo.";
+}
+/* ================= ROUTE ================= */
 router.get("/", async (req, res) => {
     try {
         const user = getUser(req);
@@ -23,94 +67,100 @@ router.get("/", async (req, res) => {
         const companyFilter = user.role === "COMPANY_ADMIN"
             ? { companyId: user.companyId }
             : {};
+        /* ================= PARTICIPANTES ================= */
         const participants = await db_1.default.participant.findMany({
-            where: companyFilter
+            where: companyFilter,
+            include: { company: true }
         });
         const participantIds = participants.map(p => p.id);
-        const assignments = await db_1.default.assignment.findMany({
-            where: {
-                participantId: { in: participantIds }
-            }
+        /* ================= RESULTADOS ================= */
+        const allResults = await db_1.default.evaluationResult.findMany({
+            where: { participantId: { in: participantIds } },
+            include: { evaluation: true },
+            orderBy: { createdAt: "desc" }
         });
-        const totalEvaluaciones = assignments.length;
-        const pendientes = assignments.filter(a => a.status !== "COMPLETED").length;
-        const results = await db_1.default.evaluationResult.findMany({
-            where: {
-                participantId: { in: participantIds }
+        /* ================= AGRUPAR POR PARTICIPANTE ================= */
+        const grouped = {};
+        allResults.forEach(r => {
+            if (!grouped[r.participantId]) {
+                grouped[r.participantId] = [];
             }
+            grouped[r.participantId].push(r);
         });
+        /* ================= CONSOLIDADO ================= */
+        const consolidated = [];
+        Object.entries(grouped).forEach(([participantId, results]) => {
+            const final = consolidateResults(results);
+            if (!final)
+                return;
+            const participant = participants.find(p => p.id === participantId);
+            consolidated.push({
+                participantId,
+                companyId: participant?.companyId,
+                companyName: participant?.company?.name,
+                ...final
+            });
+        });
+        /* ================= DASHBOARD GLOBAL ================= */
         let verde = 0;
         let amarillo = 0;
         let rojo = 0;
-        results.forEach(r => {
-            if (r.score >= 85)
+        consolidated.forEach(r => {
+            if (r.estado === "VERDE")
                 verde++;
-            else if (r.score >= 55)
+            else if (r.estado === "AMARILLO")
                 amarillo++;
             else
                 rojo++;
         });
-        /* ===============================
-        🔥 COMPETENCIAS (CORREGIDO REAL)
-        =============================== */
-        const competenciasMap = {};
-        results.forEach(r => {
-            try {
-                const json = typeof r.resultJson === "string"
-                    ? JSON.parse(r.resultJson)
-                    : r.resultJson;
-                /* ===== CASO 1: OBJETO ===== */
-                if (json?.competencias && typeof json.competencias === "object") {
-                    Object.entries(json.competencias).forEach(([name, value]) => {
-                        if (!competenciasMap[name]) {
-                            competenciasMap[name] = { total: 0, count: 0 };
-                        }
-                        competenciasMap[name].total += Number(value);
-                        competenciasMap[name].count++;
-                    });
-                }
-                /* ===== CASO 2: ARRAY ===== */
-                else if (Array.isArray(json?.competenciasDetalle)) {
-                    json.competenciasDetalle.forEach((c) => {
-                        const name = c.name;
-                        const score = Number(c.score || 0);
-                        if (!competenciasMap[name]) {
-                            competenciasMap[name] = { total: 0, count: 0 };
-                        }
-                        competenciasMap[name].total += score;
-                        competenciasMap[name].count++;
-                    });
-                }
+        /* ================= DASHBOARD POR EMPRESA ================= */
+        const companyMap = {};
+        consolidated.forEach(r => {
+            if (!r.companyId)
+                return;
+            if (!companyMap[r.companyId]) {
+                companyMap[r.companyId] = {
+                    id: r.companyId,
+                    name: r.companyName,
+                    total: 0,
+                    verde: 0,
+                    amarillo: 0,
+                    rojo: 0
+                };
             }
-            catch (e) {
-                console.error("Error parsing resultJson:", e);
-            }
+            companyMap[r.companyId].total++;
+            if (r.estado === "VERDE")
+                companyMap[r.companyId].verde++;
+            else if (r.estado === "AMARILLO")
+                companyMap[r.companyId].amarillo++;
+            else
+                companyMap[r.companyId].rojo++;
         });
-        const competencias = {};
-        Object.entries(competenciasMap).forEach(([k, v]) => {
-            competencias[k] = Math.round(v.total / v.count);
+        const companies = Object.values(companyMap).map((c) => {
+            const rojoPct = c.total > 0
+                ? Math.round((c.rojo / c.total) * 100)
+                : 0;
+            return {
+                ...c,
+                riesgo: rojoPct,
+                recomendacion: getCompanyRecommendation(rojoPct)
+            };
         });
-        const sorted = Object.entries(competencias)
-            .sort((a, b) => a[1] - b[1]);
-        const criticas = sorted.slice(0, 5);
-        const mejores = sorted.slice(-5).reverse();
+        /* ================= RESPONSE ================= */
         return res.json({
             ok: true,
-            role: user.role,
             data: {
-                participantes: participants.length,
-                evaluaciones: totalEvaluaciones,
-                pendientes,
+                participantes: consolidated.length,
                 semaforo: { verde, amarillo, rojo },
-                competencias,
-                criticas,
-                mejores
+                companies
             }
         });
     }
     catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Error dashboard" });
+        return res.status(500).json({
+            error: "Error dashboard"
+        });
     }
 });
 exports.default = router;

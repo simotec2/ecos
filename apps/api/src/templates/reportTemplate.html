@@ -109,11 +109,70 @@ body{
   <!-- SALTO -->
   <div class="page-break"></div>
 
-  <!-- ANALISIS -->
-  <div class="card compact">
-    <b>Análisis del Profesional</b><br/>
+  <!-- ANALISIS PREMIUM -->
+<div class="card compact">
+
+  <b style="font-size:14px;">Conclusión General</b>
+
+  <div style="margin-top:5px;margin-bottom:10px;">
     {{analysis}}
   </div>
+
+  <div style="display:flex;gap:20px;margin-top:10px;">
+
+    <!-- BRECHAS -->
+    <div style="flex:1;">
+      <b style="color:#dc2626;">Brechas Críticas</b>
+
+      <div style="
+        margin-top:6px;
+        border:1px solid #eee;
+        padding:8px;
+        border-radius:6px;
+        font-size:11.5px;
+      ">
+        {{bottom}}
+      </div>
+
+      <div style="
+        margin-top:6px;
+        background:#fef2f2;
+        padding:8px;
+        border-radius:6px;
+        font-size:11px;
+      ">
+        Se recomienda intervención focalizada en estas competencias, incluyendo acompañamiento en terreno y refuerzo conductual.
+      </div>
+    </div>
+
+    <!-- FORTALEZAS -->
+    <div style="flex:1;">
+      <b style="color:#16a34a;">Fortalezas Clave</b>
+
+      <div style="
+        margin-top:6px;
+        border:1px solid #eee;
+        padding:8px;
+        border-radius:6px;
+        font-size:11.5px;
+      ">
+        {{top}}
+      </div>
+
+      <div style="
+        margin-top:6px;
+        background:#ecfdf5;
+        padding:8px;
+        border-radius:6px;
+        font-size:11px;
+      ">
+        Estas competencias pueden ser aprovechadas como base para el desarrollo y desempeño en el rol.
+      </div>
+    </div>
+
+  </div>
+
+</div>
 
 </div>
 

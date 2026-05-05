@@ -38,13 +38,17 @@ function normalizeResult(result) {
 }
 /*
 =====================================
-PDF ENGINE (FINAL FUNCIONANDO)
+PDF ENGINE
 =====================================
 */
 async function generatePDF(html) {
+    const executablePath = await chromium_1.default.executablePath();
+    if (!executablePath) {
+        throw new Error("Chromium no disponible en este entorno");
+    }
     const browser = await puppeteer_core_1.default.launch({
         args: chromium_1.default.args,
-        executablePath: await chromium_1.default.executablePath(),
+        executablePath,
         headless: true
     });
     const page = await browser.newPage();
@@ -99,23 +103,51 @@ router.get("/:id/pdf", async (req, res) => {
 });
 /*
 =====================================
-PDF FINAL
+PDF FINAL (CORREGIDO COMPLETO)
 =====================================
 */
 router.get("/:id/final/pdf", async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await db_1.default.evaluationResult.findUnique({
+        // 1. Resultado base
+        const baseResult = await db_1.default.evaluationResult.findUnique({
             where: { id },
             include: {
-                participant: { include: { company: true } },
+                participant: { include: { company: true } }
+            }
+        });
+        if (!baseResult) {
+            return res.status(404).json({ error: "Resultado no encontrado" });
+        }
+        // 2. Todos los resultados del participante
+        const allResults = await db_1.default.evaluationResult.findMany({
+            where: {
+                participantId: baseResult.participantId
+            },
+            include: {
                 evaluation: true
             }
         });
-        if (!result) {
-            return res.status(404).json({ error: "Resultado no encontrado" });
+        // 3. Normalizar
+        const evaluations = allResults.map(r => normalizeResult(r));
+        // 🔥 4. LÓGICA DE SEMÁFORO CORRECTA
+        function getFinalTraffic(evals) {
+            const colors = evals.map(e => e.traffic?.color);
+            if (colors.includes("ROJO")) {
+                return { color: "ROJO", result: "NO RECOMENDABLE" };
+            }
+            if (colors.includes("AMARILLO")) {
+                return { color: "AMARILLO", result: "RECOMENDABLE CON OBSERVACIONES" };
+            }
+            return { color: "VERDE", result: "RECOMENDABLE" };
         }
-        const data = normalizeResult(result);
+        const finalTraffic = getFinalTraffic(evaluations);
+        // 5. Data final
+        const data = {
+            participant: baseResult.participant,
+            evaluations,
+            finalTraffic
+        };
         const html = await (0, finalReportRenderer_1.renderFinalReportHTML)(data);
         const pdf = await generatePDF(html);
         res.setHeader("Content-Type", "application/pdf");
@@ -125,8 +157,10 @@ router.get("/:id/final/pdf", async (req, res) => {
     catch (error) {
         console.error("❌ ERROR PDF FINAL:", error);
         return res.status(500).json({
-            error: "Error generando PDF final",
-            detail: error.message
+            error: "ERROR NUEVO TEST FINAL 123",
+            detail: error.message,
+            stack: error.stack,
+            raw: error
         });
     }
 });

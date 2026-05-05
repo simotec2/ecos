@@ -27,6 +27,7 @@ const evaluationAnswer_1 = __importDefault(require("./routes/evaluationAnswer"))
 const history_1 = __importDefault(require("./routes/history"));
 const questions_1 = __importDefault(require("./routes/questions"));
 const debug_1 = __importDefault(require("./routes/debug"));
+const template_1 = __importDefault(require("./routes/template"));
 const app = (0, express_1.default)();
 /* =========================
 MIDDLEWARES
@@ -38,6 +39,9 @@ HEALTH CHECK (CRÍTICO)
 ========================= */
 app.get("/api/health", (req, res) => {
     res.json({ ok: true });
+});
+app.get("/api/test", (req, res) => {
+    res.json({ ok: true, version: "NUEVA VERSION 123" });
 });
 /* =========================
 RUTAS
@@ -61,6 +65,7 @@ app.use("/api/evaluationfinish", evaluationFinish_1.default);
 app.use("/api/history", history_1.default);
 app.use("/api/questions", questions_1.default);
 app.use("/api/debug", debug_1.default);
+app.use("/api/template", template_1.default);
 /* =========================
 FINAL REPORT
 ========================= */

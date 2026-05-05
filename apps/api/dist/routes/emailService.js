@@ -5,66 +5,33 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendEvaluationEmail = sendEvaluationEmail;
 const nodemailer_1 = __importDefault(require("nodemailer"));
-/* ======================================
-TRANSPORTER GLOBAL (MEJOR PRACTICA)
-====================================== */
-const transporter = nodemailer_1.default.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
-});
-/* ======================================
-ENVIAR EMAIL
-====================================== */
 async function sendEvaluationEmail(email, name, token) {
-    /* =========================
-    URL DINÁMICA (CLAVE)
-    ========================= */
-    const baseUrl = process.env.FRONTEND_URL ||
-        "http://localhost:5173";
-    const link = `${baseUrl}/access/${token}`;
+    const transporter = nodemailer_1.default.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+        }
+    });
+    const link = `http://localhost:5173/access/${token}`;
     await transporter.sendMail({
         from: `"ECOS Evaluaciones" <${process.env.SMTP_USER}>`,
         to: email,
-        subject: "Invitación a evaluación ECOS",
+        subject: "Invitación a evaluación",
         html: `
-      <div style="font-family: Arial; max-width:600px; margin:auto;">
-        
-        <h2 style="color:#111;">Invitación a evaluación</h2>
+      <h2>Invitación a evaluación</h2>
 
-        <p>Hola ${name},</p>
+      <p>Hola ${name},</p>
 
-        <p>Has sido invitado a rendir una evaluación en la plataforma ECOS.</p>
+      <p>Has sido invitado a rendir una evaluación.</p>
 
-        <p>Haz clic en el siguiente enlace para comenzar:</p>
+      <p>Para comenzar haz clic en el siguiente enlace:</p>
 
-        <a 
-          href="${link}" 
-          style="
-            display:inline-block;
-            padding:10px 20px;
-            background:#2563eb;
-            color:#fff;
-            text-decoration:none;
-            border-radius:6px;
-            margin:10px 0;
-          "
-        >
-          Ingresar a evaluación
-        </a>
+      <a href="${link}">${link}</a>
 
-        <p style="font-size:12px; color:#666;">
-          Si el botón no funciona, copia este enlace:<br/>
-          ${link}
-        </p>
-
-        <p style="margin-top:20px;">Plataforma ECOS</p>
-
-      </div>
+      <p>Plataforma ECOS</p>
     `
     });
 }

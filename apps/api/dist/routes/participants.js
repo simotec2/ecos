@@ -45,7 +45,7 @@ router.get("/", async (req, res) => {
     }
 });
 /* ======================================
-CREAR PARTICIPANTE (PRO REAL)
+CREAR PARTICIPANTE
 ====================================== */
 router.post("/", async (req, res) => {
     try {
@@ -56,9 +56,6 @@ router.post("/", async (req, res) => {
             });
         }
         const cleanRut = normalizeRut(rut);
-        /* =========================
-        VALIDAR DUPLICADO
-        ========================= */
         const existing = await db_1.default.participant.findFirst({
             where: {
                 rut: cleanRut,
@@ -71,9 +68,6 @@ router.post("/", async (req, res) => {
             });
         }
         const token = (0, crypto_1.randomUUID)();
-        /* =========================
-        CREAR PARTICIPANTE
-        ========================= */
         const participant = await db_1.default.participant.create({
             data: {
                 nombre,
@@ -84,13 +78,7 @@ router.post("/", async (req, res) => {
                 companyId: companyId || null
             }
         });
-        /* =========================
-        RESPONDER INMEDIATO (CLAVE UX)
-        ========================= */
         res.json(participant);
-        /* =========================
-        EMAIL NO BLOQUEANTE (CLAVE)
-        ========================= */
         if (email) {
             (0, email_1.sendEvaluationEmail)(email, `${nombre} ${apellido}`, token);
         }
@@ -115,9 +103,6 @@ router.put("/:id", async (req, res) => {
             });
         }
         const cleanRut = normalizeRut(rut);
-        /* =========================
-        VALIDAR DUPLICADO
-        ========================= */
         const existing = await db_1.default.participant.findFirst({
             where: {
                 rut: cleanRut,
@@ -146,6 +131,43 @@ router.put("/:id", async (req, res) => {
         console.error("UPDATE PARTICIPANT ERROR:", error?.message, error);
         res.status(500).json({
             error: "Error actualizando participante"
+        });
+    }
+});
+/* ======================================
+REENVIAR INVITACIÓN
+====================================== */
+router.post("/:id/resend", async (req, res) => {
+    try {
+        const id = req.params.id;
+        const participant = await db_1.default.participant.findUnique({
+            where: { id }
+        });
+        if (!participant) {
+            return res.status(404).json({
+                error: "Participante no encontrado"
+            });
+        }
+        if (!participant.email) {
+            return res.status(400).json({
+                error: "El participante no tiene email"
+            });
+        }
+        let token = participant.accessToken;
+        if (!token) {
+            token = (0, crypto_1.randomUUID)();
+            await db_1.default.participant.update({
+                where: { id },
+                data: { accessToken: token }
+            });
+        }
+        await (0, email_1.sendEvaluationEmail)(participant.email, `${participant.nombre} ${participant.apellido}`, token);
+        res.json({ success: true });
+    }
+    catch (error) {
+        console.error("RESEND ERROR:", error?.message, error);
+        res.status(500).json({
+            error: "Error reenviando invitación"
         });
     }
 });

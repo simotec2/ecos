@@ -5,40 +5,42 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const db_1 = __importDefault(require("../db"));
-const puppeteer_1 = __importDefault(require("puppeteer"));
+const chromium_1 = __importDefault(require("@sparticuz/chromium"));
+const puppeteer_core_1 = __importDefault(require("puppeteer-core"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const radarGenerator_1 = require("../services/radarGenerator");
 const aiEngine_1 = require("../services/aiEngine");
 const router = (0, express_1.Router)();
+/* ======================================
+FORMATEAR ANALISIS
+====================================== */
 function formatAnalysisHTML(text) {
     if (!text)
         return "";
     let html = text;
-    /* TITULOS EN NEGRITA */
     html = html
         .replace(/Diagnóstico General:/gi, "<b>Diagnóstico General:</b><br/>")
         .replace(/Impacto en Desempeño y Riesgos:/gi, "<br/><b>Impacto en Desempeño y Riesgos:</b><br/>")
         .replace(/Recomendaciones:/gi, "<br/><b>Recomendaciones:</b><br/>")
-        .replace(/Conclusión:/gi, "<br/><b>Conclusión:</b><br/>")
-        .replace(/Resultados:/gi, "<br/><b>Resultados:</b><br/>");
-    /* LISTAS */
+        .replace(/Conclusión:/gi, "<br/><b>Conclusión:</b><br/>");
     html = html.replace(/- (.*?)(\n|$)/g, "<li>$1</li>");
-    /* ENVOLVER LISTA */
     html = html.replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>");
-    /* SALTOS DE LINEA */
     html = html.replace(/\n/g, "<br/>");
     return html;
 }
 /* ======================================
-UTILS
+SEMAFORO FINAL CORRECTO
 ====================================== */
-function calculateTraffic(score) {
-    if (score >= 85)
-        return { color: "VERDE", label: "RECOMENDABLE" };
-    if (score >= 55)
+function calculateFinalTraffic(results) {
+    const colors = results.map(r => r.traffic); // 🔥 CORREGIDO
+    if (colors.includes("ROJO")) {
+        return { color: "ROJO", label: "NO RECOMENDABLE" };
+    }
+    if (colors.includes("AMARILLO")) {
         return { color: "AMARILLO", label: "RECOMENDABLE CON OBSERVACIONES" };
-    return { color: "ROJO", label: "NO RECOMENDABLE" };
+    }
+    return { color: "VERDE", label: "RECOMENDABLE" };
 }
 function getColorHex(color) {
     if (color === "VERDE")
@@ -48,47 +50,29 @@ function getColorHex(color) {
     return "#dc2626";
 }
 /* ======================================
-IA FINAL PROFESIONAL
+IA FINAL
 ====================================== */
 async function buildFinalAnalysisIA(evaluations, finalScore) {
     const prompt = `
-Eres un psicólogo laboral senior experto en evaluación de competencias en minería.
+Eres un psicólogo laboral senior experto en minería.
 
-Redacta un INFORME EJECUTIVO PROFESIONAL.
+Genera un informe ejecutivo.
 
-REGLAS:
-- NO saludar
-- NO hacer preguntas
-- NO lenguaje conversacional
-- NO markdown
-- tono formal, técnico, ejecutivo
-- máximo 2 párrafos + 3 recomendaciones
-
-CONTEXTO:
 Evaluaciones:
 ${evaluations.map(e => `${e.name}: ${e.score}%`).join("\n")}
 
 Puntaje final: ${finalScore}%
 
-OBJETIVO:
-- integrar resultados en un diagnóstico único
-- explicar impacto en desempeño y seguridad
-- identificar brechas de forma integrada
-- entregar recomendaciones accionables
-
-FORMATO:
-Párrafo 1: Diagnóstico  
-Párrafo 2: Impacto  
+Formato:
+Diagnóstico General:
+Impacto en Desempeño y Riesgos:
 Recomendaciones:
 - ...
 - ...
 - ...
 `;
     let text = await (0, aiEngine_1.generateAIReport)(prompt);
-    /* LIMPIEZA */
     text = text
-        .replace(/hola.*\n?/gi, "")
-        .replace(/¿.*\?/gi, "")
         .replace(/\*\*/g, "")
         .trim();
     return text;
@@ -141,26 +125,36 @@ router.get("/:participantId/pdf", async (req, res) => {
         if (!results.length) {
             return res.status(404).json({ error: "Sin resultados" });
         }
-        /* SOLO ÚLTIMO POR TIPO */
+        /* 🔥 SOLO ÚLTIMO POR TIPO */
         const map = {};
         for (const r of results) {
             const type = r.evaluation.type;
-            if (!map[type])
+            if (!map[type]) {
                 map[type] = r;
+            }
         }
         const finalResults = Object.values(map);
+        /* 🔥 NORMALIZAR */
         const evaluations = finalResults.map((r) => {
             const data = JSON.parse(r.resultJson || "{}");
+            const score = Math.round(data.score || 0);
+            const traffic = score >= 85
+                ? "VERDE"
+                : score >= 55
+                    ? "AMARILLO"
+                    : "ROJO";
             return {
                 name: r.evaluation.name,
-                score: Math.round(data.score || 0),
+                score,
+                traffic,
                 competencies: data.competencies || data.competenciasDetalle || []
             };
         });
-        const scores = evaluations.map(e => e.score);
-        const finalScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-        const traffic = calculateTraffic(finalScore);
-        /* CONSOLIDAR COMPETENCIAS */
+        /* 🔥 SCORE PROMEDIO */
+        const finalScore = Math.round(evaluations.reduce((acc, e) => acc + e.score, 0) / evaluations.length);
+        /* 🔥 SEMÁFORO CORRECTO */
+        const traffic = calculateFinalTraffic(evaluations);
+        /* 🔥 CONSOLIDAR COMPETENCIAS */
         const compMap = {};
         evaluations.forEach(e => {
             (e.competencies || []).forEach((c) => {
@@ -175,7 +169,7 @@ router.get("/:participantId/pdf", async (req, res) => {
             name,
             score: Math.round(values.reduce((a, b) => a + b, 0) / values.length)
         }));
-        /* IA */
+        /* 🔥 IA */
         const analysis = await buildFinalAnalysisIA(evaluations, finalScore);
         const html = await renderHTML({
             participant,
@@ -184,7 +178,16 @@ router.get("/:participantId/pdf", async (req, res) => {
             competencies,
             analysis
         });
-        const browser = await puppeteer_1.default.launch({ headless: true });
+        /* 🔥 CHROMIUM */
+        const executablePath = await chromium_1.default.executablePath();
+        if (!executablePath) {
+            throw new Error("Chromium no disponible");
+        }
+        const browser = await puppeteer_core_1.default.launch({
+            args: chromium_1.default.args,
+            executablePath,
+            headless: true
+        });
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: "networkidle0" });
         const pdf = await page.pdf({
@@ -200,8 +203,11 @@ router.get("/:participantId/pdf", async (req, res) => {
         res.send(pdf);
     }
     catch (e) {
-        console.error(e);
-        res.status(500).json({ error: "Error generando informe final" });
+        console.error("❌ ERROR FINAL REPORT:", e);
+        res.status(500).json({
+            error: "Error generando informe final",
+            detail: e.message
+        });
     }
 });
 exports.default = router;

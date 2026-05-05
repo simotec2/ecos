@@ -42,6 +42,30 @@ const crypto_1 = require("crypto");
 const XLSX = __importStar(require("xlsx"));
 const email_1 = require("../utils/email");
 const router = (0, express_1.Router)();
+/* ======================================
+UTILS
+====================================== */
+function normalize(text) {
+    return String(text || "")
+        .toLowerCase()
+        .trim();
+}
+function isSelected(value) {
+    return value === 1 || value === "1" || value === "X" || value === "x";
+}
+/* ======================================
+MAPA VISUAL → SISTEMA
+====================================== */
+const evaluationMap = {
+    // visibles
+    "evaluacion conductual": "PETS",
+    "evaluacion psicolaboral": "ICOM",
+    // seguridad
+    "seguridad supervisor puerto": "Seguridad Supervisor Puerto",
+    "seguridad operador puerto": "Seguridad Operador Puerto",
+    "seguridad supervisor minería": "Seguridad Supervisor Minería",
+    "seguridad operador minería": "Seguridad Operador Minería"
+};
 router.post("/", async (req, res) => {
     try {
         const { file } = req.body;
@@ -51,10 +75,10 @@ router.post("/", async (req, res) => {
         const buffer = Buffer.from(file, "base64");
         const workbook = XLSX.read(buffer, { type: "buffer" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const data = XLSX.utils.sheet_to_json(sheet);
-        const allEvaluations = await db_1.default.evaluation.findMany();
+        const rows = XLSX.utils.sheet_to_json(sheet);
+        const evaluationsDB = await db_1.default.evaluation.findMany();
         const results = [];
-        for (const row of data) {
+        for (const row of rows) {
             const nombre = row.nombre;
             const apellido = row.apellido;
             const rut = row.rut;
@@ -64,7 +88,9 @@ router.post("/", async (req, res) => {
             if (!nombre || !apellido || !rut)
                 continue;
             const token = (0, crypto_1.randomUUID)();
-            // empresa
+            /* ======================
+            EMPRESA
+            ====================== */
             let companyId = null;
             if (empresa) {
                 const company = await db_1.default.company.findFirst({
@@ -73,6 +99,9 @@ router.post("/", async (req, res) => {
                 if (company)
                     companyId = company.id;
             }
+            /* ======================
+            PARTICIPANTE
+            ====================== */
             const participant = await db_1.default.participant.create({
                 data: {
                     nombre,
@@ -84,25 +113,37 @@ router.post("/", async (req, res) => {
                     perfil: perfil || null
                 }
             });
-            // 🔥 evaluar columnas dinámicas
-            for (const ev of allEvaluations) {
-                const value = row[ev.name];
-                if (value === 1 || value === "1" || value === "X" || value === "x") {
-                    await db_1.default.assignment.create({
-                        data: {
-                            participantId: participant.id,
-                            evaluationId: ev.id
-                        }
-                    });
+            /* ======================
+            ASIGNAR EVALUACIONES
+            ====================== */
+            for (const column in row) {
+                const normalizedColumn = normalize(column);
+                const mappedValue = evaluationMap[normalizedColumn];
+                if (!mappedValue)
+                    continue;
+                const value = row[column];
+                if (isSelected(value)) {
+                    const evaluation = evaluationsDB.find(ev => ev.type === mappedValue || ev.name === mappedValue);
+                    if (evaluation) {
+                        await db_1.default.assignment.create({
+                            data: {
+                                participantId: participant.id,
+                                evaluationId: evaluation.id,
+                                status: "PENDING"
+                            }
+                        });
+                    }
                 }
             }
-            // email
+            /* ======================
+            EMAIL
+            ====================== */
             if (email) {
                 try {
                     await (0, email_1.sendEvaluationEmail)(email, `${nombre} ${apellido}`, token);
                 }
                 catch (e) {
-                    console.error("Error email:", email);
+                    console.error("Error enviando email:", email);
                 }
             }
             results.push(participant);
@@ -115,7 +156,8 @@ router.post("/", async (req, res) => {
     catch (error) {
         console.error(error);
         res.status(500).json({
-            error: "Error carga masiva"
+            error: "Error carga masiva",
+            detail: error.message
         });
     }
 });
