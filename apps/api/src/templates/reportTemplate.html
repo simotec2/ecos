@@ -50,6 +50,10 @@ body{
   page-break-before: always;
 }
 
+.no-break{
+  page-break-inside: avoid;
+}
+
 </style>
 </head>
 
@@ -68,140 +72,160 @@ body{
     {{perfil}}
   </div>
 
- <!-- DECISION + KPI -->
-<div class="card compact">
+  <!-- DECISION + KPI -->
+  <div class="card compact">
 
-  <div style="
-    margin-bottom:8px;
-    padding:10px;
-    border-radius:8px;
-    text-align:center;
-    font-weight:bold;
-    font-size:14px;
-    color:white;
-    background:#111;
-  ">
-    DECISIÓN OPERACIONAL
+    <div style="
+      margin-bottom:8px;
+      padding:10px;
+      border-radius:8px;
+      text-align:center;
+      font-weight:bold;
+      font-size:14px;
+      color:white;
+      background:#1e3a8a;
+    ">
+      DECISIÓN OPERACIONAL
+    </div>
+
+    {{kpi}}
+
+    <div style="
+      margin-top:8px;
+      padding:8px;
+      border-radius:6px;
+      background:#f3f4f6;
+      text-align:center;
+      font-size:11.5px;
+    ">
+      Evaluación basada en competencias críticas para desempeño seguro en contexto operacional.
+    </div>
+
   </div>
 
-  {{kpi}}
+  <!-- RESUMEN EJECUTIVO -->
+  <div class="card compact section">
 
-  <div style="
-    margin-top:8px;
-    padding:8px;
-    border-radius:6px;
-    background:#f3f4f6;
-    text-align:center;
-    font-size:11.5px;
-  ">
-    Evaluación basada en competencias críticas para desempeño seguro en contexto operacional.
+    <b>Resumen Ejecutivo</b>
+
+    <div style="margin-top:5px;">
+      {{resumen}}
+    </div>
+
+    <div style="
+      margin-top:6px;
+      padding:6px;
+      background:#f9fafb;
+      border-radius:6px;
+      font-size:11px;
+    ">
+      Este informe identifica brechas críticas y propone acciones concretas para mejorar el desempeño del participante en entornos de alta exigencia.
+    </div>
+
   </div>
 
-</div>
+  <!-- RADAR + TOP/BOTTOM -->
+  <div class="card section no-break">
 
- <!-- RESUMEN EJECUTIVO -->
-<div class="card compact section">
-
-  <b>Resumen Ejecutivo</b>
-
-  <div style="margin-top:5px;">
-    {{resumen}}
-  </div>
-
-  <div style="
-    margin-top:8px;
-    padding:8px;
-    background:#f9fafb;
-    border-radius:6px;
-    font-size:11.5px;
-  ">
-    Este informe identifica brechas críticas y propone acciones concretas para mejorar el desempeño del participante en entornos de alta exigencia.
-  </div>
-
-  <!-- RADAR -->
-  <div class="card section">
-
-    <div style="text-align:center;margin-bottom:10px;">
+    <div style="text-align:center;margin-bottom:6px;">
       {{radar}}
     </div>
 
-    <div style="display:flex;gap:15px;font-size:12px;">
+    <table style="width:100%; font-size:11.5px;">
+      <tr>
 
-      <div style="flex:1;">
-        <b style="color:#16a34a;">Fortalezas</b>
-        <div style="margin-top:5px;">
-          {{top}}
-        </div>
+        <td style="width:50%; vertical-align:top; text-align:left;">
+          <b style="color:#16a34a;">Fortalezas</b>
+          <div style="margin-top:4px;">
+            {{top}}
+          </div>
+        </td>
 
-      <div style="flex:1;">
-        <b style="color:#dc2626;">Brechas</b>
-        <div style="margin-top:5px;">
-          {{bottom}}
-        </div>
+        <td style="width:50%; vertical-align:top; text-align:left;">
+          <b style="color:#dc2626;">Brechas</b>
+          <div style="margin-top:4px;">
+            {{bottom}}
+          </div>
+        </td>
 
-  <!-- SALTO -->
+      </tr>
+    </table>
+
+  </div>
+
+  <!-- SALTO CONTROLADO -->
   <div class="page-break"></div>
 
   <!-- ANALISIS PREMIUM -->
-<div class="card compact">
+  <div class="card compact no-break">
 
-  <b style="font-size:14px;">Conclusión General</b>
+    <b style="font-size:13px;">Conclusión General</b>
 
-  <div style="margin-top:5px;margin-bottom:10px;">
-    {{analysis}}
-  </div>
-
-  <div style="display:flex;gap:10px;margin-top:10px;">
-
-    <!-- BRECHAS -->
-    <div style="flex:1;">
-      <b style="color:#dc2626;">Brechas Críticas</b>
-
-      <div style="
-        margin-top:6px;
-        border:1px solid #eee;
-        padding:8px;
-        border-radius:6px;
-        font-size:11.5px;
-      ">
-        {{bottom}}
-      </div>
-
-      <div style="
-        margin-top:6px;
-        background:#fef2f2;
-        padding:8px;
-        border-radius:6px;
-        font-size:11px;
-      ">
-        Se recomienda intervención focalizada en estas competencias, incluyendo acompañamiento en terreno y refuerzo conductual.
-      </div>
+    <div style="margin-top:4px;margin-bottom:8px;">
+      {{analysis}}
     </div>
 
-    <!-- FORTALEZAS -->
-    <div style="flex:1;">
-      <b style="color:#16a34a;">Fortalezas Clave</b>
+    <table style="width:100%; border-collapse:collapse; font-size:11.5px;">
+      <tr>
 
-      <div style="
-        margin-top:6px;
-        border:1px solid #eee;
-        padding:8px;
-        border-radius:6px;
-        font-size:11.5px;
-      ">
-        {{top}}
-      </div>
+        <!-- BRECHAS -->
+        <td style="width:50%; vertical-align:top; padding-right:6px;">
+          
+          <b style="color:#dc2626;">Brechas Críticas</b>
 
-      <div style="
-        margin-top:6px;
-        background:#ecfdf5;
-        padding:8px;
-        border-radius:6px;
-        font-size:11px;
-      ">
-        Estas competencias pueden ser aprovechadas como base para el desarrollo y desempeño en el rol.
-      </div>
-  
+          <div style="
+            margin-top:4px;
+            border:1px solid #eee;
+            padding:6px;
+            border-radius:6px;
+          ">
+            {{bottom}}
+          </div>
+
+          <div style="
+            margin-top:4px;
+            background:#fef2f2;
+            padding:6px;
+            border-radius:6px;
+            font-size:10.5px;
+          ">
+            Requiere intervención directa y seguimiento en terreno.
+          </div>
+
+        </td>
+
+        <!-- FORTALEZAS -->
+        <td style="width:50%; vertical-align:top; padding-left:6px;">
+          
+          <b style="color:#16a34a;">Fortalezas Clave</b>
+
+          <div style="
+            margin-top:4px;
+            border:1px solid #eee;
+            padding:6px;
+            border-radius:6px;
+          ">
+            {{top}}
+          </div>
+
+          <div style="
+            margin-top:4px;
+            background:#ecfdf5;
+            padding:6px;
+            border-radius:6px;
+            font-size:10.5px;
+          ">
+            Base adecuada para desarrollo y desempeño en el rol.
+          </div>
+
+        </td>
+
+      </tr>
+    </table>
+
+  </div>
+
+</div>
 
 </body>
 </html>

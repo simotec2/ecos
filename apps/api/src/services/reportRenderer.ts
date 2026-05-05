@@ -58,7 +58,7 @@ export async function renderReportHTML(data:any){
   let radarHTML = ""
   if(competencies.length > 0){
     const radar = await generateRadarImage(competencies)
-    radarHTML = `<img src="${radar}" style="width:450px;margin:auto;display:block;" />`
+    radarHTML = `<img src="${radar}" style="width:280px;margin:auto;display:block;" />`
   }
 
   /* ORDEN */
