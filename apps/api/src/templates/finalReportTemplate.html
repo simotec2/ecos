@@ -1,76 +1,140 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
+
 <style>
-.header{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  margin-bottom:22px;
-}
 
-.logo{
-  position:absolute;
-  left:0;
-}
-
-.title{
-  font-size:24px;
-  font-weight:bold;
-  text-align:center;
+@page {
+  size: letter;
+  margin: 18mm;
 }
 
 body{
-  font-family: Arial;
-  padding:40px;
-  color:#111;
+  font-family: Arial, sans-serif;
+  margin:0;
+  color:#1f2937;
+}
+
+/* CONTENEDOR */
+.container{
+  max-width:760px;
+  margin:auto;
+}
+
+/* HEADER */
+.header{
+  text-align:center;
+  margin-bottom:12px;
+}
+
+/* NOMBRE Y EMPRESA */
+.identity{
+  margin-top:10px;
+  font-size:15px;
+}
+
+.identity small{
+  display:block;
+  font-size:12px;
+  color:#6b7280;
+}
+
+/* LINEA PREMIUM */
+.line{
+  height:5px;
+  background: linear-gradient(to right, #1e3a8a, #60a5fa);
+  border-radius:3px;
+  margin-top:10px;
+  margin-bottom:12px;
+}
+
+/* TARJETAS */
+.card{
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:10px;
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+}
+
+/* VARIANTES */
+.section-blue{
+  background:#eff6ff;
+  border:1px solid #dbeafe;
+}
+
+.section-green{
+  background:#ecfdf5;
+  border:1px solid #d1fae5;
+}
+
+.section-yellow{
+  background:#fffbeb;
+  border:1px solid #fef3c7;
+}
+
+/* TITULOS */
+h3{
+  margin-top:6px;
+  margin-bottom:6px;
+  font-size:14px;
+}
+
+/* TEXTO */
+.analysis{
+  line-height:1.5;
+  font-size:11.5px;
+  text-align:justify;
+}
+
+p{
+  margin:4px 0;
+}
+
+ul{
+  margin:4px 0;
+  padding-left:18px;
+}
+
+li{
+  margin-bottom:3px;
 }
 
 /* KPI */
 .kpis{
   display:flex;
-  gap:20px;
-  margin-top:30px;
+  gap:10px;
 }
 
 .kpi{
   flex:1;
-  background:#f3f4f6;
-  padding:20px;
-  border-radius:10px;
+  background:#ffffff;
+  padding:10px;
+  border-radius:8px;
   text-align:center;
+  border:1px solid #e5e7eb;
 }
 
 .result{
-  color:#fff;
-  padding:12px;
-  border-radius:10px;
+  color:white;
+  padding:8px;
+  border-radius:6px;
   font-weight:bold;
 }
 
 /* RADAR */
 .radar{
-  margin-top:30px;
+  margin-top:15px;
   text-align:center;
 }
 
-/* PAGE BREAK */
-.page-break{
-  page-break-before: always;
-}
-
-/* ANALISIS */
-.analysis{
-  margin-top:4px;
-  line-height:1.7;
-  text-align:justify;
-  font-size:12px;
-}
-
-hr{
-  margin:10px 0;
+/* FOOTER */
+.footer{
+  margin-top:15px;
+  font-size:10px;
+  text-align:center;
+  color:#6b7280;
 }
 
 </style>
@@ -78,51 +142,77 @@ hr{
 
 <body>
 
-<!-- PAGINA 1 -->
-<div class="header">
+<div class="container">
 
-  <div class="logo">
+  <!-- HEADER -->
+  <div class="header">
     {{logo}}
+    <h2>INFORME FINAL ECOS</h2>
   </div>
 
-  <div class="title">
-    INFORME FINAL ECOS
+  <!-- IDENTIDAD -->
+  <div class="identity">
+    <b>{{participant}}</b>
+    <small>{{company}}</small>
+    <small>Fecha de informe: {{date}}</small>
   </div>
 
-</div>
+  <div class="line"></div>
 
-<div>{{participant}}</div>
-<div>{{perfil}}</div>
-<div>{{company}}</div>
+  <!-- KPI -->
+  <div class="card section-blue">
 
-<hr/>
+    <div class="kpis">
 
-<div class="kpis">
-  <div class="kpi">
-    Puntaje Global<br/>
-    <b>{{score}}%</b>
+      <div class="kpi">
+        Puntaje Global<br/>
+        <b>{{score}}%</b>
+      </div>
+
+      <div class="kpi">
+        Resultado<br/>
+        <div class="result" style="background:{{color}}">
+          {{result}}
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
-  <div class="kpi">
-    Resultado<br/>
-    <div class="result" style="background:{{color}}">
-      {{result}}
+  <!-- RADAR -->
+  <div class="card">
+    <div class="radar">
+      {{radar}}
     </div>
   </div>
-</div>
 
-<div class="radar">
-  {{radar}}
-</div>
+  <!-- ANALISIS -->
+  <div class="card">
+    <h3>Análisis Ejecutivo</h3>
+    <div class="analysis">
+      {{analysis}}
+    </div>
+  </div>
 
-<div class="page-break"></div>
+  <!-- RECOMENDACIONES -->
+  <div class="card section-yellow">
+    <h3>Recomendaciones</h3>
+    {{recommendations}}
+  </div>
 
-<!-- PAGINA 2 -->
-<h3>Análisis Final</h3>
+  <!-- CONCLUSION -->
+  <div class="card section-green">
+    <h3>Conclusión</h3>
+    {{conclusion}}
+  </div>
 
-<div class="analysis">
-  {{analysis}}
+  <!-- FOOTER -->
+  <div class="footer">
+    Informe generado por ECOS – Plataforma de Evaluación de Competencias en Seguridad
+  </div>
+
 </div>
 
 </body>
-</html> 
+</html>
