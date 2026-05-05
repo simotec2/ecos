@@ -63,9 +63,13 @@ export async function renderReportHTML(data:any){
 
   /* ORDEN */
   const sorted = [...competencies].sort((a,b)=>b.score - a.score)
-  const top = sorted.slice(0,3)
-  const bottom = sorted.slice(-3).reverse()
+  let top = sorted.slice(0,3)
+let bottom = sorted.slice(-3).reverse()
 
+// 🔥 evitar duplicados cuando hay pocas competencias
+if(sorted.length <= 3){
+  bottom = sorted.filter(c => !top.includes(c))
+}
   const topHTML = top.map(c=>`
     <div style="color:#16a34a;">${c.name} (${Math.round(c.score)}%)</div>
   `).join("")
