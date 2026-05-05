@@ -49,27 +49,40 @@ export async function renderReportHTML(data:any){
     data.evaluationName ||
     ""
 
-  /* LOGO */
+  /* ======================
+  FECHA
+  ====================== */
+  const today = new Date().toLocaleDateString("es-CL")
+
+  /* ======================
+  LOGO
+  ====================== */
   const logoPath = path.join(__dirname,"..","..","assets","logos","ecos.png")
   const logoBase64 = fs.readFileSync(logoPath).toString("base64")
   const logo = `<img src="data:image/png;base64,${logoBase64}" style="height:45px;" />`
 
-  /* RADAR */
+  /* ======================
+  RADAR
+  ====================== */
   let radarHTML = ""
   if(competencies.length > 0){
     const radar = await generateRadarImage(competencies)
     radarHTML = `<img src="${radar}" style="width:280px;margin:auto;display:block;" />`
   }
 
-  /* ORDEN */
+  /* ======================
+  ORDEN COMPETENCIAS (FIX REAL)
+  ====================== */
   const sorted = [...competencies].sort((a,b)=>b.score - a.score)
-  let top = sorted.slice(0,3)
-let bottom = sorted.slice(-3).reverse()
 
-// 🔥 evitar duplicados cuando hay pocas competencias
-if(sorted.length <= 3){
-  bottom = sorted.filter(c => !top.includes(c))
-}
+  const top = sorted.slice(0,3)
+
+  const bottom = sorted
+    .slice()
+    .reverse()
+    .filter(b => !top.some(t => t.name === b.name))
+    .slice(0,3)
+
   const topHTML = top.map(c=>`
     <div style="color:#16a34a;">${c.name} (${Math.round(c.score)}%)</div>
   `).join("")
@@ -78,7 +91,9 @@ if(sorted.length <= 3){
     <div style="color:#dc2626;">${c.name} (${Math.round(c.score)}%)</div>
   `).join("")
 
-  /* KPI */
+  /* ======================
+  KPI
+  ====================== */
   const score = Math.round(data.score || 0)
   const result = data.traffic?.result || ""
   const decision = getDecision(score)
@@ -114,7 +129,9 @@ if(sorted.length <= 3){
     </div>
   `
 
-  /* PERFIL */
+  /* ======================
+  PERFIL (YA NO SE USA EN TEMPLATE NUEVO)
+  ====================== */
   const perfilHTML = `
     <div style="font-size:13px;">
       <b>${participant.nombre || ""} ${participant.apellido || ""}</b><br/>
@@ -123,7 +140,9 @@ if(sorted.length <= 3){
     </div>
   `
 
-  /* RESUMEN */
+  /* ======================
+  RESUMEN
+  ====================== */
   const resumenHTML = `
     <div style="margin-bottom:5px;">
       <b>Desempeño general:</b> ${score}%
@@ -140,12 +159,18 @@ if(sorted.length <= 3){
 
   const analysis = clean(data.analysis || data.aiText || "")
 
+  /* ======================
+  REEMPLAZOS
+  ====================== */
   html = html
     .replace(/{{logo}}/g, logo)
     .replace(/{{perfil}}/g, perfilHTML)
     .replace(/{{participant}}/g, `${participant.nombre || ""} ${participant.apellido || ""}`)
     .replace(/{{company}}/g, participant.company?.name || "")
     .replace(/{{evaluation}}/g, evaluationName)
+    .replace(/{{date}}/g, today)
+    .replace(/{{result}}/g, result)
+    .replace(/{{color}}/g, getColor(data.traffic?.color))
     .replace(/{{kpi}}/g, kpiHTML)
     .replace(/{{resumen}}/g, resumenHTML)
     .replace(/{{radar}}/g, radarHTML)
@@ -154,4 +179,4 @@ if(sorted.length <= 3){
     .replace(/{{analysis}}/g, `<div style="line-height:1.5;">${analysis}</div>`)
 
   return html
-}
+  }
