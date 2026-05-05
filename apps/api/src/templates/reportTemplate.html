@@ -42,16 +42,8 @@ body{
   line-height:1.3;
 }
 
-.section{
-  page-break-inside: avoid;
-}
-
 .page-break{
   page-break-before: always;
-}
-
-.no-break{
-  page-break-inside: avoid;
 }
 
 </style>
@@ -67,26 +59,26 @@ body{
     <div class="title">INFORME ECOS</div>
   </div>
 
-  <!-- PERFIL -->
+  <!-- DATOS -->
   <div class="card compact">
 
-  <div style="font-size:12px; line-height:1.4;">
-    <b>Nombre:</b> {{participant}}<br/>
-    <b>Perfil:</b> {{evaluation}}<br/>
-    <b>Empresa:</b> {{company}}<br/>
-    <b>Fecha:</b> {{date}}
+    <div style="font-size:12px;">
+      <b>Nombre:</b> {{participant}}<br/>
+      <b>Perfil:</b> {{evaluation}}<br/>
+      <b>Empresa:</b> {{company}}<br/>
+      <b>Fecha:</b> {{date}}
+    </div>
+
+    <div style="
+      margin-top:6px;
+      height:3px;
+      background:#1e3a8a;
+      border-radius:2px;
+    "></div>
+
   </div>
 
-  <div style="
-    margin-top:6px;
-    height:3px;
-    background:#1e3a8a;
-    border-radius:2px;
-  "></div>
-
-</div>
-
-  <!-- DECISION PRINCIPAL -->
+  <!-- DECISION -->
   <div class="card compact">
 
     <div style="
@@ -103,21 +95,10 @@ body{
 
     {{kpi}}
 
-    <div style="
-      margin-top:6px;
-      padding:8px;
-      border-radius:6px;
-      background:#f3f4f6;
-      text-align:center;
-      font-size:11px;
-    ">
-      Evaluación basada en competencias críticas para desempeño seguro en contexto operacional.
-    </div>
-
   </div>
 
-  <!-- RESUMEN EJECUTIVO -->
-  <div class="card compact section">
+  <!-- RESUMEN -->
+  <div class="card compact">
 
     <b style="font-size:13px;">Resumen Ejecutivo</b>
 
@@ -125,113 +106,69 @@ body{
       {{resumen}}
     </div>
 
-    <div style="
-      margin-top:6px;
-      font-weight:bold;
-      font-size:11.5px;
-    ">
-      Nivel de desempeño: {{result}} | Riesgo operacional: {{result}}
-    </div>
-
   </div>
 
-  <!-- RADAR + COMPETENCIAS -->
-  <div class="card section no-break">
+  <!-- RADAR -->
+  <div class="card">
 
-    <div style="text-align:center;margin-bottom:6px;">
+    <div style="text-align:center;">
       {{radar}}
     </div>
-
-    <table style="width:100%; font-size:11.5px;">
-      <tr>
-
-        <td style="width:50%; vertical-align:top;">
-          <b style="color:#16a34a;">Fortalezas</b>
-          <div style="margin-top:4px;">
-            {{top}}
-          </div>
-        </td>
-
-        <td style="width:50%; vertical-align:top;">
-          <b style="color:#dc2626;">Brechas</b>
-          <div style="margin-top:4px;">
-            {{bottom}}
-          </div>
-        </td>
-
-      </tr>
-    </table>
 
   </div>
 
   <!-- SALTO -->
   <div class="page-break"></div>
 
-  <!-- ANALISIS PREMIUM -->
-  <div class="card compact no-break">
+  <!-- ANALISIS EN 2 COLUMNAS -->
+  <div class="card compact">
 
     <b style="font-size:13px;">Conclusión General</b>
 
-    <div style="margin-top:4px;margin-bottom:8px;">
-      {{analysis}}
-    </div>
+    <table style="width:100%; margin-top:8px; font-size:11.5px;">
 
-    <table style="width:100%; border-collapse:collapse; font-size:11.5px;">
       <tr>
 
-        <!-- BRECHAS -->
-        <td style="width:50%; vertical-align:top; padding-right:6px;">
-          
-          <b style="color:#dc2626;">Brechas Críticas</b>
+        <!-- COLUMNA IZQUIERDA -->
+        <td style="width:50%; vertical-align:top; padding-right:8px;">
 
-          <div style="
-            margin-top:4px;
-            border:1px solid #eee;
-            padding:6px;
-            border-radius:6px;
-          ">
-            {{bottom}}
-          </div>
+          <b>Análisis</b>
 
-          <div style="
-            margin-top:4px;
-            background:#fef2f2;
-            padding:6px;
-            border-radius:6px;
-            font-size:10.5px;
-          ">
-            Requiere intervención directa y seguimiento en terreno.
+          <div style="margin-top:4px;">
+            {{analysis}}
           </div>
 
         </td>
 
-        <!-- FORTALEZAS -->
-        <td style="width:50%; vertical-align:top; padding-left:6px;">
-          
-          <b style="color:#16a34a;">Fortalezas Clave</b>
+        <!-- COLUMNA DERECHA -->
+        <td style="width:50%; vertical-align:top; padding-left:8px;">
 
-          <div style="
-            margin-top:4px;
-            border:1px solid #eee;
-            padding:6px;
-            border-radius:6px;
-          ">
-            {{top}}
+          <b style="color:#dc2626;">Brechas Críticas</b>
+
+          <div style="margin-top:4px;">
+            {{bottom}}
           </div>
 
           <div style="
-            margin-top:4px;
-            background:#ecfdf5;
-            padding:6px;
-            border-radius:6px;
+            margin-top:6px;
             font-size:10.5px;
+            color:#6b7280;
           ">
-            Base adecuada para desarrollo y desempeño en el rol.
+            Requiere intervención directa y seguimiento en terreno.
+          </div>
+
+          <div style="margin-top:12px;">
+            <b style="color:#16a34a;">Fortalezas Clave</b>
+          </div>
+
+          <div style="margin-top:4px;">
+            {{top}}
           </div>
 
         </td>
 
       </tr>
+
     </table>
 
   </div>
