@@ -16,19 +16,16 @@ body{
   color:#1f2937;
 }
 
-/* CONTENEDOR */
 .container{
   max-width:760px;
   margin:auto;
 }
 
-/* HEADER */
 .header{
   text-align:center;
   margin-bottom:12px;
 }
 
-/* NOMBRE Y EMPRESA */
 .identity{
   margin-top:10px;
   font-size:15px;
@@ -40,7 +37,6 @@ body{
   color:#6b7280;
 }
 
-/* LINEA PREMIUM */
 .line{
   height:5px;
   background: linear-gradient(to right, #1e3a8a, #60a5fa);
@@ -49,7 +45,6 @@ body{
   margin-bottom:12px;
 }
 
-/* TARJETAS */
 .card{
   padding:10px;
   margin-bottom:10px;
@@ -58,15 +53,9 @@ body{
   border:1px solid #e5e7eb;
 }
 
-/* VARIANTES */
 .section-blue{
   background:#eff6ff;
   border:1px solid #dbeafe;
-}
-
-.section-green{
-  background:#ecfdf5;
-  border:1px solid #d1fae5;
 }
 
 .section-yellow{
@@ -74,34 +63,22 @@ body{
   border:1px solid #fef3c7;
 }
 
-/* TITULOS */
+.section-green{
+  background:#ecfdf5;
+  border:1px solid #d1fae5;
+}
+
 h3{
-  margin-top:6px;
-  margin-bottom:6px;
+  margin:6px 0;
   font-size:14px;
 }
 
-/* TEXTO */
 .analysis{
   line-height:1.5;
   font-size:11.5px;
   text-align:justify;
 }
 
-p{
-  margin:4px 0;
-}
-
-ul{
-  margin:4px 0;
-  padding-left:18px;
-}
-
-li{
-  margin-bottom:3px;
-}
-
-/* KPI */
 .kpis{
   display:flex;
   gap:10px;
@@ -109,7 +86,7 @@ li{
 
 .kpi{
   flex:1;
-  background:#ffffff;
+  background:#fff;
   padding:10px;
   border-radius:8px;
   text-align:center;
@@ -123,13 +100,15 @@ li{
   font-weight:bold;
 }
 
-/* RADAR */
 .radar{
-  margin-top:15px;
   text-align:center;
 }
 
-/* FOOTER */
+/* 🔥 SALTO REAL */
+.page-break{
+  page-break-before: always;
+}
+
 .footer{
   margin-top:15px;
   font-size:10px;
@@ -161,23 +140,18 @@ li{
 
   <!-- KPI -->
   <div class="card section-blue">
-
     <div class="kpis">
-
       <div class="kpi">
         Puntaje Global<br/>
         <b>{{score}}%</b>
       </div>
-
       <div class="kpi">
         Resultado<br/>
         <div class="result" style="background:{{color}}">
           {{result}}
         </div>
       </div>
-
     </div>
-
   </div>
 
   <!-- RADAR -->
@@ -186,6 +160,9 @@ li{
       {{radar}}
     </div>
   </div>
+
+  <!-- 🔥 SALTO DE PAGINA CORRECTO -->
+  <div class="page-break"></div>
 
   <!-- ANALISIS -->
   <div class="card">
@@ -207,7 +184,6 @@ li{
     {{conclusion}}
   </div>
 
-  <!-- FOOTER -->
   <div class="footer">
     Informe generado por ECOS – Plataforma de Evaluación de Competencias en Seguridad
   </div>
