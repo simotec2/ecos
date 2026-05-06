@@ -59,47 +59,47 @@ export async function renderFinalReportHTML(data:any){
   REEMPLAZOS
   ====================================== */
 
-  html = html
+    html = html
 
-    .replace(/{{logo}}/g, logo)
+    .replace(/{{\s*logo\s*}}/g, logo)
 
     .replace(
-      /{{participant}}/g,
+      /{{\s*participant\s*}}/g,
       `${participant.nombre || ""} ${participant.apellido || ""}`
     )
 
     .replace(
-      /{{company}}/g,
+      /{{\s*company\s*}}/g,
       participant.company?.name || ""
     )
 
     .replace(
-       /{{\s*date\s*}}/g,
+      /{{\s*date\s*}}/g,
       today
     )
 
     .replace(
-      /{{score}}/g,
+      /{{\s*score\s*}}/g,
       String(data.score || 0)
     )
 
     .replace(
-      /{{result}}/g,
+      /{{\s*result\s*}}/g,
       data.traffic?.result || ""
     )
 
     .replace(
-      /{{color}}/g,
+      /{{\s*color\s*}}/g,
       getColor(data.traffic?.color)
     )
 
     .replace(
-      /{{analysis}}/g,
+      /{{\s*analysis\s*}}/g,
       analysis
     )
 
     .replace(
-      /{{radar}}/g,
+      /{{\s*radar\s*}}/g,
       data.radar || ""
     )
 
