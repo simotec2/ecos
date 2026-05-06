@@ -63,9 +63,10 @@ export async function renderFinalReportHTML(data:any){
   FECHA REAL
   ====================================== */
 
-  const reportDate =
-    data.date || ""
-
+  const reportDate = data.date
+  ? new Date(data.date)
+      .toLocaleDateString("es-CL")
+  : ""
   /* ======================================
   RADAR
   ====================================== */
