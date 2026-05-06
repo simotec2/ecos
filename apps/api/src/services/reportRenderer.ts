@@ -79,8 +79,8 @@ export async function renderReportHTML(data:any){
 
   const participant = data.participant || {}
   const participantProfile =
-  participant.profile ||
   participant.perfil ||
+  participant.profile ||
   ""
   const competencies = data.competencies || []
 
