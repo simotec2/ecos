@@ -73,11 +73,8 @@ export async function renderFinalReportHTML(data:any){
       participant.company?.name || ""
     )
 
-    .replace(
-      /{{\s*date\s*}}/g,
-      today
-    )
-
+    .replace(      /__DATE__/g, today)
+    
     .replace(
       /{{\s*score\s*}}/g,
       String(data.score || 0)
