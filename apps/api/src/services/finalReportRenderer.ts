@@ -4,20 +4,10 @@ import path from "path"
 function getColor(color:string){
 
   if(color === "VERDE") return "#16a34a"
+
   if(color === "AMARILLO") return "#f59e0b"
 
   return "#dc2626"
-
-}
-
-function clean(text:string){
-
-  return (text || "")
-    .replace(/[#*]/g,"")
-    .replace(/\n/g,"<br/>")
-    .replace(/Recomendaciones:/gi,"")
-    .replace(/Conclusión:/gi,"")
-    .trim()
 
 }
 
@@ -37,77 +27,41 @@ export async function renderFinalReportHTML(data:any){
   const today = new Date().toLocaleDateString("es-CL")
 
   /* ======================================
-  ANALISIS IA
+  LOGO
   ====================================== */
 
-  const rawAnalysis = data.analysis || ""
+  const logoPath = path.join(
+    __dirname,
+    "..",
+    "..",
+    "assets",
+    "logos",
+    "ecos.png"
+  )
+
+  const logoBase64 = fs.readFileSync(logoPath).toString("base64")
+
+  const logo = `
+    <img
+      src="data:image/png;base64,${logoBase64}"
+      style="height:55px;"
+    />
+  `
 
   /* ======================================
-  EXTRAER RECOMENDACIONES
+  ANALISIS
   ====================================== */
 
-  let recommendations = ""
-  let conclusion = ""
-
-  const recRegex = /Recomendaciones:(.*?)(Conclusión:|$)/is
-  const conclRegex = /Conclusión:(.*)$/is
-
-  const recMatch = rawAnalysis.match(recRegex)
-  const conclMatch = rawAnalysis.match(conclRegex)
-
-  if(recMatch){
-
-    recommendations = clean(recMatch[1])
-
-  }
-
-  if(conclMatch){
-
-    conclusion = clean(conclMatch[1])
-
-  }
-
-  /* ======================================
-  BLOQUE RECOMENDACIONES
-  ====================================== */
-
-  const recommendationsBlock = recommendations
-    ? `
-      <div class="card section-yellow">
-
-        <h3>Recomendaciones</h3>
-
-        <div class="analysis">
-          ${recommendations}
-        </div>
-
-      </div>
-    `
-    : ""
-
-  /* ======================================
-  BLOQUE CONCLUSION
-  ====================================== */
-
-  const conclusionBlock = conclusion
-    ? `
-      <div class="card section-green">
-
-        <h3>Conclusión Ejecutiva</h3>
-
-        <div class="analysis">
-          ${conclusion}
-        </div>
-
-      </div>
-    `
-    : ""
+  const analysis = (data.analysis || "")
+    .replace(/\n/g,"<br/>")
 
   /* ======================================
   REEMPLAZOS
   ====================================== */
 
   html = html
+
+    .replace(/{{logo}}/g, logo)
 
     .replace(
       /{{participant}}/g,
@@ -140,18 +94,13 @@ export async function renderFinalReportHTML(data:any){
     )
 
     .replace(
+      /{{analysis}}/g,
+      analysis
+    )
+
+    .replace(
       /{{radar}}/g,
       data.radar || ""
-    )
-
-    .replace(
-      /{{recommendationsBlock}}/g,
-      recommendationsBlock
-    )
-
-    .replace(
-      /{{conclusionBlock}}/g,
-      conclusionBlock
     )
 
   /* ======================================
