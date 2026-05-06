@@ -59,7 +59,11 @@ export async function renderFinalReportHTML(data:any){
   REEMPLAZOS
   ====================================== */
 
-    html = html
+      /* ======================================
+  REEMPLAZOS
+  ====================================== */
+
+  html = html
 
     .replace(/{{\s*logo\s*}}/g, logo)
 
@@ -73,8 +77,11 @@ export async function renderFinalReportHTML(data:any){
       participant.company?.name || ""
     )
 
-    .replace(      /__DATE__/g, today)
-    
+    .replace(
+      /__DATE__/g,
+      today
+    )
+
     .replace(
       /{{\s*score\s*}}/g,
       String(data.score || 0)
