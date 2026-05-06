@@ -3,15 +3,23 @@ import path from "path"
 
 function getColor(color:string){
 
-  if(color === "VERDE") return "#16a34a"
+  if(color === "VERDE"){
+    return "#16a34a"
+  }
 
-  if(color === "AMARILLO") return "#f59e0b"
+  if(color === "AMARILLO"){
+    return "#f59e0b"
+  }
 
   return "#dc2626"
 
 }
 
 export async function renderFinalReportHTML(data:any){
+
+  /* ======================================
+  TEMPLATE
+  ====================================== */
 
   const templatePath = path.join(
     __dirname,
@@ -25,7 +33,29 @@ export async function renderFinalReportHTML(data:any){
     "utf-8"
   )
 
+  /* ======================================
+  PARTICIPANTE
+  ====================================== */
+
   const participant = data.participant || {}
+
+  /* ======================================
+  FECHA REAL EVALUACIÓN
+  ====================================== */
+
+  const reportDate = data.date
+    ? new Date(data.date)
+        .toLocaleDateString("es-CL")
+    : ""
+
+  /* ======================================
+  INYECTAR FECHA DIRECTA
+  ====================================== */
+
+  html = html.replace(
+    "Fecha de informe: {{date}}",
+    `Fecha de informe: ${reportDate}`
+  )
 
   /* ======================================
   LOGO
@@ -40,9 +70,9 @@ export async function renderFinalReportHTML(data:any){
     "ecos.png"
   )
 
-  const logoBase64 = fs.readFileSync(
-    logoPath
-  ).toString("base64")
+  const logoBase64 = fs
+    .readFileSync(logoPath)
+    .toString("base64")
 
   const logo = `
     <img
@@ -60,19 +90,10 @@ export async function renderFinalReportHTML(data:any){
   ).replace(/\n/g,"<br/>")
 
   /* ======================================
-  FECHA REAL
-  ====================================== */
-
-  const reportDate = data.date
-  ? new Date(data.date)
-      .toLocaleDateString("es-CL")
-  : ""
-  /* ======================================
   RADAR
   ====================================== */
 
-  const radar =
-    data.radar || ""
+  const radar = data.radar || ""
 
   /* ======================================
   REEMPLAZOS
@@ -80,7 +101,10 @@ export async function renderFinalReportHTML(data:any){
 
   html = html
 
-    .replace(/{{logo}}/g, logo)
+    .replace(
+      /{{logo}}/g,
+      logo
+    )
 
     .replace(
       /{{participant}}/g,
@@ -92,8 +116,6 @@ export async function renderFinalReportHTML(data:any){
       participant.company?.name || ""
     )
 
-    .replace(/{{\s*date\s*}}/g, reportDate)
-  
     .replace(
       /{{score}}/g,
       String(data.score || 0)
