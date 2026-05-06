@@ -239,7 +239,7 @@ router.get("/:id/final/pdf", async (req,res)=>{
       await generateFinalReport(
         baseResult.participantId
       )
-
+      data.date = baseResult.createdAt
     /* =========================
     HTML
     ========================= */
