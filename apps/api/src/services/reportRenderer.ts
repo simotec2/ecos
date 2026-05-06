@@ -134,7 +134,7 @@ export async function renderReportHTML(data:any){
     radarHTML = `
       <img
         src="${radar}"
-        style="width:260px;margin:auto;display:block;"
+        style="width:360px;margin:auto;display:block;"
       />
     `
 
