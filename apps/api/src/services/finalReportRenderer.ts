@@ -20,11 +20,12 @@ export async function renderFinalReportHTML(data:any){
     "finalReportTemplate.html"
   )
 
-  let html = fs.readFileSync(templatePath,"utf-8")
+  let html = fs.readFileSync(
+    templatePath,
+    "utf-8"
+  )
 
   const participant = data.participant || {}
-
-  const today = new Date().toLocaleDateString("es-CL")
 
   /* ======================================
   LOGO
@@ -39,7 +40,9 @@ export async function renderFinalReportHTML(data:any){
     "ecos.png"
   )
 
-  const logoBase64 = fs.readFileSync(logoPath).toString("base64")
+  const logoBase64 = fs.readFileSync(
+    logoPath
+  ).toString("base64")
 
   const logo = `
     <img
@@ -52,66 +55,80 @@ export async function renderFinalReportHTML(data:any){
   ANALISIS
   ====================================== */
 
-  const analysis = (data.analysis || "")
-    .replace(/\n/g,"<br/>")
+  const analysis = (
+    data.analysis || ""
+  ).replace(/\n/g,"<br/>")
+
+  /* ======================================
+  FECHA REAL
+  ====================================== */
+
+  const reportDate =
+    data.date || ""
+
+  /* ======================================
+  RADAR
+  ====================================== */
+
+  const radar =
+    data.radar || ""
 
   /* ======================================
   REEMPLAZOS
   ====================================== */
 
-      /* ======================================
-  REEMPLAZOS
-  ====================================== */
-
   html = html
 
-    .replace(/{{\s*logo\s*}}/g, logo)
+    .replace(/{{logo}}/g, logo)
 
     .replace(
-      /{{\s*participant\s*}}/g,
+      /{{participant}}/g,
       `${participant.nombre || ""} ${participant.apellido || ""}`
     )
 
     .replace(
-      /{{\s*company\s*}}/g,
+      /{{company}}/g,
       participant.company?.name || ""
     )
 
     .replace(
-      /__DATE__/g,
-      today
+      /{{date}}/g,
+      reportDate
     )
 
     .replace(
-      /{{\s*score\s*}}/g,
+      /{{score}}/g,
       String(data.score || 0)
     )
 
     .replace(
-      /{{\s*result\s*}}/g,
+      /{{result}}/g,
       data.traffic?.result || ""
     )
 
     .replace(
-      /{{\s*color\s*}}/g,
+      /{{color}}/g,
       getColor(data.traffic?.color)
     )
 
     .replace(
-      /{{\s*analysis\s*}}/g,
+      /{{analysis}}/g,
       analysis
     )
 
     .replace(
-      /{{\s*radar\s*}}/g,
-      data.radar || ""
+      /{{radar}}/g,
+      radar
     )
 
   /* ======================================
   LIMPIEZA FINAL
   ====================================== */
 
-  html = html.replace(/{{.*?}}/g,"")
+  html = html.replace(
+    /{{.*?}}/g,
+    ""
+  )
 
   return html
 
