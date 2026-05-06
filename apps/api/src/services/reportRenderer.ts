@@ -78,6 +78,7 @@ export async function renderReportHTML(data:any){
   )
 
   const participant = data.participant || {}
+  console.log("PARTICIPANT PDF:", participant)
   const participantProfile =
   participant.perfil ||
   participant.profile ||
