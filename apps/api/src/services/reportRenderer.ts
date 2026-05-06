@@ -78,7 +78,10 @@ export async function renderReportHTML(data:any){
   )
 
   const participant = data.participant || {}
-
+  const participantProfile =
+  participant.profile ||
+  participant.perfil ||
+  ""
   const competencies = data.competencies || []
 
   const evaluationName =
@@ -294,7 +297,10 @@ export async function renderReportHTML(data:any){
       /{{evaluation}}/g,
       evaluationName
     )
-
+    .replace(
+      /{{profile}}/g,
+     participantProfile
+    )
     .replace(
       /{{date}}/g,
       reportDate
