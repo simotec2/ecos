@@ -30,48 +30,92 @@ export default function Participants(){
   },[])
 
   async function loadParticipants(){
+
     try{
+
       const data = await apiFetch("/api/participants")
+
       setParticipants(data || [])
+
     }catch{
+
       alert("Error cargando participantes")
+
     }
+
   }
 
   async function loadCompanies(){
+
     try{
+
       const data = await apiFetch("/api/companies")
+
       setCompanies(data || [])
+
       if(data?.length){
         setCompanyId(data[0].id)
       }
+
     }catch{
+
       alert("Error cargando empresas")
+
     }
+
   }
 
   async function loadEvaluations(){
+
     try{
+
       const data = await apiFetch("/api/evaluations")
+
       setEvaluations(data || [])
+
     }catch{
+
       alert("Error cargando evaluaciones")
+
     }
+
   }
 
   function toggleEvaluation(id:string){
+
     if(selectedEvaluations.includes(id)){
-      setSelectedEvaluations(selectedEvaluations.filter(e=>e!==id))
+
+      setSelectedEvaluations(
+        selectedEvaluations.filter(e=>e!==id)
+      )
+
     }else{
-      setSelectedEvaluations([...selectedEvaluations,id])
+
+      setSelectedEvaluations([
+        ...selectedEvaluations,
+        id
+      ])
+
     }
+
   }
 
   async function createParticipant(){
 
     if(!nombre || !apellido || !rut){
+
       alert("Completa nombre, apellido y rut")
+
       return
+
+    }
+
+    if(!perfil){
+
+      alert("Selecciona un perfil")
+
+      return
+
     }
 
     try{
@@ -89,6 +133,7 @@ export default function Participants(){
       })
 
       for(const evaluationId of selectedEvaluations){
+
         await apiFetch("/api/assignments",{
           method:"POST",
           body:{
@@ -96,6 +141,7 @@ export default function Participants(){
             evaluationId
           }
         })
+
       }
 
       setNombre("")
@@ -110,8 +156,11 @@ export default function Participants(){
       alert("Participante creado")
 
     }catch{
+
       alert("Error creando participante")
+
     }
+
   }
 
   async function updateParticipant(){
@@ -124,19 +173,24 @@ export default function Participants(){
           nombre:editing.nombre,
           apellido:editing.apellido,
           rut:editing.rut,
+          perfil:editing.perfil,
           email:editing.email,
           companyId:editing.companyId
         }
       })
 
       setEditing(null)
+
       await loadParticipants()
 
       alert("Actualizado correctamente")
 
     }catch{
+
       alert("Error actualizando")
+
     }
+
   }
 
   async function resendInvitation(id:string){
@@ -144,107 +198,294 @@ export default function Participants(){
     if(!confirm("¿Reenviar invitación?")) return
 
     try{
+
       await apiFetch(`/api/participants/${id}/resend`,{
         method:"POST"
       })
+
       alert("Invitación reenviada")
+
     }catch{
+
       alert("Error reenviando")
+
     }
+
   }
 
   const filtered = participants.filter((p:any)=>
-    `${p.nombre} ${p.apellido} ${p.rut}`.toLowerCase().includes(search.toLowerCase())
+
+    `${p.nombre} ${p.apellido} ${p.rut}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+
   )
 
   return(
 
     <PageContainer title="Participantes">
 
+      {/* ======================================
+      NUEVO PARTICIPANTE
+      ====================================== */}
+
       <Card title="Nuevo participante">
 
-        <select value={companyId} onChange={(e)=>setCompanyId(e.target.value)}>
+        <select
+          value={companyId}
+          onChange={(e)=>setCompanyId(e.target.value)}
+        >
+
           {companies.map((c:any)=>(
-            <option key={c.id} value={c.id}>{c.name}</option>
+
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+
           ))}
+
         </select>
 
         <FormGrid>
-          <input placeholder="Nombre" value={nombre} onChange={e=>setNombre(e.target.value)} />
-          <input placeholder="Apellido" value={apellido} onChange={e=>setApellido(e.target.value)} />
-          <input placeholder="RUT" value={rut} onChange={e=>setRut(e.target.value)} />
-          <input placeholder="Perfil" value={perfil} onChange={e=>setPerfil(e.target.value)} />
-          <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
+
+          <input
+            placeholder="Nombre"
+            value={nombre}
+            onChange={e=>setNombre(e.target.value)}
+          />
+
+          <input
+            placeholder="Apellido"
+            value={apellido}
+            onChange={e=>setApellido(e.target.value)}
+          />
+
+          <input
+            placeholder="RUT"
+            value={rut}
+            onChange={e=>setRut(e.target.value)}
+          />
+
+          {/* ======================================
+          PERFIL DESPLEGABLE
+          ====================================== */}
+
+          <select
+            value={perfil}
+            onChange={e=>setPerfil(e.target.value)}
+          >
+
+            <option value="">
+              Seleccionar perfil
+            </option>
+
+            <option value="Operador">
+              Operador
+            </option>
+
+            <option value="Supervisor">
+              Supervisor
+            </option>
+
+          </select>
+
+          <input
+            placeholder="Email"
+            value={email}
+            onChange={e=>setEmail(e.target.value)}
+          />
+
         </FormGrid>
 
-        <button style={styles.button} onClick={createParticipant}>
+        <button
+          style={styles.button}
+          onClick={createParticipant}
+        >
           Crear participante
         </button>
 
       </Card>
 
+      {/* ======================================
+      LISTADO
+      ====================================== */}
+
       <Card title="Listado de participantes">
 
-        <SearchBox value={search} onChange={setSearch} placeholder="Buscar..." />
+        <SearchBox
+          value={search}
+          onChange={setSearch}
+          placeholder="Buscar..."
+        />
 
         <table style={styles.table}>
+
           <thead>
+
             <tr>
+
               <th style={styles.th}>Nombre</th>
+
+              <th style={styles.th}>Perfil</th>
+
               <th style={styles.th}>RUT</th>
+
               <th style={styles.th}>Email</th>
+
               <th style={styles.th}>Empresa</th>
+
               <th style={styles.th}>Acciones</th>
+
             </tr>
+
           </thead>
 
           <tbody>
+
             {filtered.map((p:any)=>(
+
               <tr key={p.id}>
-                <td style={styles.td}>{p.nombre} {p.apellido}</td>
-                <td style={styles.td}>{p.rut}</td>
-                <td style={styles.td}>{p.email || "-"}</td>
-                <td style={styles.td}>{p.company?.name || "-"}</td>
 
                 <td style={styles.td}>
-                  <button style={styles.editBtn} onClick={()=>setEditing(p)}>
+                  {p.nombre} {p.apellido}
+                </td>
+
+                <td style={styles.td}>
+                  {p.perfil || "-"}
+                </td>
+
+                <td style={styles.td}>
+                  {p.rut}
+                </td>
+
+                <td style={styles.td}>
+                  {p.email || "-"}
+                </td>
+
+                <td style={styles.td}>
+                  {p.company?.name || "-"}
+                </td>
+
+                <td style={styles.td}>
+
+                  <button
+                    style={styles.editBtn}
+                    onClick={()=>setEditing(p)}
+                  >
                     Editar
                   </button>
 
-                  <button style={styles.resendBtn} onClick={()=>resendInvitation(p.id)}>
+                  <button
+                    style={styles.resendBtn}
+                    onClick={()=>resendInvitation(p.id)}
+                  >
                     Reenviar
                   </button>
+
                 </td>
 
               </tr>
+
             ))}
+
           </tbody>
+
         </table>
 
       </Card>
 
+      {/* ======================================
+      MODAL EDICIÓN
+      ====================================== */}
+
       {editing && (
+
         <div style={styles.modal}>
+
           <div style={styles.modalBox}>
 
             <h3>Editar participante</h3>
 
-            <input value={editing.nombre} onChange={e=>setEditing({...editing,nombre:e.target.value})}/>
-            <input value={editing.apellido} onChange={e=>setEditing({...editing,apellido:e.target.value})}/>
-            <input value={editing.rut} onChange={e=>setEditing({...editing,rut:e.target.value})}/>
-            <input value={editing.email || ""} onChange={e=>setEditing({...editing,email:e.target.value})}/>
+            <input
+              value={editing.nombre}
+              onChange={e=>setEditing({
+                ...editing,
+                nombre:e.target.value
+              })}
+            />
 
-            <div style={{display:"flex", gap:10, marginTop:10}}>
-              <button onClick={updateParticipant}>Guardar</button>
-              <button onClick={()=>setEditing(null)}>Cancelar</button>
+            <input
+              value={editing.apellido}
+              onChange={e=>setEditing({
+                ...editing,
+                apellido:e.target.value
+              })}
+            />
+
+            <input
+              value={editing.rut}
+              onChange={e=>setEditing({
+                ...editing,
+                rut:e.target.value
+              })}
+            />
+
+            <select
+              value={editing.perfil || ""}
+              onChange={e=>setEditing({
+                ...editing,
+                perfil:e.target.value
+              })}
+            >
+
+              <option value="">
+                Seleccionar perfil
+              </option>
+
+              <option value="Operador">
+                Operador
+              </option>
+
+              <option value="Supervisor">
+                Supervisor
+              </option>
+
+            </select>
+
+            <input
+              value={editing.email || ""}
+              onChange={e=>setEditing({
+                ...editing,
+                email:e.target.value
+              })}
+            />
+
+            <div style={{
+              display:"flex",
+              gap:10,
+              marginTop:10
+            }}>
+
+              <button onClick={updateParticipant}>
+                Guardar
+              </button>
+
+              <button onClick={()=>setEditing(null)}>
+                Cancelar
+              </button>
+
             </div>
 
           </div>
+
         </div>
+
       )}
 
     </PageContainer>
+
   )
+
 }
 
 const styles:any = {
@@ -311,7 +552,7 @@ const styles:any = {
     background:"#fff",
     padding:20,
     borderRadius:8,
-    width:300,
+    width:320,
     display:"flex",
     flexDirection:"column",
     gap:10

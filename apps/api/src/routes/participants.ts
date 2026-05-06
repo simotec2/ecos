@@ -65,6 +65,7 @@ router.post("/", async (req, res) => {
       nombre,
       apellido,
       rut,
+      perfil,
       email,
       companyId
     } = req.body
@@ -97,6 +98,7 @@ router.post("/", async (req, res) => {
         nombre,
         apellido,
         rut: cleanRut,
+        perfil,
         email,
         accessToken: token,
         companyId: companyId || null
@@ -138,6 +140,7 @@ router.put("/:id", async (req, res) => {
       nombre,
       apellido,
       rut,
+      perfil,
       email,
       companyId
     } = req.body
@@ -170,6 +173,7 @@ router.put("/:id", async (req, res) => {
         nombre,
         apellido,
         rut: cleanRut,
+        perfil,
         email,
         companyId: companyId || null
       }
