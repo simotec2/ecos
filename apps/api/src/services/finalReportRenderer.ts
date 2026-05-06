@@ -74,7 +74,7 @@ export async function renderFinalReportHTML(data:any){
     )
 
     .replace(
-      /{{date}}/g,
+       /{{\s*date\s*}}/g,
       today
     )
 
