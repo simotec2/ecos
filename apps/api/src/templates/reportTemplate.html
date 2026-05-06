@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
 <meta charset="UTF-8">
 
 <style>
@@ -14,6 +16,7 @@ body{
   font-family: Arial, sans-serif;
   margin:0;
   color:#1f2937;
+  background:#ffffff;
 }
 
 .container{
@@ -23,30 +26,64 @@ body{
 
 .header{
   text-align:center;
-  margin-bottom:10px;
+  margin-bottom:12px;
 }
 
 .title{
-  font-size:16px;
+  font-size:22px;
   font-weight:bold;
+  color:#111827;
+}
+
+.subtitle{
+  font-size:11px;
+  color:#6b7280;
+  margin-top:3px;
+}
+
+.line{
+  height:5px;
+  background: linear-gradient(to right, #16a34a, #4ade80);
+  border-radius:3px;
+  margin-top:10px;
+  margin-bottom:14px;
 }
 
 .card{
-  padding:6px;
-  margin-bottom:8px;
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:12px;
+  background:#ecfdf5;
+  border:1px solid #bbf7d0;
   page-break-inside: avoid;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .compact{
-  font-size:11.2px;
-  line-height:1.45;
+  font-size:11.3px;
+  line-height:1.5;
+}
+
+.section-title{
+  font-size:14px;
+  font-weight:bold;
+  margin-bottom:8px;
+  color:#111827;
 }
 
 .page-break{
   page-break-before: always;
 }
 
+.footer{
+  margin-top:15px;
+  font-size:10px;
+  text-align:center;
+  color:#6b7280;
+}
+
 </style>
+
 </head>
 
 <body>
@@ -55,26 +92,42 @@ body{
 
   <!-- HEADER -->
   <div class="header">
+
     {{logo}}
-    <div class="title">INFORME PARCIAL ECOS</div>
+
+    <div class="title">
+      INFORME PARCIAL ECOS
+    </div>
+
+    <div class="subtitle">
+      Plataforma de Evaluación de Competencias en Seguridad
+    </div>
+
   </div>
+
+  <div class="line"></div>
 
   <!-- DATOS -->
   <div class="card compact">
 
-    <div style="font-size:12px;">
-      <b>Nombre:</b> {{participant}}<br/>
-      <b>Perfil:</b> {{evaluation}}<br/>
-      <b>Empresa:</b> {{company}}<br/>
-      <b>Fecha:</b> {{date}}
-    </div>
+    <div style="font-size:12px; line-height:1.6;">
 
-    <div style="
-      margin-top:6px;
-      height:3px;
-      background:#1e3a8a;
-      border-radius:2px;
-    "></div>
+      <b>Nombre:</b>
+      {{participant}}<br/>
+
+      <b>Evaluación:</b>
+      {{evaluation}}<br/>
+
+      <b>Perfil:</b>
+      {{Profile}}<br>
+
+      <b>Empresa:</b>
+      {{company}}<br/>
+
+      <b>Fecha evaluación:</b>
+      {{date}}
+
+    </div>
 
   </div>
 
@@ -89,8 +142,11 @@ body{
       font-size:16px;
       color:white;
       background:{{color}};
+      margin-bottom:10px;
     ">
+
       {{result}}
+
     </div>
 
     {{kpi}}
@@ -100,9 +156,11 @@ body{
   <!-- RESUMEN -->
   <div class="card compact">
 
-    <b style="font-size:13px;">Resumen Profesional</b>
+    <div class="section-title">
+      Resumen Profesional
+    </div>
 
-    <div style="margin-top:4px;">
+    <div>
       {{resumen}}
     </div>
 
@@ -110,75 +168,139 @@ body{
 
   <!-- RADAR -->
   <div class="card">
-    <div style="text-align:center;">
-      {{radar}}
+
+    <div class="section-title">
+      Competencias Evaluadas
     </div>
+
+    <div style="text-align:center;">
+
+      {{radar}}
+
+    </div>
+
   </div>
 
-  <!-- SALTO DE PAGINA -->
+  <!-- SALTO -->
   <div class="page-break"></div>
 
-  <!-- ANALISIS (UNA COLUMNA LIMPIA) -->
+  <!-- ANALISIS -->
   <div class="card compact">
 
-    <b style="font-size:13px;">ANALISIS DEL PROFESIONAL</b>
+    <div class="section-title">
+      Análisis del Profesional
+    </div>
 
     <div style="
-      margin-top:6px;
       text-align:justify;
       font-size:11.2px;
-      line-height:1.5;
+      line-height:1.7;
     ">
+
       {{analysis}}
+
     </div>
 
   </div>
 
-  <!-- BRECHAS Y FORTALEZAS -->
+  <!-- BRECHAS / FORTALEZAS -->
   <div class="card compact">
 
-    <table style="width:100%; font-size:11.2px;">
+    <table style="
+      width:100%;
+      font-size:11.2px;
+      border-collapse:collapse;
+    ">
+
       <tr>
 
         <!-- BRECHAS -->
-        <td style="width:50%; vertical-align:top; padding-left:8px;">
-          <b style="color:#dc2626;">Brechas Críticas</b>
+        <td style="
+          width:50%;
+          vertical-align:top;
+          padding-right:10px;
+        ">
 
-          <div style="margin-top:5px;">
-            {{bottom}}
+          <div style="
+            background:#fef2f2;
+            border:1px solid #fecaca;
+            border-radius:10px;
+            padding:10px;
+          ">
+
+            <b style="color:#dc2626;">
+              Brechas Críticas
+            </b>
+
+            <div style="margin-top:8px;">
+
+              {{bottom}}
+
+            </div>
+
+            <div style="
+              margin-top:8px;
+              font-size:10.5px;
+              color:#6b7280;
+            ">
+
+              Requiere intervención directa y seguimiento en terreno.
+
+            </div>
+
           </div>
 
-          <div style="margin-top:6px; font-size:10.5px; color:#6b7280;">
-            Requiere intervención directa y seguimiento en terreno.
-          </div>
         </td>
 
         <!-- FORTALEZAS -->
-        <td style="width:50%; vertical-align:top; padding-left:8px;">
-          <b style="color:#16a34a;">Fortalezas Clave</b>
+        <td style="
+          width:50%;
+          vertical-align:top;
+          padding-left:10px;
+        ">
 
-          <div style="margin-top:5px;">
-            {{top}}
+          <div style="
+            background:#f0fdf4;
+            border:1px solid #bbf7d0;
+            border-radius:10px;
+            padding:10px;
+          ">
+
+            <b style="color:#16a34a;">
+              Fortalezas Clave
+            </b>
+
+            <div style="margin-top:8px;">
+
+              {{top}}
+
+            </div>
+
+            <div style="
+              margin-top:8px;
+              font-size:10.5px;
+              color:#6b7280;
+            ">
+
+              Base adecuada para desarrollo y desempeño en el rol.
+
+            </div>
+
           </div>
 
-          <div style="margin-top:6px; font-size:10.5px; color:#6b7280;">
-            Base adecuada para desarrollo y desempeño en el rol.
-          </div>
         </td>
 
       </tr>
+
     </table>
 
   </div>
 
-  <!-- FIRMA -->
-  <div style="
-    margin-top:12px;
-    font-size:10px;
-    text-align:center;
-    color:#6b7280;
-  ">
+  <!-- FOOTER -->
+  <div class="footer">
+
     Informe generado por ECOS – Plataforma de Evaluación de Competencias en Seguridad
+
   </div>
 
 </div>
