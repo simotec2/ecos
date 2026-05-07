@@ -1,8 +1,4 @@
-import { useNavigate } from "react-router-dom"
-
 export default function Finished(){
-
-  const navigate = useNavigate()
 
   return(
 
@@ -18,59 +14,133 @@ export default function Finished(){
 
       <div style={{
         background:"#fff",
-        padding:40,
-        borderRadius:12,
-        maxWidth:600,
+        padding:50,
+        borderRadius:16,
+        maxWidth:700,
         width:"100%",
-        boxShadow:"0 4px 20px rgba(0,0,0,0.08)",
+        boxShadow:"0 4px 25px rgba(0,0,0,0.08)",
         textAlign:"center"
       }}>
 
-        {/* LOGO */}
-        <div style={{marginBottom:20}}>
-          <img src="/ecos-logo.png" alt="ECOS" style={{height:60}} />
+        {/* ======================================
+        LOGO
+        ====================================== */}
+
+        <div style={{
+          marginBottom:25
+        }}>
+
+          <img
+            src="/ecos-logo.png"
+            alt="ECOS"
+            style={{height:65}}
+          />
+
         </div>
 
-        {/* TITULO */}
-        <h2 style={{marginBottom:20}}>
-          Evaluación finalizada
-        </h2>
+        {/* ======================================
+        ICONO
+        ====================================== */}
 
-        {/* MENSAJE */}
-        <p style={{marginBottom:15,lineHeight:1.6}}>
-          Muchas gracias por completar la evaluación.
+        <div style={{
+          width:90,
+          height:90,
+          borderRadius:"50%",
+          background:"#dcfce7",
+          display:"flex",
+          alignItems:"center",
+          justifyContent:"center",
+          margin:"0 auto 30px auto",
+          fontSize:42
+        }}>
+
+          ✅
+
+        </div>
+
+        {/* ======================================
+        TITULO
+        ====================================== */}
+
+        <h1 style={{
+          marginBottom:20,
+          color:"#111827",
+          fontSize:32
+        }}>
+          Evaluaciones Finalizadas
+        </h1>
+
+        {/* ======================================
+        MENSAJES
+        ====================================== */}
+
+        <p style={{
+          marginBottom:20,
+          lineHeight:1.8,
+          fontSize:17,
+          color:"#374151"
+        }}>
+
+          Muchas gracias por realizar la Evaluación ECOS, su proceso de evaluación ha sido completado correctamente.
+
         </p>
 
-        <p style={{marginBottom:15,lineHeight:1.6}}>
-          Sus respuestas han sido registradas correctamente y serán analizadas como parte del proceso.
+        <p style={{
+          marginBottom:20,
+          lineHeight:1.8,
+          fontSize:16,
+          color:"#4b5563"
+        }}>
+
+          Sus respuestas fueron registradas exitosamente en la plataforma ECOS y serán analizadas como parte del proceso de evaluación.
+
         </p>
 
-        <p style={{marginBottom:15,lineHeight:1.6}}>
-          Los resultados serán gestionados directamente por su organización, por lo que le recomendamos contactar con ellos para obtener información sobre sus resultados y próximos pasos.
+        <p style={{
+          marginBottom:20,
+          lineHeight:1.8,
+          fontSize:15,
+          color:"#6b7280"
+        }}>
+
+          Los resultados serán gestionados directamente por su organización.
+
         </p>
 
-        <p style={{marginBottom:25,lineHeight:1.6}}>
-          Agradecemos su participación.
+        <p style={{
+          marginBottom:35,
+          lineHeight:1.8,
+          fontSize:15,
+          color:"#6b7280",
+          fontWeight:"bold"
+        }}>
+
+          Ya no es necesario volver a ingresar a la plataforma.
+          Puede cerrar esta ventana con tranquilidad.
+
         </p>
 
-        {/* BOTON OPCIONAL */}
-        <button
-          onClick={()=>navigate("/")}
-          style={{
-            padding:"10px 20px",
-            background:"#0A7C66",
-            color:"#fff",
-            border:"none",
-            borderRadius:8,
-            cursor:"pointer"
-          }}
-        >
-          Finalizar
-        </button>
+        {/* ======================================
+        MENSAJE FINAL
+        ====================================== */}
+
+        <div style={{
+          padding:15,
+          borderRadius:10,
+          background:"#f0fdf4",
+          border:"1px solid #bbf7d0",
+          color:"#166534",
+          fontSize:14
+        }}>
+
+          Gracias por participar en la Evaluación de Competencias en Seguridad ECOS.
+
+        </div>
 
       </div>
 
     </div>
 
   )
+
 }
