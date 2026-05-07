@@ -95,58 +95,57 @@ export async function renderFinalReportHTML(data:any){
   REEMPLAZOS
   ====================================== */
 
-  html = html
+ html = html
 
-    .replace(
-      /{{logo}}/g,
-      logo
-    )
+  .replace(
+    /{{logo}}/gi,
+    logo
+  )
 
-    .replace(
-      /{{participant}}/g,
-      `${participant.nombre || ""} ${participant.apellido || ""}`
-    )
+  .replace(
+    /{{participant}}/gi,
+    `${participant.nombre || ""} ${participant.apellido || ""}`
+  )
 
-    .replace(
-      /{{profile}}/g,
-      participantProfile
-    )
+  .replace(
+    /{{profile}}/gi,
+    participantProfile
+  )
 
-    .replace(
-      /{{company}}/g,
-      participant.company?.name || ""
-    )
+  .replace(
+    /{{company}}/gi,
+    participant.company?.name || ""
+  )
 
-    .replace(
-      /{{date}}/g,
-      reportDate
-    )
+  .replace(
+    /{{date}}/gi,
+    reportDate
+  )
 
-    .replace(
-      /{{score}}/g,
-      String(data.score || 0)
-    )
+  .replace(
+    /{{score}}/gi,
+    String(data.score || 0)
+  )
 
-    .replace(
-      /{{result}}/g,
-      data.traffic?.result || ""
-    )
+  .replace(
+    /{{result}}/gi,
+    data.traffic?.result || ""
+  )
 
-    .replace(
-      /{{color}}/g,
-      getColor(data.traffic?.color)
-    )
+  .replace(
+    /{{color}}/gi,
+    getColor(data.traffic?.color)
+  )
 
-    .replace(
-      /{{analysis}}/g,
-      analysis
-    )
+  .replace(
+    /{{analysis}}/gi,
+    analysis
+  )
 
-    .replace(
-      /{{radar}}/g,
-      radar
-    )
-
+  .replace(
+    /{{radar}}/gi,
+    radar
+  )
   /* ======================================
   LIMPIEZA FINAL
   ====================================== */
