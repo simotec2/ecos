@@ -405,10 +405,11 @@ export default function Participants(){
                 <td style={styles.td}>
 
                   <button
-                    style={styles.editBtn}
+                    style={styles.iconBtnBlue}
                     onClick={()=>setEditing(p)}
+                    title="Editar participante"
                   >
-                    Editar
+                    ✏️
                   </button>
 
                   <button
@@ -568,15 +569,22 @@ const styles:any = {
     borderBottom:"1px solid #f1f5f9"
   },
 
-  editBtn:{
-    marginRight:6,
-    padding:"6px 10px",
-    background:"#2563eb",
-    color:"#fff",
-    border:"none",
-    borderRadius:4,
-    cursor:"pointer"
-  },
+ iconBtnBlue:{
+  marginRight:6,
+  width:30,
+  height:30,
+  background:"#2563eb",
+  color:"#fff",
+  border:"none",
+  borderRadius:6,
+  cursor:"pointer",
+  display:"flex",
+  alignItems:"center",
+  justifyContent:"center",
+  padding:0,
+  fontSize:14,
+  lineHeight:1
+},
 
   resendBtn:{
     padding:"6px 10px",
@@ -591,7 +599,7 @@ const styles:any = {
   marginLeft:6,
   width:32,
   height:32,
-  background:"#474444",
+  background:"#b1a2a2",
   color:"#fff",
   border:"none",
   borderRadius:6,
