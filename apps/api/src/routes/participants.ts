@@ -316,50 +316,51 @@ router.delete("/:id", authMiddleware, async (req:any, res) => {
 /* ======================================
 ACCESS PARTICIPANTE
 ====================================== */
-router.get("/access/:token", async (req,res)=>{
+/* ======================================
+OBTENER PARTICIPANTES
+====================================== */
+router.get("/", authMiddleware, async (req:any, res) => {
 
-  try{
+  try {
 
-    const { token } = req.params
+    let where:any = {}
 
-    const participant = await prisma.participant.findFirst({
-      where:{ accessToken: token },
-      include:{ company:true }
-    })
+    /* ======================================
+    COMPANY ADMIN SOLO SU EMPRESA
+    ====================================== */
 
-    if(!participant){
-      return res.status(404).json({
-        error:"Participante no encontrado"
-      })
+    if(req.user?.role === "COMPANY_ADMIN"){
+
+      where.companyId = req.user.companyId
+
     }
 
-    const assignments = await prisma.assignment.findMany({
-      where:{
-        participantId: participant.id,
-        status:{ in:["PENDING","STARTED"] }
+    const participants = await prisma.participant.findMany({
+
+      where,
+
+      include:{
+        company:true
       },
-      include:{ evaluation:true },
-      orderBy:{ createdAt:"desc" }
+
+      orderBy:{
+        createdAt:"desc"
+      }
+
     })
 
-    const evaluations = assignments.map(a=>({
-      id: a.evaluation.id,
-      name: a.evaluation.name,
-      type: a.evaluation.type,
-      status: a.status
-    }))
+    return res.json(participants)
 
-    return res.json({
-      participant,
-      evaluations
-    })
+  } catch (error:any) {
 
-  }catch(err:any){
-
-    console.error("ERROR ACCESS:", err?.message, err)
+    console.error(
+      "GET PARTICIPANTS ERROR:",
+      error?.message,
+      error
+    )
 
     return res.status(500).json({
-      error:"Error obteniendo acceso"
+      error:"Error obteniendo participantes"
     })
 
   }
