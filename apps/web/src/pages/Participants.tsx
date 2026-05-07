@@ -23,6 +23,13 @@ export default function Participants(){
 
   const [editing,setEditing] = useState<any>(null)
 
+  const user = JSON.parse(
+    localStorage.getItem("user") || "{}"
+  )
+
+  const isSuperAdmin =
+    user?.role === "SUPERADMIN"
+
   useEffect(()=>{
     loadParticipants()
     loadCompanies()
@@ -195,7 +202,9 @@ export default function Participants(){
 
   async function resendInvitation(id:string){
 
-    if(!confirm("¿Reenviar invitación?")) return
+    if(!confirm("¿Reenviar invitación?")){
+      return
+    }
 
     try{
 
@@ -208,6 +217,38 @@ export default function Participants(){
     }catch{
 
       alert("Error reenviando")
+
+    }
+
+  }
+
+  async function deleteParticipant(id:string){
+
+    if(!isSuperAdmin){
+      return
+    }
+
+    const confirmDelete = confirm(
+      "¿Seguro que deseas eliminar este participante? Esta acción no se puede deshacer."
+    )
+
+    if(!confirmDelete){
+      return
+    }
+
+    try{
+
+      await apiFetch(`/api/participants/${id}`,{
+        method:"DELETE"
+      })
+
+      await loadParticipants()
+
+      alert("Participante eliminado")
+
+    }catch{
+
+      alert("Error eliminando participante")
 
     }
 
@@ -233,22 +274,22 @@ export default function Participants(){
 
         <div style={styles.companySelector}>
 
-      <select
-        value={companyId}
-        onChange={(e)=>setCompanyId(e.target.value)}
-      >
+          <select
+            value={companyId}
+            onChange={(e)=>setCompanyId(e.target.value)}
+          >
 
-        {companies.map((c:any)=>(
+            {companies.map((c:any)=>(
 
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
 
-        ))}
+            ))}
 
-      </select>
+          </select>
 
-    </div>
+        </div>
 
         <FormGrid>
 
@@ -269,10 +310,6 @@ export default function Participants(){
             value={rut}
             onChange={e=>setRut(e.target.value)}
           />
-
-          {/* ======================================
-          PERFIL DESPLEGABLE
-          ====================================== */}
 
           <select
             value={perfil}
@@ -329,15 +366,10 @@ export default function Participants(){
             <tr>
 
               <th style={styles.th}>Nombre</th>
-
               <th style={styles.th}>Perfil</th>
-
               <th style={styles.th}>RUT</th>
-
               <th style={styles.th}>Email</th>
-
               <th style={styles.th}>Empresa</th>
-
               <th style={styles.th}>Acciones</th>
 
             </tr>
@@ -385,6 +417,17 @@ export default function Participants(){
                   >
                     Reenviar
                   </button>
+
+                  {isSuperAdmin && (
+
+                    <button
+                      style={styles.deleteBtn}
+                      onClick={()=>deleteParticipant(p.id)}
+                    >
+                      Eliminar
+                    </button>
+
+                  )}
 
                 </td>
 
@@ -493,9 +536,11 @@ export default function Participants(){
 }
 
 const styles:any = {
+
   companySelector:{
     marginBottom:16
   },
+
   button:{
     marginTop:15,
     padding:"10px 18px",
@@ -536,6 +581,16 @@ const styles:any = {
   resendBtn:{
     padding:"6px 10px",
     background:"#16a34a",
+    color:"#fff",
+    border:"none",
+    borderRadius:4,
+    cursor:"pointer"
+  },
+
+  deleteBtn:{
+    marginLeft:6,
+    padding:"6px 10px",
+    background:"#dc2626",
     color:"#fff",
     border:"none",
     borderRadius:4,

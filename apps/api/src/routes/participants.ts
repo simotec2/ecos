@@ -2,6 +2,7 @@ import { Router } from "express"
 import prisma from "../db"
 import { randomUUID } from "crypto"
 import { sendEvaluationEmail } from "../utils/email"
+import { authMiddleware } from "../auth"
 
 const router = Router()
 
@@ -254,23 +255,57 @@ router.post("/:id/resend", async (req, res) => {
 /* ======================================
 ELIMINAR PARTICIPANTE
 ====================================== */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authMiddleware, async (req:any, res) => {
 
   try {
 
+    if(req.user?.role !== "SUPERADMIN"){
+
+      return res.status(403).json({
+        error:"No autorizado"
+      })
+
+    }
+
     const id = req.params.id
+
+    /* ======================================
+    ELIMINAR RESPUESTAS / RESULTADOS
+    ====================================== */
+
+    await prisma.evaluationResult.deleteMany({
+      where:{ participantId:id }
+    })
+
+    /* ======================================
+    ELIMINAR ASIGNACIONES
+    ====================================== */
+
+    await prisma.assignment.deleteMany({
+      where:{ participantId:id }
+    })
+
+    /* ======================================
+    ELIMINAR PARTICIPANTE
+    ====================================== */
 
     await prisma.participant.delete({
       where:{ id }
     })
 
-    res.json({ success:true })
+    return res.json({
+      success:true
+    })
 
   } catch (error:any) {
 
-    console.error("DELETE PARTICIPANT ERROR:", error?.message, error)
+    console.error(
+      "DELETE PARTICIPANT ERROR:",
+      error?.message,
+      error
+    )
 
-    res.status(500).json({
+    return res.status(500).json({
       error:"Error eliminando participante"
     })
 
