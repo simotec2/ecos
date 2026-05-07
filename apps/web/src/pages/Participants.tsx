@@ -404,31 +404,36 @@ export default function Participants(){
 
                 <td style={styles.td}>
 
-                  <button
-                    style={styles.iconBtnBlue}
-                    onClick={()=>setEditing(p)}
-                    title="Editar participante"
-                  >
-                    ✏️
-                  </button>
-
-                  <button
-                    style={styles.resendBtn}
-                    onClick={()=>resendInvitation(p.id)}
-                  >
-                    Reenviar
-                  </button>
-
-                  {isSuperAdmin && (
+                  <div style={styles.actions}>
 
                     <button
-                    style={styles.deleteBtn}
-                    onClick={()=>deleteParticipant(p.id)}
-                    title="Eliminar participante"
-                  >
-                    🗑️
-                  </button>
-                  )},
+                      style={styles.iconBtnBlue}
+                      onClick={()=>setEditing(p)}
+                      title="Editar participante"
+                    >
+                      ✏️
+                    </button>
+
+                    <button
+                      style={styles.resendBtn}
+                      onClick={()=>resendInvitation(p.id)}
+                    >
+                      Reenviar
+                    </button>
+
+                    {isSuperAdmin && (
+
+                      <button
+                        style={styles.deleteBtn}
+                        onClick={()=>deleteParticipant(p.id)}
+                        title="Eliminar participante"
+                      >
+                        🗑️
+                      </button>
+
+                    )}
+
+                  </div>
 
                 </td>
 
@@ -569,47 +574,54 @@ const styles:any = {
     borderBottom:"1px solid #f1f5f9"
   },
 
- iconBtnBlue:{
-  marginRight:6,
-  width:30,
-  height:30,
-  background:"#2563eb",
-  color:"#fff",
-  border:"none",
-  borderRadius:6,
-  cursor:"pointer",
-  display:"flex",
-  alignItems:"center",
-  justifyContent:"center",
-  padding:0,
-  fontSize:14,
-  lineHeight:1
-},
+  actions:{
+    display:"flex",
+    alignItems:"center",
+    gap:6,
+    flexWrap:"nowrap"
+  },
+
+  iconBtnBlue:{
+    width:30,
+    height:30,
+    background:"#7f9cda",
+    color:"#fff",
+    border:"none",
+    borderRadius:6,
+    cursor:"pointer",
+    display:"flex",
+    alignItems:"center",
+    justifyContent:"center",
+    padding:0,
+    fontSize:14,
+    lineHeight:1
+  },
 
   resendBtn:{
     padding:"6px 10px",
-    background:"#16a34a",
+    background:"#0fbd4e",
     color:"#fff",
     border:"none",
     borderRadius:4,
-    cursor:"pointer"
+    cursor:"pointer",
+    whiteSpace:"nowrap"
   },
 
   deleteBtn:{
-  marginLeft:6,
-  width:32,
-  height:32,
-  background:"#b1a2a2",
-  color:"#fff",
-  border:"none",
-  borderRadius:6,
-  cursor:"pointer",
-  display:"inline-flex",
-  alignItems:"center",
-  justifyContent:"center",
-  fontSize:14,
-  padding:0
-},
+    width:30,
+    height:30,
+    background:"#b1a2a2",
+    color:"#fff",
+    border:"none",
+    borderRadius:6,
+    cursor:"pointer",
+    display:"flex",
+    alignItems:"center",
+    justifyContent:"center",
+    fontSize:14,
+    padding:0,
+    lineHeight:1
+  },
 
   modal:{
     position:"fixed",
