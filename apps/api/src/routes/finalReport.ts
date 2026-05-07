@@ -138,7 +138,9 @@ async function renderHTML(data:any){
 
   .replace(
     /{{date}}/gi,
-    new Date().toLocaleDateString("es-CL")
+    new Date(
+      data.date
+    ).toLocaleDateString("es-CL")
   )
 
   .replace(
@@ -261,7 +263,8 @@ router.get("/:participantId/pdf", async (req,res)=>{
       score: finalScore,
       traffic,
       competencies,
-      analysis
+      analysis,
+      date: results[0].createdAt
     })
 
     /* 🔥 CHROMIUM */
