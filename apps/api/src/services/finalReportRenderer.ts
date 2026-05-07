@@ -39,23 +39,19 @@ export async function renderFinalReportHTML(data:any){
 
   const participant = data.participant || {}
 
+  const participantProfile =
+    participant.perfil ||
+    participant.profile ||
+    ""
+
   /* ======================================
-  FECHA REAL EVALUACIÓN
+  FECHA REAL
   ====================================== */
 
   const reportDate = data.date
     ? new Date(data.date)
         .toLocaleDateString("es-CL")
     : ""
-
-  /* ======================================
-  INYECTAR FECHA DIRECTA
-  ====================================== */
-
-  html = html.replace(
-    "Fecha de informe: {{date}}",
-    `Fecha de informe: ${reportDate}`
-  )
 
   /* ======================================
   LOGO
@@ -112,8 +108,18 @@ export async function renderFinalReportHTML(data:any){
     )
 
     .replace(
+      /{{profile}}/g,
+      participantProfile
+    )
+
+    .replace(
       /{{company}}/g,
       participant.company?.name || ""
+    )
+
+    .replace(
+      /{{date}}/g,
+      reportDate
     )
 
     .replace(
