@@ -42,25 +42,7 @@ router.post("/", async (req,res)=>{
       })
     }
 
-    /* =========================
-    🔥 REUTILIZAR SESIÓN ACTIVA
-    ========================= */
-    const existingSession = await prisma.evaluationSession.findFirst({
-      where:{
-        participantId,
-        evaluationId,
-        status:"IN_PROGRESS"
-      },
-      orderBy:{
-        createdAt:"desc"
-      }
-    })
-
-    if(existingSession){
-      console.log("♻️ REUSING SESSION:", existingSession.id)
-      return res.json(existingSession)
-    }
-
+   
     /* =========================
     TRAER EVALUACIÓN
     ========================= */
