@@ -122,7 +122,28 @@ export default function Users(){
     load()
 
   }
+  async function resetPassword(id:string){
 
+  const password = prompt(
+    "Nueva contraseña:"
+  )
+
+  if(!password) return
+
+  await apiFetch(
+    `/api/users/${id}/reset-password`,
+    {
+      method:"PUT",
+
+      body: JSON.stringify({
+        password
+      })
+    }
+  )
+
+  alert("Contraseña actualizada")
+
+}
   /* ======================================
   LOGIN AS
   ====================================== */
@@ -405,7 +426,25 @@ export default function Users(){
                   Ver como
 
                 </button>
+                {/* RESET PASSWORD */}
+                <button
+                  onClick={()=>
+                    resetPassword(u.id)
+                  }
+                  style={{
+                    background:"#f59e0b",
+                    color:"#fff",
+                    border:"none",
+                    padding:"6px 10px",
+                    borderRadius:6,
+                    marginRight:6,
+                    cursor:"pointer"
+                  }}
+                >
 
+                  Reset Pass
+
+                </button>
                 {/* ELIMINAR */}
 
                 <button

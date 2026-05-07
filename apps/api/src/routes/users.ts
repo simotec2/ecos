@@ -181,5 +181,50 @@ router.post("/loginAs/:id", async (req, res) => {
   }
 
 })
+/* =====================================
+RESET PASSWORD
+===================================== */
 
+router.put("/:id/reset-password", async (req, res) => {
+
+  try {
+
+    const { password } = req.body
+
+    if(!password){
+
+      return res.status(400).json({
+        error:"Password requerida"
+      })
+
+    }
+
+    const user = await prisma.user.update({
+
+      where:{
+        id:req.params.id
+      },
+
+      data:{
+        password
+      }
+
+    })
+
+    res.json({
+      ok:true,
+      user
+    })
+
+  } catch (error) {
+
+    console.error(error)
+
+    res.status(500).json({
+      error:"Error resetting password"
+    })
+
+  }
+
+})
 export default router
