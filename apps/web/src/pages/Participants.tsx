@@ -231,20 +231,24 @@ export default function Participants(){
 
       <Card title="Nuevo participante">
 
-        <select
-          value={companyId}
-          onChange={(e)=>setCompanyId(e.target.value)}
-        >
+        <div style={styles.companySelector}>
 
-          {companies.map((c:any)=>(
+      <select
+        value={companyId}
+        onChange={(e)=>setCompanyId(e.target.value)}
+      >
 
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
+        {companies.map((c:any)=>(
 
-          ))}
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
 
-        </select>
+        ))}
+
+      </select>
+
+    </div>
 
         <FormGrid>
 
@@ -489,7 +493,9 @@ export default function Participants(){
 }
 
 const styles:any = {
-
+  companySelector:{
+    marginBottom:16
+  },
   button:{
     marginTop:15,
     padding:"10px 18px",
