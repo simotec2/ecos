@@ -1,20 +1,8 @@
 import { Router } from "express"
 import prisma from "../db"
-import { verifyAccessToken } from "../utils/jwt"
+import { authMiddleware } from "../auth"
 
 const router = Router()
-
-/* ================= AUTH ================= */
-function getUser(req:any){
-  try{
-    const auth = req.headers.authorization || ""
-    if(!auth.startsWith("Bearer ")) return null
-    const token = auth.replace("Bearer ","")
-    return verifyAccessToken(token)
-  }catch{
-    return null
-  }
-}
 
 /* ================= CONSOLIDADOR ================= */
 function consolidateResults(results:any[]){
@@ -22,6 +10,7 @@ function consolidateResults(results:any[]){
   const byType:Record<string, number> = {}
 
   results.forEach(r=>{
+
     const type = r.evaluation?.type
     const score = Number(r.score)
 
@@ -30,115 +19,193 @@ function consolidateResults(results:any[]){
     if(byType[type] === undefined){
       byType[type] = score
     }
+
   })
 
   const scores = Object.values(byType)
 
-  if(scores.length === 0) return null
+  if(scores.length === 0){
+    return null
+  }
 
   const sum = scores.reduce((a,b)=>a+b,0)
+
   const finalScore = sum / scores.length
 
   let estado:"VERDE" | "AMARILLO" | "ROJO" = "VERDE"
 
-  if(finalScore < 55) estado = "ROJO"
-  else if(finalScore < 85) estado = "AMARILLO"
+  if(finalScore < 55){
+    estado = "ROJO"
+  }
+  else if(finalScore < 85){
+    estado = "AMARILLO"
+  }
 
   return {
     score: Math.round(finalScore),
     estado
   }
+
 }
 
 /* ================= RECOMENDACIÓN EMPRESA ================= */
 function getCompanyRecommendation(rojoPct:number){
 
   if(rojoPct > 50){
+
     return "Nivel crítico. Se recomienda intervención inmediata, reentrenamiento y supervisión operativa."
+
   }
 
   if(rojoPct > 25){
+
     return "Riesgo moderado. Implementar refuerzo en competencias críticas."
+
   }
 
   return "Nivel controlado. Mantener estándar operacional y monitoreo."
+
 }
 
 /* ================= ROUTE ================= */
-router.get("/", async (req,res)=>{
+router.get("/", authMiddleware, async (req:any,res)=>{
 
   try{
 
-    const user:any = getUser(req)
+    const user = req.user
 
     if(!user){
-      return res.status(401).json({ error:"No autorizado" })
+
+      return res.status(401).json({
+        error:"No autorizado"
+      })
+
     }
 
-    const companyFilter = user.role === "COMPANY_ADMIN"
-      ? { companyId: user.companyId }
-      : {}
+    /* ======================================
+    FILTRO COMPANY ADMIN
+    ====================================== */
 
-    /* ================= PARTICIPANTES ================= */
+    let companyFilter:any = {}
+
+    if(user.role === "COMPANY_ADMIN"){
+
+      companyFilter = {
+        companyId: user.companyId
+      }
+
+    }
+
+    /* ======================================
+    PARTICIPANTES
+    ====================================== */
 
     const participants = await prisma.participant.findMany({
+
       where: companyFilter,
-      include:{ company:true }
+
+      include:{
+        company:true
+      }
+
     })
 
     const participantIds = participants.map(p=>p.id)
 
-    /* ================= RESULTADOS ================= */
+    /* ======================================
+    RESULTADOS
+    ====================================== */
 
     const allResults = await prisma.evaluationResult.findMany({
-      where:{ participantId:{ in: participantIds } },
-      include:{ evaluation:true },
-      orderBy:{ createdAt:"desc" }
+
+      where:{
+        participantId:{
+          in: participantIds
+        }
+      },
+
+      include:{
+        evaluation:true
+      },
+
+      orderBy:{
+        createdAt:"desc"
+      }
+
     })
 
-    /* ================= AGRUPAR POR PARTICIPANTE ================= */
+    /* ======================================
+    AGRUPAR
+    ====================================== */
 
     const grouped:any = {}
 
     allResults.forEach(r=>{
+
       if(!grouped[r.participantId]){
         grouped[r.participantId] = []
       }
+
       grouped[r.participantId].push(r)
+
     })
 
-    /* ================= CONSOLIDADO ================= */
+    /* ======================================
+    CONSOLIDADO
+    ====================================== */
 
     const consolidated:any[] = []
 
-    Object.entries(grouped).forEach(([participantId, results]:any)=>{
+    Object.entries(grouped).forEach(
+      ([participantId, results]:any)=>{
 
       const final = consolidateResults(results)
+
       if(!final) return
 
-      const participant = participants.find(p=>p.id === participantId)
+      const participant = participants.find(
+        p=>p.id === participantId
+      )
 
       consolidated.push({
+
         participantId,
+
         companyId: participant?.companyId,
+
         companyName: participant?.company?.name,
+
         ...final
+
       })
+
     })
 
-    /* ================= DASHBOARD GLOBAL ================= */
+    /* ======================================
+    DASHBOARD GLOBAL
+    ====================================== */
 
     let verde = 0
     let amarillo = 0
     let rojo = 0
 
     consolidated.forEach(r=>{
-      if(r.estado === "VERDE") verde++
-      else if(r.estado === "AMARILLO") amarillo++
-      else rojo++
+
+      if(r.estado === "VERDE"){
+        verde++
+      }
+      else if(r.estado === "AMARILLO"){
+        amarillo++
+      }
+      else{
+        rojo++
+      }
+
     })
 
-    /* ================= DASHBOARD POR EMPRESA ================= */
+    /* ======================================
+    DASHBOARD EMPRESA
+    ====================================== */
 
     const companyMap:any = {}
 
@@ -147,21 +214,37 @@ router.get("/", async (req,res)=>{
       if(!r.companyId) return
 
       if(!companyMap[r.companyId]){
+
         companyMap[r.companyId] = {
+
           id: r.companyId,
+
           name: r.companyName,
+
           total: 0,
+
           verde: 0,
+
           amarillo: 0,
+
           rojo: 0
+
         }
+
       }
 
       companyMap[r.companyId].total++
 
-      if(r.estado === "VERDE") companyMap[r.companyId].verde++
-      else if(r.estado === "AMARILLO") companyMap[r.companyId].amarillo++
-      else companyMap[r.companyId].rojo++
+      if(r.estado === "VERDE"){
+        companyMap[r.companyId].verde++
+      }
+      else if(r.estado === "AMARILLO"){
+        companyMap[r.companyId].amarillo++
+      }
+      else{
+        companyMap[r.companyId].rojo++
+      }
+
     })
 
     const companies = Object.values(companyMap).map((c:any)=>{
@@ -171,30 +254,50 @@ router.get("/", async (req,res)=>{
         : 0
 
       return {
+
         ...c,
+
         riesgo: rojoPct,
-        recomendacion: getCompanyRecommendation(rojoPct)
+
+        recomendacion:
+          getCompanyRecommendation(rojoPct)
+
       }
+
     })
 
-    /* ================= RESPONSE ================= */
+    /* ======================================
+    RESPONSE
+    ====================================== */
 
     return res.json({
+
       ok:true,
+
       data:{
+
         participantes: consolidated.length,
-        semaforo:{ verde, amarillo, rojo },
+
+        semaforo:{
+          verde,
+          amarillo,
+          rojo
+        },
+
         companies
+
       }
+
     })
 
   }catch(err){
 
-    console.error(err)
+    console.error("DASHBOARD ERROR:", err)
 
     return res.status(500).json({
       error:"Error dashboard"
     })
+
   }
 
 })
