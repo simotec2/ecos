@@ -113,16 +113,58 @@ async function renderHTML(data:any){
   }
 
   html = html
-    .replace(/{{logo}}/g, logo)
-    .replace(/{{participant}}/g, `${participant.nombre} ${participant.apellido}`)
-    .replace(/{{perfil}}/g, participant.perfil || "")
-    .replace(/{{company}}/g, participant.company?.name || "")
-    .replace(/{{score}}/g, data.score)
-    .replace(/{{result}}/g, data.traffic.label)
-    .replace(/{{color}}/g, getColorHex(data.traffic.color))
-    .replace(/{{radar}}/g, radarHTML)
-    .replace(/{{analysis}}/g, formatAnalysisHTML(data.analysis))
 
+  .replace(/{{logo}}/gi, logo)
+
+  .replace(
+    /{{participant}}/gi,
+    `${participant.nombre} ${participant.apellido}`
+  )
+
+  .replace(
+    /{{perfil}}/gi,
+    participant.perfil || ""
+  )
+
+  .replace(
+    /{{profile}}/gi,
+    participant.perfil || ""
+  )
+
+  .replace(
+    /{{company}}/gi,
+    participant.company?.name || ""
+  )
+
+  .replace(
+    /{{date}}/gi,
+    new Date().toLocaleDateString("es-CL")
+  )
+
+  .replace(
+    /{{score}}/gi,
+    String(data.score)
+  )
+
+  .replace(
+    /{{result}}/gi,
+    data.traffic.label
+  )
+
+  .replace(
+    /{{color}}/gi,
+    getColorHex(data.traffic.color)
+  )
+
+  .replace(
+    /{{radar}}/gi,
+    radarHTML
+  )
+
+  .replace(
+    /{{analysis}}/gi,
+    formatAnalysisHTML(data.analysis)
+  )
   return html
 }
 
