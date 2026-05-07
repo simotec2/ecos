@@ -421,13 +421,13 @@ export default function Participants(){
                   {isSuperAdmin && (
 
                     <button
-                      style={styles.deleteBtn}
-                      onClick={()=>deleteParticipant(p.id)}
-                    >
-                      Eliminar
-                    </button>
-
-                  )}
+                    style={styles.deleteBtn}
+                    onClick={()=>deleteParticipant(p.id)}
+                    title="Eliminar participante"
+                  >
+                    🗑️
+                  </button>
+                  )},
 
                 </td>
 
@@ -588,14 +588,20 @@ const styles:any = {
   },
 
   deleteBtn:{
-    marginLeft:6,
-    padding:"6px 10px",
-    background:"#dc2626",
-    color:"#fff",
-    border:"none",
-    borderRadius:4,
-    cursor:"pointer"
-  },
+  marginLeft:6,
+  width:32,
+  height:32,
+  background:"#474444",
+  color:"#fff",
+  border:"none",
+  borderRadius:6,
+  cursor:"pointer",
+  display:"inline-flex",
+  alignItems:"center",
+  justifyContent:"center",
+  fontSize:14,
+  padding:0
+},
 
   modal:{
     position:"fixed",
