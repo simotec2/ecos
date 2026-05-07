@@ -302,6 +302,12 @@ export async function renderReportHTML(data:any){
       /{{profile}}/g,
      participantProfile
     )
+
+    .replace(
+      /{{Profile}}/g,
+      participantProfile
+    )
+
     .replace(
       /{{date}}/g,
       reportDate
