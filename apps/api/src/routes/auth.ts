@@ -60,6 +60,10 @@ router.post("/login", async (req, res) => {
       })
     }
 
+    /* =====================================
+    PASSWORD SIMPLE
+    ===================================== */
+
     if (user.password !== password) {
       return res.status(401).json({
         error: "Credenciales inválidas"
@@ -71,7 +75,7 @@ router.post("/login", async (req, res) => {
     return res.json({
       ok: true,
       token,
-      forcePasswordChange: user.forcePasswordChange,
+      forcePasswordChange: false,
       user: {
         id: user.id,
         name: user.name,
@@ -120,7 +124,10 @@ router.post("/change-password", async (req, res) => {
 
     const token = authHeader.split(" ")[1]
 
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET as string)
+    const decoded: any = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    )
 
     const userId = decoded.id
 

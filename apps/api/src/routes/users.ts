@@ -27,7 +27,6 @@ router.get("/", async (req, res) => {
 
 })
 
-
 /* =====================================
 CREAR USUARIO
 ===================================== */
@@ -54,12 +53,13 @@ router.post("/", async (req, res) => {
 
   } catch (error) {
 
+    console.error(error)
+
     res.status(500).json({ error: "Error creating user" })
 
   }
 
 })
-
 
 /* =====================================
 ACTUALIZAR USUARIO
@@ -89,12 +89,13 @@ router.put("/:id", async (req, res) => {
 
   } catch (error) {
 
+    console.error(error)
+
     res.status(500).json({ error: "Error updating user" })
 
   }
 
 })
-
 
 /* =====================================
 ELIMINAR USUARIO
@@ -111,8 +112,6 @@ router.delete("/:id", async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" })
     }
-
-    /* evitar borrar el ultimo superadmin */
 
     if (user.role === "SUPERADMIN") {
 
@@ -138,15 +137,16 @@ router.delete("/:id", async (req, res) => {
 
   } catch (error) {
 
+    console.error(error)
+
     res.status(500).json({ error: "Error deleting user" })
 
   }
 
 })
 
-
 /* =====================================
-LOGIN AS (VER COMO USUARIO)
+LOGIN AS
 ===================================== */
 
 router.post("/loginAs/:id", async (req, res) => {
@@ -176,11 +176,14 @@ router.post("/loginAs/:id", async (req, res) => {
 
   } catch (error) {
 
+    console.error(error)
+
     res.status(500).json({ error: "LoginAs error" })
 
   }
 
 })
+
 /* =====================================
 RESET PASSWORD
 ===================================== */
@@ -227,4 +230,5 @@ router.put("/:id/reset-password", async (req, res) => {
   }
 
 })
+
 export default router
