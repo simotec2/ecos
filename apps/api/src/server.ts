@@ -27,6 +27,7 @@ import historyRoutes from "./routes/history"
 import questionsRoutes from "./routes/questions"
 import debugRoutes from "./routes/debug"
 import templateRoutes from "./routes/template"
+import exportRoutes from "./routes/export"
 
 const app = express()
 
@@ -69,6 +70,7 @@ app.use("/api/history", historyRoutes)
 app.use("/api/questions", questionsRoutes)
 app.use("/api/debug", debugRoutes)
 app.use("/api/template", templateRoutes)
+app.use("/api/export", exportRoutes)
 
 /* =========================
 FINAL REPORT
