@@ -1,8 +1,5 @@
 import prisma from "../db"
-
-import {
-  generateAIReport
-} from "./aiEngine"
+import { generateAIReport } from "./aiEngine"
 
 /* ======================================
 SEMÁFORO FINAL
@@ -54,33 +51,56 @@ function calculateFinalTraffic(
 }
 
 /* ======================================
-CLASES CSS
+CSS
 ====================================== */
 function getTrafficClass(color:string){
 
   if(color === "VERDE"){
-    return "card-green"
+    return "green"
   }
 
   if(color === "AMARILLO"){
-    return "card-yellow"
+    return "orange"
   }
 
-  return "card-red"
+  return "red"
 
 }
 
 function getResultClass(color:string){
 
   if(color === "VERDE"){
-    return "result-green"
+    return "green"
   }
 
   if(color === "AMARILLO"){
-    return "result-yellow"
+    return "orange"
   }
 
-  return "result-red"
+  return "red"
+
+}
+
+/* ======================================
+TOP / BOTTOM
+====================================== */
+function buildTopCompetencies(
+  competencies:any[]
+){
+
+  return [...competencies]
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,5)
+
+}
+
+function buildBottomCompetencies(
+  competencies:any[]
+){
+
+  return [...competencies]
+    .sort((a,b)=>a.score-b.score)
+    .slice(0,5)
 
 }
 
@@ -94,20 +114,13 @@ export async function generateOperationalFinalReport(
   const results =
     await prisma.evaluationResult.findMany({
 
-      where:{
-        participantId
-      },
+      where:{ participantId },
 
       include:{
-
         evaluation:true,
-
         participant:{
-          include:{
-            company:true
-          }
+          include:{ company:true }
         }
-
       },
 
       orderBy:{
@@ -166,11 +179,9 @@ export async function generateOperationalFinalReport(
 
       return {
 
-        type:
-          r.evaluation?.type,
+        type:r.evaluation?.type,
 
-        score:
-          Number(r.score || 0),
+        score:Number(r.score || 0),
 
         traffic:
           data.traffic || {
@@ -178,7 +189,9 @@ export async function generateOperationalFinalReport(
           },
 
         competencies:
-          data.competencies || [],
+          data.competencies ||
+          data.competenciasDetalle ||
+          [],
 
         analysis:
           data.aiText ||
@@ -219,13 +232,17 @@ export async function generateOperationalFinalReport(
 
     for(const c of r.competencies){
 
+      if(!c?.name) continue
+
       if(!map[c.name]){
 
         map[c.name] = []
 
       }
 
-      map[c.name].push(c.score)
+      map[c.name].push(
+        Number(c.score || 0)
+      )
 
     }
 
@@ -250,38 +267,41 @@ export async function generateOperationalFinalReport(
     })
 
   /* ======================================
-  IA FINAL
+  TOP / BOTTOM
+  ====================================== */
+
+  const topCompetencies =
+    buildTopCompetencies(
+      competencies
+    )
+
+  const bottomCompetencies =
+    buildBottomCompetencies(
+      competencies
+    )
+
+  /* ======================================
+  IA
   ====================================== */
 
   let aiText = ""
 
   try{
 
-    aiText = await generateAIReport({
+    aiText =
+      await generateAIReport({
 
-      type:"FINAL",
+        type:"FINAL",
 
-      score:globalScore,
+        score:globalScore,
 
-      traffic,
+        traffic,
 
-      competencies,
+        competencies,
 
-      evaluations:selected.map(e=>({
+        evaluations:selected
 
-        type:e.type,
-
-        score:e.score,
-
-        competencies:e.competencies,
-
-        analysis:e.analysis,
-
-        traffic:e.traffic
-
-      }))
-
-    })
+      })
 
   }catch(err){
 
@@ -327,6 +347,10 @@ export async function generateOperationalFinalReport(
       ),
 
     competencies,
+
+    topCompetencies,
+
+    bottomCompetencies,
 
     analysis:aiText,
 

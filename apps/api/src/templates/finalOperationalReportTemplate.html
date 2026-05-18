@@ -9,14 +9,14 @@
 
 @page{
   size: letter;
-  margin: 16mm;
+  margin: 14mm;
 }
 
 body{
   font-family: Arial, sans-serif;
-  color:#1f2937;
   margin:0;
   padding:0;
+  color:#1e293b;
   background:#ffffff;
 }
 
@@ -24,82 +24,132 @@ body{
   width:100%;
 }
 
+/* ======================================
+HEADER
+====================================== */
+
 .header{
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  margin-bottom:20px;
+  align-items:flex-start;
+  margin-bottom:18px;
 }
 
-.title{
-  font-size:24px;
-  font-weight:bold;
+.title-area{
+  width:70%;
+}
+
+.main-title{
+  font-size:28px;
+  font-weight:700;
   color:#0f172a;
+  margin-bottom:6px;
 }
 
-.subtitle{
+.sub-title{
   font-size:13px;
   color:#64748b;
-  margin-top:4px;
+  line-height:1.4;
+}
+
+.logo{
+  text-align:right;
 }
 
 .line{
-  height:5px;
-  background:linear-gradient(to right,#1e3a8a,#22c55e);
-  border-radius:3px;
-  margin-top:15px;
-  margin-bottom:20px;
+  height:6px;
+  background:linear-gradient(to right,#1e3a8a,#16a34a);
+  border-radius:4px;
+  margin-top:14px;
+  margin-bottom:22px;
 }
+
+/* ======================================
+IDENTIDAD
+====================================== */
 
 .identity{
   background:#f8fafc;
   border:1px solid #e2e8f0;
-  border-radius:12px;
-  padding:15px;
+  border-radius:14px;
+  padding:18px;
   margin-bottom:20px;
+}
+
+.identity-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.identity-item{
+  font-size:12px;
+  line-height:1.6;
+}
+
+.identity-label{
+  color:#64748b;
+  font-size:11px;
+  margin-bottom:2px;
+}
+
+.identity-value{
   font-size:13px;
-  line-height:1.7;
+  font-weight:bold;
+  color:#0f172a;
 }
 
-.cards{
-  display:flex;
+/* ======================================
+KPI
+====================================== */
+
+.kpi-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr;
   gap:12px;
-  margin-bottom:20px;
+  margin-bottom:24px;
 }
 
-.card{
-  flex:1;
-  border-radius:12px;
-  padding:15px;
+.kpi{
+  border-radius:14px;
+  padding:16px;
   color:white;
 }
 
-.card-title{
-  font-size:12px;
+.kpi-title{
+  font-size:11px;
   opacity:0.9;
 }
 
-.card-value{
-  font-size:22px;
-  font-weight:bold;
+.kpi-value{
   margin-top:8px;
+  font-size:24px;
+  font-weight:bold;
 }
 
-.card-blue{
+.blue{
   background:#2563eb;
 }
 
-.card-green{
+.green{
   background:#16a34a;
 }
 
-.card-yellow{
+.orange{
   background:#f59e0b;
 }
 
-.card-red{
+.red{
   background:#dc2626;
 }
+
+.gray{
+  background:#334155;
+}
+
+/* ======================================
+SECCIONES
+====================================== */
 
 .section{
   margin-bottom:22px;
@@ -110,83 +160,92 @@ body{
   font-size:18px;
   font-weight:bold;
   color:#0f172a;
-  margin-bottom:10px;
+  margin-bottom:12px;
+}
+
+.block{
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  padding:18px;
 }
 
 .text{
   font-size:12px;
-  line-height:1.7;
+  line-height:1.8;
   text-align:justify;
 }
 
+/* ======================================
+RADAR
+====================================== */
+
 .radar{
   text-align:center;
-  margin-top:20px;
-  margin-bottom:20px;
+  margin-top:10px;
 }
 
-.block{
-  background:#f8fafc;
+/* ======================================
+TABLAS
+====================================== */
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  background:#0f172a;
+  color:white;
+  padding:12px;
+  font-size:11px;
+  text-align:left;
+}
+
+td{
   border:1px solid #e2e8f0;
-  border-radius:12px;
-  padding:15px;
+  padding:11px;
+  font-size:11px;
 }
 
-ul{
-  margin-top:8px;
-  padding-left:18px;
+/* ======================================
+RESULTADO
+====================================== */
+
+.result-box{
+  padding:18px;
+  border-radius:14px;
+  text-align:center;
+  color:white;
+  font-size:20px;
+  font-weight:bold;
 }
 
-li{
-  margin-bottom:8px;
-  font-size:12px;
+/* ======================================
+2 COLUMNAS
+====================================== */
+
+.two-columns{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
 }
+
+/* ======================================
+FOOTER
+====================================== */
 
 .footer{
   margin-top:30px;
+  border-top:1px solid #cbd5e1;
+  padding-top:12px;
   text-align:center;
   font-size:10px;
   color:#64748b;
 }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:10px;
-}
-
-th{
-  background:#1e293b;
-  color:white;
-  padding:10px;
-  font-size:12px;
-}
-
-td{
-  border:1px solid #e2e8f0;
-  padding:10px;
-  font-size:11px;
-}
-
-.result-box{
-  color:white;
-  padding:12px;
-  border-radius:10px;
-  font-size:18px;
-  font-weight:bold;
-  text-align:center;
-}
-
-.result-green{
-  background:#16a34a;
-}
-
-.result-yellow{
-  background:#f59e0b;
-}
-
-.result-red{
-  background:#dc2626;
+.page-break{
+  page-break-before:always;
 }
 
 </style>
@@ -201,19 +260,20 @@ td{
 
   <div class="header">
 
-    <div>
+    <div class="title-area">
 
-      <div class="title">
-        INFORME PREVENTIVO OPERACIONAL
+      <div class="main-title">
+        INFORME INTEGRADO DE EVALUACIÓN
       </div>
 
-      <div class="subtitle">
-        Evaluación preventiva inteligente previa a acreditación minera
+      <div class="sub-title">
+        Plataforma ECOS de Competencias en Seguridad · Simotec<br/>
+        Informe preventivo para procesos de acreditación minera
       </div>
 
     </div>
 
-    <div>
+    <div class="logo">
       {{logo}}
     </div>
 
@@ -225,56 +285,54 @@ td{
 
   <div class="identity">
 
-    <b>Nombre:</b> {{participant}}<br/>
+    <div class="identity-grid">
 
-    <b>Perfil:</b> {{profile}}<br/>
-
-    <b>Empresa:</b> {{company}}<br/>
-
-    <b>Fecha Evaluación:</b> {{date}}
-
-  </div>
-
-  <!-- KPIS -->
-
-  <div class="cards">
-
-    <div class="card card-blue">
-
-      <div class="card-title">
-        Puntaje Global
+      <div class="identity-item">
+        <div class="identity-label">Participante</div>
+        <div class="identity-value">{{participant}}</div>
       </div>
 
-      <div class="card-value">
-        {{score}}%
+      <div class="identity-item">
+        <div class="identity-label">Perfil Evaluado</div>
+        <div class="identity-value">{{profile}}</div>
       </div>
 
-    </div>
-
-    <div class="card {{trafficClass}}">
-
-      <div class="card-title">
-        Resultado Final
+      <div class="identity-item">
+        <div class="identity-label">Empresa</div>
+        <div class="identity-value">{{company}}</div>
       </div>
 
-      <div class="card-value">
-        {{result}}
+      <div class="identity-item">
+        <div class="identity-label">Fecha Evaluación</div>
+        <div class="identity-value">{{date}}</div>
       </div>
 
     </div>
 
   </div>
 
-  <!-- DIAGNOSTICO -->
+  <!-- KPI -->
 
-  <div class="section">
+  <div class="kpi-grid">
 
-    <div class="section-title">
-      Diagnóstico General
+    <div class="kpi blue">
+      <div class="kpi-title">Puntaje Integrado</div>
+      <div class="kpi-value">{{score}}%</div>
     </div>
 
-    <div class="block text">
-      {{diagnostic}}
+    <div class="kpi {{trafficClass}}">
+      <div class="kpi-title">Resultado Final</div>
+      <div class="kpi-value">{{result}}</div>
+    </div>
+
+    <div class="kpi gray">
+      <div class="kpi-title">Evaluaciones</div>
+      <div class="kpi-value">3</div>
+    </div>
+
+    <div class="kpi green">
+      <div class="kpi-title">Estado</div>
+      <div class="kpi-value">ECOS</div>
     </div>
 
   </div>
@@ -287,7 +345,11 @@ td{
       Resultados por Evaluación
     </div>
 
-    {{evaluationsTable}}
+    <div class="block">
+
+      {{evaluationsTable}}
+
+    </div>
 
   </div>
 
@@ -296,39 +358,67 @@ td{
   <div class="section">
 
     <div class="section-title">
-      Perfil Integrado
+      Perfil Integrado de Competencias
     </div>
 
-    <div class="radar">
+    <div class="block radar">
+
       {{radar}}
+
     </div>
 
   </div>
 
-  <!-- FORTALEZAS -->
+  <!-- PAGE BREAK -->
 
-  <div class="section">
+  <div class="page-break"></div>
 
-    <div class="section-title">
-      Fortalezas Operacionales
+  <!-- DOS COLUMNAS -->
+
+  <div class="two-columns">
+
+    <div class="section">
+
+      <div class="section-title">
+        Fortalezas Operacionales
+      </div>
+
+      <div class="block text">
+
+        {{strengths}}
+
+      </div>
+
     </div>
 
-    <div class="block text">
-      {{strengths}}
+    <div class="section">
+
+      <div class="section-title">
+        Brechas Prioritarias
+      </div>
+
+      <div class="block text">
+
+        {{gaps}}
+
+      </div>
+
     </div>
 
   </div>
 
-  <!-- BRECHAS -->
+  <!-- DIAGNOSTICO -->
 
   <div class="section">
 
     <div class="section-title">
-      Brechas Prioritarias
+      Diagnóstico Ejecutivo
     </div>
 
     <div class="block text">
-      {{gaps}}
+
+      {{diagnostic}}
+
     </div>
 
   </div>
@@ -342,7 +432,9 @@ td{
     </div>
 
     <div class="block text">
+
       {{impact}}
+
     </div>
 
   </div>
@@ -352,25 +444,13 @@ td{
   <div class="section">
 
     <div class="section-title">
-      Plan de Desarrollo Sugerido
+      Plan de Desarrollo
     </div>
 
     <div class="block text">
+
       {{development}}
-    </div>
 
-  </div>
-
-  <!-- CURSOS -->
-
-  <div class="section">
-
-    <div class="section-title">
-      Cursos Recomendados
-    </div>
-
-    <div class="block text">
-      {{courses}}
     </div>
 
   </div>
@@ -380,11 +460,13 @@ td{
   <div class="section">
 
     <div class="section-title">
-      Recomendación para Supervisor
+      Recomendaciones Supervisor / RRHH
     </div>
 
     <div class="block text">
+
       {{supervisor}}
+
     </div>
 
   </div>
@@ -394,7 +476,7 @@ td{
   <div class="section">
 
     <div class="section-title">
-      Conclusión Final
+      Veredicto Integrado
     </div>
 
     <div class="result-box {{resultClass}}">
@@ -409,12 +491,12 @@ td{
 
   <div class="footer">
 
-    Informe generado por ECOS – Plataforma Preventiva para Minería Moderna
+    ECOS · Plataforma de Evaluación de Competencias en Seguridad · Simotec<br/>
+    Documento confidencial para uso interno de supervisión y RRHH
 
   </div>
 
 </div>
 
 </body>
-
 </html>
