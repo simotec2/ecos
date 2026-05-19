@@ -122,7 +122,7 @@ export async function generateOperationalFinalReport(
 
     color:"ROJO",
 
-    result:"NO RECOMENDABLE"
+    result:"AUN NO RECOMENDABLE"
 
   }
 
@@ -215,7 +215,7 @@ export async function generateOperationalFinalReport(
       let color = "#dc2626"
 
       let label =
-        "No recomendable"
+        "Aun No Recomendable"
 
       if(score >= 85){
 
@@ -227,10 +227,10 @@ export async function generateOperationalFinalReport(
       }
       else if(score >= 55){
 
-        color = "#d97706"
+        color = "#f5e509"
 
         label =
-          "Recomendable con seguimiento"
+          "Recomendable con Seguimiento"
 
       }
 
@@ -279,7 +279,7 @@ export async function generateOperationalFinalReport(
     ){
 
       recommendedCourses.push(
-        "Curso IPER y Control de Riesgos Operacionales"
+        "Curso de Identificacion de Peligros y Evaluacion de Riegos y Control de Riesgos Operacionales"
       )
 
     }
