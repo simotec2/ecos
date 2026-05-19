@@ -24,10 +24,6 @@ body{
   width:100%;
 }
 
-/* ======================================
-HEADER
-====================================== */
-
 .header{
   display:flex;
   justify-content:space-between;
@@ -61,10 +57,6 @@ HEADER
   margin-top:12px;
   margin-bottom:20px;
 }
-
-/* ======================================
-PORTADA
-====================================== */
 
 .top-grid{
   display:grid;
@@ -122,10 +114,6 @@ PORTADA
   line-height:1.7;
 }
 
-/* ======================================
-KPIS
-====================================== */
-
 .kpi-grid{
   display:grid;
   grid-template-columns:1fr 1fr 1fr;
@@ -168,10 +156,6 @@ KPIS
   color:#dc2626;
 }
 
-/* ======================================
-RIESGO
-====================================== */
-
 .risk-container{
   text-align:center;
   margin-top:20px;
@@ -186,7 +170,6 @@ RIESGO
 
 .risk-bar{
   width:120px;
-  margin:auto;
   border-radius:8px;
   overflow:hidden;
   border:1px solid #cbd5e1;
@@ -216,10 +199,6 @@ RIESGO
   font-weight:bold;
 }
 
-/* ======================================
-SECCIONES
-====================================== */
-
 .section{
   margin-bottom:26px;
   page-break-inside:avoid;
@@ -240,55 +219,11 @@ SECCIONES
   text-align:justify;
 }
 
-/* ======================================
-RADAR
-====================================== */
-
 .radar{
   text-align:center;
   margin-top:20px;
   margin-bottom:30px;
 }
-
-/* ======================================
-PLANES
-====================================== */
-
-.plan-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-}
-
-.plan-card{
-  background:#ecfdf5;
-  border-radius:12px;
-  padding:18px;
-  min-height:120px;
-}
-
-.plan-title{
-  font-size:20px;
-  font-weight:700;
-  margin-bottom:10px;
-  color:#0f172a;
-}
-
-.plan-text{
-  font-size:13px;
-  line-height:1.6;
-}
-
-.priority{
-  margin-top:12px;
-  font-size:12px;
-  font-weight:bold;
-  color:#dc2626;
-}
-
-/* ======================================
-SUPERVISOR
-====================================== */
 
 .summary-grid{
   display:grid;
@@ -329,10 +264,6 @@ SUPERVISOR
   margin-bottom:10px;
 }
 
-/* ======================================
-RESPALDO
-====================================== */
-
 .legal-grid{
   display:grid;
   grid-template-columns:1fr 1fr 1fr 1fr;
@@ -359,10 +290,6 @@ RESPALDO
   line-height:1.5;
 }
 
-/* ======================================
-FOOTER
-====================================== */
-
 .footer{
   margin-top:30px;
   text-align:center;
@@ -384,431 +311,7 @@ FOOTER
 
 <div class="container">
 
-  <!-- HEADER -->
-
-  <div class="header">
-
-    <div class="logo">
-      {{logo}}
-    </div>
-
-    <div class="header-title">
-
-      <div class="main-title">
-        INFORME INTEGRADO DE EVALUACIÓN
-      </div>
-
-      <div class="sub-title">
-        Plataforma ECOS de Competencias en Seguridad · Simotec
-      </div>
-
-    </div>
-
-  </div>
-
-  <div class="line"></div>
-
-  <!-- PORTADA -->
-
-  <div class="top-grid">
-
-    <div class="identity-card">
-
-      <div class="identity-title">
-        PARTICIPANTE
-      </div>
-
-      <div class="participant-name">
-        {{participant}}
-      </div>
-
-      <div class="identity-data">
-
-        Perfil evaluado:
-        <b>{{profile}}</b><br/>
-
-        Empresa:
-        <b>{{company}}</b><br/>
-
-        Fecha evaluación:
-        <b>{{date}}</b>
-
-      </div>
-
-    </div>
-
-    <div class="veredict-card">
-
-      <div class="veredict-title">
-        VEREDICTO INTEGRADO
-      </div>
-
-      <div class="veredict-main">
-        {{result}}
-      </div>
-
-      <div class="veredict-text">
-
-        Puede incorporarse al rol con seguimiento operacional,
-        capacitación dirigida y acompañamiento durante los
-        primeros 90 días.
-
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- KPIS -->
-
-  <div class="section">
-
-    <div class="section-title">
-      01 · RESULTADOS POR EVALUACIÓN
-    </div>
-
-    <div class="kpi-grid">
-
-      {{evaluationsCards}}
-
-    </div>
-
-  </div>
-
-  <!-- RIESGO -->
-
-  <div class="risk-container">
-
-    <div class="risk-title">
-      Nivel de Riesgo de Incorporación
-    </div>
-
-    <div class="risk-bar">
-
-      <div class="risk-green">
-        Bajo riesgo<br/>
-        (Recomendable)
-      </div>
-
-      <div class="risk-orange">
-        Riesgo medio<br/>
-        (Observaciones)
-      </div>
-
-      <div class="risk-red">
-        Riesgo alto<br/>
-        (No recomendable)
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- PAGE BREAK -->
-
-  <div class="page-break"></div>
-
-  <!-- RADAR -->
-
-  <div class="section">
-
-    <div class="section-title">
-      02 · PERFIL INTEGRADO DE COMPETENCIAS
-    </div>
-
-    <div class="radar">
-      {{radar}}
-    </div>
-
-  </div>
-
-  <!-- FORTALEZAS -->
-
-  <div class="section">
-
-    <div class="section-title">
-      03 · FORTALEZAS Y BRECHAS
-    </div>
-
-    <div class="summary-grid">
-
-      <div class="good-box">
-
-        <div class="summary-title green">
-          Fortalezas clave
-        </div>
-
-        <div class="text">
-          {{strengths}}
-        </div>
-
-      </div>
-
-      <div class="bad-box">
-
-        <div class="summary-title red">
-          Brechas prioritarias
-        </div>
-
-        <div class="text">
-          {{gaps}}
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- PAGE BREAK -->
-
-  <div class="page-break"></div>
-
-  <!-- PLAN -->
-
-  <div class="section">
-
-    <div class="section-title">
-      04 · ACCIONES CONCRETAS DEL PLAN DE DESARROLLO
-    </div>
-
-    <div class="plan-grid">
-
-      <div class="plan-card">
-
-        <div class="plan-title">
-          Hombre Nuevo Minería
-        </div>
-
-        <div class="plan-text">
-
-          Capacitación inicial de seguridad,
-          estándares DAS, control de riesgos
-          y comportamiento seguro.
-
-        </div>
-
-        <div class="priority">
-          Prioridad alta · Mes 1
-        </div>
-
-      </div>
-
-      <div class="plan-card">
-
-        <div class="plan-title">
-          Tutor operacional
-        </div>
-
-        <div class="plan-text">
-
-          Asignación de supervisor o mentor
-          senior durante los primeros
-          90 días.
-
-        </div>
-
-        <div class="priority">
-          Prioridad alta · Mes 1–3
-        </div>
-
-      </div>
-
-      <div class="plan-card">
-
-        <div class="plan-title">
-          Comunicación operacional
-        </div>
-
-        <div class="plan-text">
-
-          Taller de reportabilidad,
-          coordinación segura y
-          comunicación efectiva.
-
-        </div>
-
-        <div class="priority">
-          Prioridad media · Mes 1–2
-        </div>
-
-      </div>
-
-      <div class="plan-card">
-
-        <div class="plan-title">
-          Refuerzo técnico
-        </div>
-
-        <div class="plan-text">
-
-          Reinducción técnica del rol,
-          procedimientos y riesgos críticos.
-
-        </div>
-
-        <div class="priority">
-          Prioridad media · Mes 2–3
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- SUPERVISOR -->
-
-  <div class="section">
-
-    <div class="section-title">
-      05 · RESUMEN PARA SUPERVISOR Y ADMINISTRADOR
-    </div>
-
-    <div class="summary-grid">
-
-      <div class="good-box">
-
-        <div class="summary-title green">
-          Lo que trae bien desarrollado
-        </div>
-
-        <div class="text">
-          {{strengths}}
-        </div>
-
-      </div>
-
-      <div class="bad-box">
-
-        <div class="summary-title red">
-          Lo que necesita acompañamiento
-        </div>
-
-        <div class="text">
-          {{gaps}}
-        </div>
-
-      </div>
-
-    </div>
-
-    <div class="alert-box">
-
-      <div class="alert-title">
-        Atención supervisor / administrador
-      </div>
-
-      <div class="text">
-
-        Se recomienda seguimiento directo
-        durante los primeros 90 días,
-        acompañamiento operacional y
-        observaciones en terreno para
-        asegurar correcta adaptación al rol.
-
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- RESPALDO -->
-
-  <div class="section">
-
-    <div class="section-title">
-      06 · RESPALDO PARA EL EMPLEADOR
-    </div>
-
-    <div class="text">
-
-      Este informe contribuye al cumplimiento
-      de la obligación del empleador en
-      materia de seguridad y desempeño
-      operacional.
-
-    </div>
-
-    <div class="legal-grid">
-
-      <div class="legal-card">
-
-        <div class="legal-title">
-          Reducción de costos
-        </div>
-
-        <div class="legal-text">
-
-          Accidentes,
-          reemplazos,
-          juicios y
-          rotación.
-
-        </div>
-
-      </div>
-
-      <div class="legal-card">
-
-        <div class="legal-title">
-          Continuidad operacional
-        </div>
-
-        <div class="legal-text">
-
-          Reduce
-          interrupciones
-          y pérdida
-          operacional.
-
-        </div>
-
-      </div>
-
-      <div class="legal-card">
-
-        <div class="legal-title">
-          Alineamiento normativo
-        </div>
-
-        <div class="legal-text">
-
-          Estándares DAS,
-          OTI y requisitos
-          minería.
-
-        </div>
-
-      </div>
-
-      <div class="legal-card">
-
-        <div class="legal-title">
-          Debida diligencia
-        </div>
-
-        <div class="legal-text">
-
-          Respaldo formal
-          para decisiones
-          de contratación.
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- FOOTER -->
-
-  <div class="footer">
-
-    Informe generado por ECOS · Plataforma de Evaluación de Competencias en Seguridad · Simotec
-
-  </div>
+{{logo}}
 
 </div>
 

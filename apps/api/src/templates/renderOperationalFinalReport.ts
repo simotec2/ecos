@@ -71,161 +71,52 @@ function extractSection(
 }
 
 /* ======================================
-TABLA EVALUACIONES
+CARDS EVALUACIONES
 ====================================== */
-function buildEvaluationsTable(
+function buildEvaluationCards(
   evaluations:any[]
 ){
 
-  return `
+  return evaluations.map(e=>{
 
-    <table>
+    const score =
+      Math.round(e.score)
 
-      <tr>
+    let color = "green"
 
-        <th>Evaluación</th>
-        <th>Puntaje</th>
-        <th>Resultado</th>
+    if(
+      e.traffic?.color === "AMARILLO"
+    ){
+      color = "orange"
+    }
 
-      </tr>
+    if(
+      e.traffic?.color === "ROJO"
+    ){
+      color = "red"
+    }
 
-      ${evaluations.map(e=>`
+    return `
 
-        <tr>
+      <div class="kpi">
 
-          <td>
-            ${getEvaluationName(e.type)}
-          </td>
+        <div class="kpi-title">
+          ${getEvaluationName(e.type)}
+        </div>
 
-          <td>
-            ${Math.round(e.score)}%
-          </td>
+        <div class="kpi-score ${color}">
+          ${score}%
+        </div>
 
-          <td>
-            ${e.traffic?.color || ""}
-          </td>
-
-        </tr>
-
-      `).join("")}
-
-    </table>
-
-  `
-
-}
-
-/* ======================================
-TOP COMPETENCIAS
-====================================== */
-function buildTopHTML(
-  competencies:any[]
-){
-
-  return competencies.map((c:any)=>`
-
-    <div style="
-      margin-bottom:14px;
-    ">
-
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        margin-bottom:5px;
-      ">
-
-        <span style="
-          font-size:11px;
-          font-weight:bold;
-          color:#0f172a;
-        ">
-          ${c.name}
-        </span>
-
-        <span style="
-          font-size:11px;
-          color:#0f172a;
-        ">
-          ${c.score}%
-        </span>
+        <div class="kpi-result ${color}">
+          ${e.traffic?.result || ""}
+        </div>
 
       </div>
 
-      <div style="
-        height:11px;
-        background:#dcfce7;
-        border-radius:20px;
-        overflow:hidden;
-      ">
+    `
 
-        <div style="
-          width:${c.score}%;
-          background:#16a34a;
-          height:100%;
-        "></div>
-
-      </div>
-
-    </div>
-
-  `).join("")
-
-}
-
-/* ======================================
-BOTTOM COMPETENCIAS
-====================================== */
-function buildBottomHTML(
-  competencies:any[]
-){
-
-  return competencies.map((c:any)=>`
-
-    <div style="
-      margin-bottom:14px;
-    ">
-
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        margin-bottom:5px;
-      ">
-
-        <span style="
-          font-size:11px;
-          font-weight:bold;
-          color:#0f172a;
-        ">
-          ${c.name}
-        </span>
-
-        <span style="
-          font-size:11px;
-          color:#0f172a;
-        ">
-          ${c.score}%
-        </span>
-
-      </div>
-
-      <div style="
-        height:11px;
-        background:#fee2e2;
-        border-radius:20px;
-        overflow:hidden;
-      ">
-
-        <div style="
-          width:${c.score}%;
-          background:#dc2626;
-          height:100%;
-        "></div>
-
-      </div>
-
-    </div>
-
-  `).join("")
+  }).join("")
 
 }
 
@@ -304,12 +195,6 @@ export async function renderOperationalFinalReport(
       .replace(/##/g,"")
       .replace(/###/g,"")
 
-  const diagnostic = extractSection(
-    analysis,
-    "DIAGNÓSTICO GENERAL:",
-    "FORTALEZAS OPERACIONALES:"
-  )
-
   const strengths = extractSection(
     analysis,
     "FORTALEZAS OPERACIONALES:",
@@ -322,58 +207,39 @@ export async function renderOperationalFinalReport(
     "IMPACTO OPERACIONAL:"
   )
 
-  const impact = extractSection(
-    analysis,
-    "IMPACTO OPERACIONAL:",
-    "PLAN DE DESARROLLO SUGERIDO:"
-  )
-
-  const development = extractSection(
-    analysis,
-    "PLAN DE DESARROLLO SUGERIDO:",
-    "CURSOS RECOMENDADOS:"
-  )
-
-  const supervisor = extractSection(
-    analysis,
-    "RECOMENDACIÓN PARA SUPERVISOR:",
-    "CONCLUSIÓN FINAL:"
-  )
-
-  const conclusion = extractSection(
-    analysis,
-    "CONCLUSIÓN FINAL:"
-  )
-
-  /* ======================================
-  TABLA
-  ====================================== */
-
-  const evaluationsTable =
-    buildEvaluationsTable(
-      data.evaluations || []
-    )
-
-  /* ======================================
-  TOP / BOTTOM
-  ====================================== */
-
-  const topHTML =
-    buildTopHTML(
-      data.topCompetencies || []
-    )
-
-  const bottomHTML =
-    buildBottomHTML(
-      data.bottomCompetencies || []
-    )
-
   /* ======================================
   RADAR
   ====================================== */
 
   const radar =
     data.radar || ""
+
+  /* ======================================
+  RISK POSITION
+  ====================================== */
+
+  let riskArrowOffset = "-120px"
+
+  if(
+    data.traffic?.color === "AMARILLO"
+  ){
+    riskArrowOffset = "0px"
+  }
+
+  if(
+    data.traffic?.color === "ROJO"
+  ){
+    riskArrowOffset = "120px"
+  }
+
+  /* ======================================
+  EVALUATIONS
+  ====================================== */
+
+  const evaluationsCards =
+    buildEvaluationCards(
+      data.evaluations || []
+    )
 
   /* ======================================
   REEMPLAZOS
@@ -432,11 +298,6 @@ export async function renderOperationalFinalReport(
   )
 
   .replace(
-    /{{diagnostic}}/gi,
-    diagnostic
-  )
-
-  .replace(
     /{{strengths}}/gi,
     strengths
   )
@@ -447,38 +308,13 @@ export async function renderOperationalFinalReport(
   )
 
   .replace(
-    /{{impact}}/gi,
-    impact
+    /{{evaluationsCards}}/gi,
+    evaluationsCards
   )
 
   .replace(
-    /{{development}}/gi,
-    development
-  )
-
-  .replace(
-    /{{supervisor}}/gi,
-    supervisor
-  )
-
-  .replace(
-    /{{conclusion}}/gi,
-    conclusion
-  )
-
-  .replace(
-    /{{evaluationsTable}}/gi,
-    evaluationsTable
-  )
-
-  .replace(
-    /{{topCompetencies}}/gi,
-    topHTML
-  )
-
-  .replace(
-    /{{bottomCompetencies}}/gi,
-    bottomHTML
+    /{{riskArrowOffset}}/gi,
+    riskArrowOffset
   )
 
   /* ======================================
