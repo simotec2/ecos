@@ -38,7 +38,7 @@ function calculateFinalTraffic(
 
     return {
       color:"AMARILLO",
-      result:"RECOMENDABLE CON OBSERVACIONES"
+      result:"APTA CON PLAN DE DESARROLLO"
     }
 
   }
@@ -101,6 +101,118 @@ function buildBottomCompetencies(
   return [...competencies]
     .sort((a,b)=>a.score-b.score)
     .slice(0,5)
+
+}
+
+/* ======================================
+PLAN DESARROLLO MINERÍA
+====================================== */
+function buildMiningDevelopmentPlan(
+  competencies:any[]
+){
+
+  const plans:string[] = []
+
+  for(const c of competencies){
+
+    const score =
+      Number(c.score || 0)
+
+    const name =
+      String(c.name || "")
+        .toLowerCase()
+
+    if(score >= 70){
+      continue
+    }
+
+    /* =========================
+    SEGURIDAD
+    ========================= */
+
+    if(
+      name.includes("riesgo") ||
+      name.includes("seguridad")
+    ){
+
+      plans.push(`
+      • Curso Hombre Nuevo Minería
+      • Identificación de peligros y control de riesgos críticos
+      • Procedimientos operacionales y estándares DAS
+      `)
+
+    }
+
+    /* =========================
+    TECNICO
+    ========================= */
+
+    if(
+      name.includes("técnico") ||
+      name.includes("tecnico")
+    ){
+
+      plans.push(`
+      • Refuerzo técnico operacional del rol
+      • Inducción específica de proceso productivo
+      • Capacitación práctica en terreno
+      `)
+
+    }
+
+    /* =========================
+    COMUNICACION
+    ========================= */
+
+    if(
+      name.includes("comunicación") ||
+      name.includes("comunicacion")
+    ){
+
+      plans.push(`
+      • Taller comunicación efectiva operacional
+      • Reportabilidad e instrucciones críticas
+      • Coordinación segura entre áreas
+      `)
+
+    }
+
+    /* =========================
+    EQUIPO
+    ========================= */
+
+    if(
+      name.includes("equipo")
+    ){
+
+      plans.push(`
+      • Taller trabajo en equipo minería
+      • Integración operacional y liderazgo colaborativo
+      • Resolución de conflictos en terreno
+      `)
+
+    }
+
+    /* =========================
+    CONDUCTUAL
+    ========================= */
+
+    if(
+      name.includes("conductual") ||
+      name.includes("consistencia")
+    ){
+
+      plans.push(`
+      • Taller conductas seguras y autocuidado
+      • Mentoría con supervisor senior
+      • Seguimiento conductual primeros 90 días
+      `)
+
+    }
+
+  }
+
+  return [...new Set(plans)].join("<br/><br/>")
 
 }
 
@@ -281,7 +393,16 @@ export async function generateOperationalFinalReport(
     )
 
   /* ======================================
-  IA
+  PLAN MINERÍA
+  ====================================== */
+
+  const miningPlan =
+    buildMiningDevelopmentPlan(
+      bottomCompetencies
+    )
+
+  /* ======================================
+  IA EJECUTIVA
   ====================================== */
 
   let aiText = ""
@@ -299,7 +420,40 @@ export async function generateOperationalFinalReport(
 
         competencies,
 
-        evaluations:selected
+        evaluations:selected,
+
+        prompt:`
+
+Eres un psicólogo laboral senior especialista en minería.
+
+Debes generar un informe ejecutivo tipo consultora minera.
+
+NO uses markdown.
+NO uses asteriscos.
+NO uses títulos repetidos.
+
+Debes redactar:
+
+DIAGNÓSTICO GENERAL:
+FORTALEZAS OPERACIONALES:
+BRECHAS PRIORITARIAS:
+IMPACTO OPERACIONAL:
+PLAN DE DESARROLLO SUGERIDO:
+RECOMENDACIÓN PARA SUPERVISOR:
+CONCLUSIÓN FINAL:
+
+Debes sonar:
+- ejecutivo
+- corporativo
+- minería
+- RRHH industrial
+- continuidad operacional
+- seguridad
+- debida diligencia
+
+NO sonar como ChatGPT.
+
+`
 
       })
 
@@ -351,6 +505,8 @@ export async function generateOperationalFinalReport(
     topCompetencies,
 
     bottomCompetencies,
+
+    miningPlan,
 
     analysis:aiText,
 
