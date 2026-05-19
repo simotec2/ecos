@@ -4,14 +4,14 @@ import path from "path"
 function getColor(color:string){
 
   if(color === "VERDE"){
-    return "#0ddb59"
+    return "#16a34a"
   }
 
   if(color === "AMARILLO"){
-    return "#d9c406"
+    return "#d97706"
   }
 
-  return "#e71313"
+  return "#dc2626"
 
 }
 
@@ -22,9 +22,9 @@ function generateDynamicVeredict(
 
   const greenTexts = [
 
-    `${participantName} presenta un perfil compatible con el rol evaluado, evidenciando competencias alineadas con ambientes operacionales de alta exigencia.`,
+    `${participantName} presenta competencias alineadas con ambientes operacionales de alta exigencia.`,
 
-    `La evaluación integrada evidencia un adecuado potencial de adaptación operacional y comportamiento preventivo.`
+    `La evaluación integrada evidencia un adecuado potencial preventivo y operacional.`
 
   ]
 
@@ -38,9 +38,9 @@ function generateDynamicVeredict(
 
   const redTexts = [
 
-    `${participantName} presenta brechas relevantes que actualmente podrían afectar el desempeño operacional seguro.`,
+    `${participantName} presenta brechas relevantes que podrían afectar el desempeño operacional seguro.`,
 
-    `Los resultados obtenidos reflejan riesgos conductuales y operacionales que hacen no recomendable la incorporación inmediata.`
+    `Los resultados obtenidos reflejan factores de exposición operacional que requieren intervención preventiva.`
 
   ]
 
@@ -81,15 +81,6 @@ export async function renderOperationalFinalReport(
   )
 
   /* ======================================
-  PARTICIPANTE
-  ====================================== */
-
-  const participantName = `
-${data.participant?.nombre || ""}
-${data.participant?.apellido || ""}
-  `.trim()
-
-  /* ======================================
   LOGO
   ====================================== */
 
@@ -114,7 +105,16 @@ ${data.participant?.apellido || ""}
   `
 
   /* ======================================
-  RESULTADO
+  PARTICIPANTE
+  ====================================== */
+
+  const participantName = `
+${data.participant?.nombre || ""}
+${data.participant?.apellido || ""}
+  `.trim()
+
+  /* ======================================
+  COLOR
   ====================================== */
 
   const resultColor =
@@ -182,11 +182,6 @@ ${data.participant?.apellido || ""}
     )
 
     .replace(
-      /{{riskArrowClass}}/gi,
-      data.riskArrowClass || ""
-    )
-
-    .replace(
       /{{radar}}/gi,
       data.radar || ""
     )
@@ -214,6 +209,11 @@ ${data.participant?.apellido || ""}
     .replace(
       /{{employerSupport}}/gi,
       data.employerSupport || ""
+    )
+
+    .replace(
+      /{{operationalExposureAnalysis}}/gi,
+      data.operationalExposureAnalysis || ""
     )
 
   /* ======================================
