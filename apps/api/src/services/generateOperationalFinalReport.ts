@@ -115,7 +115,7 @@ export async function generateOperationalFinalReport(
       : 0
 
   /* ======================================
-  TRAFFIC
+  RESULTADO FINAL
   ====================================== */
 
   let traffic = {
@@ -143,7 +143,7 @@ export async function generateOperationalFinalReport(
 
       color:"AMARILLO",
 
-      result:"APTA CON PLAN DE DESARROLLO"
+      result:"RECOMENDABLE CON SEGUIMIENTO"
 
     }
 
@@ -230,7 +230,7 @@ export async function generateOperationalFinalReport(
         color = "#d97706"
 
         label =
-          "Recomendable con observaciones"
+          "Recomendable con seguimiento"
 
       }
 
@@ -263,6 +263,99 @@ export async function generateOperationalFinalReport(
     }).join("")
 
   /* ======================================
+  CURSOS RECOMENDADOS
+  ====================================== */
+
+  const recommendedCourses:string[] = []
+
+  topGaps.forEach((gap:any)=>{
+
+    const name =
+      String(gap.name || "")
+        .toLowerCase()
+
+    if(
+      name.includes("riesgo")
+    ){
+
+      recommendedCourses.push(
+        "Curso IPER y Control de Riesgos Operacionales"
+      )
+
+    }
+
+    if(
+      name.includes("proced")
+    ){
+
+      recommendedCourses.push(
+        "Curso Procedimientos Críticos de Trabajo"
+      )
+
+    }
+
+    if(
+      name.includes("comun")
+    ){
+
+      recommendedCourses.push(
+        "Curso Comunicación Efectiva en Minería"
+      )
+
+    }
+
+    if(
+      name.includes("equipo")
+    ){
+
+      recommendedCourses.push(
+        "Curso Trabajo en Equipo y Liderazgo Operacional"
+      )
+
+    }
+
+    if(
+      name.includes("seguridad")
+    ){
+
+      recommendedCourses.push(
+        "Curso Seguridad Minera para Hombre Nuevo"
+      )
+
+    }
+
+    if(
+      name.includes("conduct")
+    ){
+
+      recommendedCourses.push(
+        "Curso Conductas Seguras y Cultura Preventiva"
+      )
+
+    }
+
+  })
+
+  const uniqueCourses =
+    [...new Set(recommendedCourses)]
+
+  const coursesHTML =
+
+    uniqueCourses.length
+
+      ? uniqueCourses.map(course=>`
+
+          <li>${course}</li>
+
+        `).join("")
+
+      : `
+          <li>
+            Curso Seguridad Minera para Hombre Nuevo
+          </li>
+        `
+
+  /* ======================================
   PLAN DESARROLLO
   ====================================== */
 
@@ -287,12 +380,17 @@ export async function generateOperationalFinalReport(
       <div class="good-box">
 
         <div class="summary-title">
-          Reforzamiento preventivo
+          Capacitación recomendada
         </div>
 
         <div class="text">
-          Capacitación dirigida en control
-          de riesgos, comunicación y trabajo seguro.
+
+          <ul>
+
+            ${coursesHTML}
+
+          </ul>
+
         </div>
 
       </div>
