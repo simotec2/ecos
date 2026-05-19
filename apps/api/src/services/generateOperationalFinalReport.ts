@@ -202,6 +202,161 @@ export async function generateOperationalFinalReport(
     `).join("<br/>")
 
   /* ======================================
+  PERFIL
+  ====================================== */
+
+  const profile =
+
+  participant.perfil ||
+  "Operador"
+
+  const isSupervisor =
+
+    String(profile)
+      .toLowerCase()
+      .includes("supervisor")
+
+  /* ======================================
+  SÍNTESIS EJECUTIVA IA
+  ====================================== */
+
+  const strengthsText =
+
+    topStrengths
+      .map((s:any)=>
+        s.name.toLowerCase()
+      )
+      .join(", ")
+
+  const gapsText =
+
+    topGaps
+      .map((g:any)=>
+        g.name.toLowerCase()
+      )
+      .join(", ")
+
+  let executiveSummary = ""
+
+  if(isSupervisor){
+
+    executiveSummary = `
+
+El participante presenta un desempeño ${
+  score >= 85
+    ? "sólido"
+    : score >= 55
+    ? "adecuado con observaciones"
+    : "con exposición relevante"
+} en competencias asociadas a liderazgo preventivo y control operacional.
+
+Destacan fortalezas relacionadas con ${strengthsText}, favoreciendo la supervisión de tareas críticas y la gestión preventiva de equipos.
+
+No obstante, persisten oportunidades de mejora vinculadas a ${gapsText}, las cuales podrían afectar la consistencia del liderazgo operacional bajo escenarios de presión y alta exigencia operacional.
+
+    `.trim()
+
+  }else{
+
+    executiveSummary = `
+
+El participante presenta un desempeño ${
+  score >= 85
+    ? "sólido"
+    : score >= 55
+    ? "adecuado con observaciones"
+    : "con exposición relevante"
+} en competencias asociadas a seguridad operacional y ejecución segura de tareas críticas.
+
+Se observan fortalezas relacionadas con ${strengthsText}, favoreciendo la adherencia preventiva y el cumplimiento operacional.
+
+Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionadas con ${gapsText}, las cuales podrían afectar la consistencia conductual bajo condiciones de presión operacional.
+
+    `.trim()
+
+  }
+
+  /* ======================================
+  RIESGOS POTENCIALES
+  ====================================== */
+
+  const risks:string[] = []
+
+  topGaps.forEach((g:any)=>{
+
+    const name =
+      String(g.name || "")
+        .toLowerCase()
+
+    if(name.includes("equipo")){
+
+      risks.push(
+        "Dificultades de coordinación en tareas grupales."
+      )
+
+    }
+
+    if(name.includes("comunic")){
+
+      risks.push(
+        "Riesgo de desviaciones asociadas a comunicación operacional insuficiente."
+      )
+
+    }
+
+    if(name.includes("conduct")){
+
+      risks.push(
+        "Variabilidad conductual frente a escenarios operacionales exigentes."
+      )
+
+    }
+
+    if(name.includes("proced")){
+
+      risks.push(
+        "Posibles desviaciones asociadas a cumplimiento procedimental."
+      )
+
+    }
+
+  })
+
+  if(!risks.length){
+
+    risks.push(
+      "No se observan factores críticos de exposición operacional inmediata."
+    )
+
+  }
+
+  /* ======================================
+  SEGUIMIENTO
+  ====================================== */
+
+  const followUp = isSupervisor
+
+    ? [
+
+        "Seguimiento en liderazgo preventivo.",
+
+        "Refuerzo de control operacional.",
+
+        "Acompañamiento inicial en gestión preventiva."
+
+      ]
+
+    : [
+
+        "Observación conductual en terreno.",
+
+        "Refuerzo preventivo inicial.",
+
+        "Seguimiento operacional durante periodo de adaptación."
+
+      ]
+
+  /* ======================================
   EVALUATION CARDS
   ====================================== */
 
@@ -274,19 +429,15 @@ export async function generateOperationalFinalReport(
       String(gap.name || "")
         .toLowerCase()
 
-    if(
-      name.includes("riesgo")
-    ){
+    if(name.includes("riesgo")){
 
       recommendedCourses.push(
-        "Curso de Identificacion de Peligros y Evaluacion de Riegos y Control de Riesgos Operacionales"
+        "Curso Identificación de Peligros y Control de Riesgos"
       )
 
     }
 
-    if(
-      name.includes("proced")
-    ){
+    if(name.includes("proced")){
 
       recommendedCourses.push(
         "Curso Procedimientos Críticos de Trabajo"
@@ -294,9 +445,7 @@ export async function generateOperationalFinalReport(
 
     }
 
-    if(
-      name.includes("comun")
-    ){
+    if(name.includes("comun")){
 
       recommendedCourses.push(
         "Curso Comunicación Efectiva en Minería"
@@ -304,29 +453,15 @@ export async function generateOperationalFinalReport(
 
     }
 
-    if(
-      name.includes("equipo")
-    ){
+    if(name.includes("equipo")){
 
       recommendedCourses.push(
-        "Curso Trabajo en Equipo y Liderazgo Operacional"
+        "Curso Trabajo en Equipo Operacional"
       )
 
     }
 
-    if(
-      name.includes("seguridad")
-    ){
-
-      recommendedCourses.push(
-        "Curso Seguridad Minera para Hombre Nuevo"
-      )
-
-    }
-
-    if(
-      name.includes("conduct")
-    ){
+    if(name.includes("conduct")){
 
       recommendedCourses.push(
         "Curso Conductas Seguras y Cultura Preventiva"
@@ -351,7 +486,7 @@ export async function generateOperationalFinalReport(
 
       : `
           <li>
-            Curso Seguridad Minera para Hombre Nuevo
+            Curso Seguridad Minera Operacional
           </li>
         `
 
@@ -366,13 +501,21 @@ export async function generateOperationalFinalReport(
       <div class="good-box">
 
         <div class="summary-title">
-          Seguimiento operacional
+          Seguimiento recomendado
         </div>
 
         <div class="text">
-          Supervisión directa y observaciones
-          en terreno durante los primeros
-          90 días.
+
+          <ul>
+
+            ${followUp
+              .map(item=>`
+                <li>${item}</li>
+              `)
+              .join("")}
+
+          </ul>
+
         </div>
 
       </div>
@@ -380,7 +523,7 @@ export async function generateOperationalFinalReport(
       <div class="good-box">
 
         <div class="summary-title">
-          Capacitación recomendada
+          Capacitación sugerida
         </div>
 
         <div class="text">
@@ -400,17 +543,29 @@ export async function generateOperationalFinalReport(
   `
 
   /* ======================================
-  RESUMEN SUPERVISOR
+  RESUMEN EJECUTIVO
   ====================================== */
 
   const supervisorSummary = `
+
+    <div class="executive-box">
+
+      <div class="summary-title">
+        Síntesis ejecutiva
+      </div>
+
+      <div class="text">
+        ${executiveSummary}
+      </div>
+
+    </div>
 
     <div class="summary-grid">
 
       <div class="good-box">
 
         <div class="summary-title green">
-          Lo que trae bien desarrollado
+          Fortalezas observadas
         </div>
 
         <div class="text">
@@ -422,7 +577,7 @@ export async function generateOperationalFinalReport(
       <div class="bad-box">
 
         <div class="summary-title red">
-          Lo que necesita acompañamiento
+          Brechas prioritarias
         </div>
 
         <div class="text">
@@ -436,14 +591,21 @@ export async function generateOperationalFinalReport(
     <div class="alert-box">
 
       <div class="alert-title">
-        Atención supervisor / administrador
+        Riesgos potenciales observados
       </div>
 
       <div class="text">
-        Se recomienda seguimiento operacional
-        directo durante el periodo inicial de
-        incorporación, reforzando conductas
-        preventivas y adaptación al entorno laboral.
+
+        <ul>
+
+          ${risks
+            .map(r=>`
+              <li>${r}</li>
+            `)
+            .join("")}
+
+        </ul>
+
       </div>
 
     </div>
@@ -465,8 +627,7 @@ export async function generateOperationalFinalReport(
         </div>
 
         <div class="legal-text">
-          Prevención de accidentes,
-          rotación y pérdidas operacionales.
+          Prevención de accidentes y pérdidas operacionales.
         </div>
 
       </div>
@@ -478,8 +639,7 @@ export async function generateOperationalFinalReport(
         </div>
 
         <div class="legal-text">
-          Disminuye interrupciones
-          y pérdida de productividad.
+          Disminuye interrupciones y exposición operacional.
         </div>
 
       </div>
@@ -487,12 +647,11 @@ export async function generateOperationalFinalReport(
       <div class="legal-card">
 
         <div class="legal-title">
-          Alineamiento normativo
+          Alineamiento preventivo
         </div>
 
         <div class="legal-text">
-          Compatible con estándares
-          de seguridad minera.
+          Compatible con estándares de seguridad minera.
         </div>
 
       </div>
@@ -500,12 +659,11 @@ export async function generateOperationalFinalReport(
       <div class="legal-card">
 
         <div class="legal-title">
-          Debida diligencia
+          Respaldo documental
         </div>
 
         <div class="legal-text">
-          Respaldo documental para
-          procesos de selección.
+          Evidencia objetiva para procesos de incorporación.
         </div>
 
       </div>
