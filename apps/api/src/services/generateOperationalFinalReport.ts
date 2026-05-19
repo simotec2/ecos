@@ -34,65 +34,253 @@ export async function generateOperationalFinalReport(
 
       include:{
         evaluation:true
+      },
+
+      orderBy:{
+        createdAt:"desc"
       }
 
     })
+
+  /* ======================================
+  COMPETENCIAS
+  ====================================== */
 
   const competencies:any[] = []
 
   results.forEach((result:any)=>{
 
-    const json =
-      result.resultJson || {}
+    let json:any = {}
+
+    try{
+
+      json =
+        typeof result.resultJson === "string"
+          ? JSON.parse(result.resultJson)
+          : result.resultJson || {}
+
+    }catch{
+
+      json = {}
+
+    }
 
     const list =
+
       json.competencies ||
+
       json.competenciasDetalle ||
+
       []
 
     list.forEach((c:any)=>{
 
-      competencies.push({
+      if(
+        c &&
+        c.name &&
+        typeof c.score === "number"
+      ){
 
-        name:c.name,
-        score:c.score
+        competencies.push({
 
-      })
+          name:c.name,
+          score:c.score
+
+        })
+
+      }
 
     })
 
   })
 
+  /* ======================================
+  SCORE GENERAL
+  ====================================== */
+
   const score =
     results.length
       ? Math.round(
+
           results.reduce(
-            (acc:any,r:any)=>acc+r.score,
+
+            (acc:any,r:any)=>
+              acc + (r.score || 0),
+
             0
+
           ) / results.length
+
         )
       : 0
 
+  /* ======================================
+  TRAFFIC
+  ====================================== */
+
   let traffic = {
+
     color:"ROJO",
+
     result:"NO RECOMENDABLE"
+
   }
 
   if(score >= 85){
 
     traffic = {
+
       color:"VERDE",
+
       result:"RECOMENDABLE"
-    }
 
-  }else if(score >= 55){
-
-    traffic = {
-      color:"AMARILLO",
-      result:"RECOMENDABLE CON OBSERVACIONES"
     }
 
   }
+  else if(score >= 55){
+
+    traffic = {
+
+      color:"AMARILLO",
+
+      result:"APTA CON PLAN DE DESARROLLO"
+
+    }
+
+  }
+
+  /* ======================================
+  TOP FORTALEZAS
+  ====================================== */
+
+  const topStrengths =
+
+    [...competencies]
+
+      .sort(
+        (a,b)=>b.score-a.score
+      )
+
+      .slice(0,3)
+
+  /* ======================================
+  TOP BRECHAS
+  ====================================== */
+
+  const topGaps =
+
+    [...competencies]
+
+      .sort(
+        (a,b)=>a.score-b.score
+      )
+
+      .slice(0,3)
+
+  /* ======================================
+  HTML FORTALEZAS
+  ====================================== */
+
+  const strengthsHTML =
+
+    topStrengths.map((c:any)=>`
+
+      • ${c.name} (${c.score}%)
+
+    `).join("<br/>")
+
+  /* ======================================
+  HTML BRECHAS
+  ====================================== */
+
+  const gapsHTML =
+
+    topGaps.map((c:any)=>`
+
+      • ${c.name} (${c.score}%)
+
+    `).join("<br/>")
+
+  /* ======================================
+  EVALUATION CARDS
+  ====================================== */
+
+  const evaluationsCards =
+
+    results.map((r:any)=>{
+
+      const score =
+        Math.round(r.score || 0)
+
+      let color = "#dc2626"
+
+      let label =
+        "No recomendable"
+
+      if(score >= 85){
+
+        color = "#16a34a"
+
+        label =
+          "Recomendable"
+
+      }
+      else if(score >= 55){
+
+        color = "#d97706"
+
+        label =
+          "Recomendable con observaciones"
+
+      }
+
+      return `
+
+        <div class="kpi">
+
+          <div class="kpi-title">
+            ${r.evaluation?.name || "Evaluación"}
+          </div>
+
+          <div
+            class="kpi-score"
+            style="color:${color}"
+          >
+            ${score}%
+          </div>
+
+          <div
+            class="kpi-result"
+            style="color:${color}"
+          >
+            ${label}
+          </div>
+
+        </div>
+
+      `
+
+    }).join("")
+
+  /* ======================================
+  RISK ARROW
+  ====================================== */
+
+  const riskArrowClass =
+
+    traffic.color === "VERDE"
+
+      ? "green"
+
+      : traffic.color === "AMARILLO"
+
+      ? "orange"
+
+      : "red"
+
+  /* ======================================
+  RETURN
+  ====================================== */
 
   return {
 
@@ -107,22 +295,15 @@ export async function generateOperationalFinalReport(
 
     competencies,
 
-    strengths:
-      "Adecuada orientación preventiva, cumplimiento operacional y disposición hacia el trabajo seguro.",
+    strengths: strengthsHTML,
 
-    gaps:
-      "Se recomienda reforzar aspectos específicos asociados a percepción de riesgo y control operacional.",
+    gaps: gapsHTML,
 
-    evaluationsCards:"",
+    evaluationsCards,
 
     radar:"",
 
-    riskArrowClass:
-      traffic.color === "VERDE"
-        ? "green"
-        : traffic.color === "AMARILLO"
-        ? "orange"
-        : "red"
+    riskArrowClass
 
   }
 
