@@ -263,6 +263,160 @@ export async function generateOperationalFinalReport(
     }).join("")
 
   /* ======================================
+  PLAN DESARROLLO
+  ====================================== */
+
+  const developmentPlan = `
+
+    <div class="summary-grid">
+
+      <div class="good-box">
+
+        <div class="summary-title">
+          Seguimiento operacional
+        </div>
+
+        <div class="text">
+          Supervisión directa y observaciones
+          en terreno durante los primeros
+          90 días.
+        </div>
+
+      </div>
+
+      <div class="good-box">
+
+        <div class="summary-title">
+          Reforzamiento preventivo
+        </div>
+
+        <div class="text">
+          Capacitación dirigida en control
+          de riesgos, comunicación y trabajo seguro.
+        </div>
+
+      </div>
+
+    </div>
+
+  `
+
+  /* ======================================
+  RESUMEN SUPERVISOR
+  ====================================== */
+
+  const supervisorSummary = `
+
+    <div class="summary-grid">
+
+      <div class="good-box">
+
+        <div class="summary-title green">
+          Lo que trae bien desarrollado
+        </div>
+
+        <div class="text">
+          ${strengthsHTML}
+        </div>
+
+      </div>
+
+      <div class="bad-box">
+
+        <div class="summary-title red">
+          Lo que necesita acompañamiento
+        </div>
+
+        <div class="text">
+          ${gapsHTML}
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="alert-box">
+
+      <div class="alert-title">
+        Atención supervisor / administrador
+      </div>
+
+      <div class="text">
+        Se recomienda seguimiento operacional
+        directo durante el periodo inicial de
+        incorporación, reforzando conductas
+        preventivas y adaptación al entorno laboral.
+      </div>
+
+    </div>
+
+  `
+
+  /* ======================================
+  RESPALDO EMPLEADOR
+  ====================================== */
+
+  const employerSupport = `
+
+    <div class="legal-grid">
+
+      <div class="legal-card">
+
+        <div class="legal-title">
+          Reducción de costos
+        </div>
+
+        <div class="legal-text">
+          Prevención de accidentes,
+          rotación y pérdidas operacionales.
+        </div>
+
+      </div>
+
+      <div class="legal-card">
+
+        <div class="legal-title">
+          Continuidad operacional
+        </div>
+
+        <div class="legal-text">
+          Disminuye interrupciones
+          y pérdida de productividad.
+        </div>
+
+      </div>
+
+      <div class="legal-card">
+
+        <div class="legal-title">
+          Alineamiento normativo
+        </div>
+
+        <div class="legal-text">
+          Compatible con estándares
+          de seguridad minera.
+        </div>
+
+      </div>
+
+      <div class="legal-card">
+
+        <div class="legal-title">
+          Debida diligencia
+        </div>
+
+        <div class="legal-text">
+          Respaldo documental para
+          procesos de selección.
+        </div>
+
+      </div>
+
+    </div>
+
+  `
+
+  /* ======================================
   RISK ARROW
   ====================================== */
 
@@ -303,7 +457,13 @@ export async function generateOperationalFinalReport(
 
     radar:"",
 
-    riskArrowClass
+    riskArrowClass,
+
+    developmentPlan,
+
+    supervisorSummary,
+
+    employerSupport
 
   }
 
