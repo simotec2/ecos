@@ -8,7 +8,7 @@
 
     "dev": "ts-node-dev src/server.ts",
 
-    "build": "npm install && npx prisma generate && tsc && cp -r src/templates dist/templates",
+    "build": "npm install && npx prisma generate && tsc && mkdir -p dist/templates && cp -r src/templates/* dist/templates/",
 
     "start": "node dist/server.js"
 
