@@ -218,18 +218,18 @@ export async function renderOperationalFinalReport(
   RISK POSITION
   ====================================== */
 
-  let riskArrowOffset = "-120px"
+  let riskArrowClass = "green"
 
   if(
     data.traffic?.color === "AMARILLO"
   ){
-    riskArrowOffset = "0px"
+    riskArrowClass = "orange"
   }
 
   if(
     data.traffic?.color === "ROJO"
   ){
-    riskArrowOffset = "120px"
+    riskArrowClass = "red"
   }
 
   /* ======================================
@@ -313,8 +313,8 @@ export async function renderOperationalFinalReport(
   )
 
   .replace(
-    /{{riskArrowOffset}}/gi,
-    riskArrowOffset
+    /{{riskArrowClass}}/gi,
+    riskArrowClass
   )
 
   /* ======================================

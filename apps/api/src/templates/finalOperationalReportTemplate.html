@@ -172,7 +172,6 @@ body{
   width:120px;
   border-radius:8px;
   overflow:hidden;
-  border:1px solid #cbd5e1;
 }
 
 .risk-green{
@@ -197,6 +196,24 @@ body{
   padding:18px;
   font-size:12px;
   font-weight:bold;
+}
+
+.risk-arrow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.risk-arrow.green{
+  margin-top:-120px;
+}
+
+.risk-arrow.orange{
+  margin-top:0;
+}
+
+.risk-arrow.red{
+  margin-top:120px;
 }
 
 .section{
@@ -311,7 +328,370 @@ body{
 
 <div class="container">
 
+<div class="header">
+
+<div class="logo">
 {{logo}}
+</div>
+
+<div class="header-title">
+
+<div class="main-title">
+INFORME INTEGRADO DE EVALUACIÓN
+</div>
+
+<div class="sub-title">
+Plataforma ECOS de Competencias en Seguridad · Simotec
+</div>
+
+</div>
+
+</div>
+
+<div class="line"></div>
+
+<div class="top-grid">
+
+<div class="identity-card">
+
+<div class="identity-title">
+PARTICIPANTE
+</div>
+
+<div class="participant-name">
+{{participant}}
+</div>
+
+<div class="identity-data">
+
+Perfil evaluado:
+<b>{{profile}}</b><br/>
+
+Empresa:
+<b>{{company}}</b><br/>
+
+Fecha evaluación:
+<b>{{date}}</b>
+
+</div>
+
+</div>
+
+<div class="veredict-card">
+
+<div class="veredict-title">
+VEREDICTO INTEGRADO
+</div>
+
+<div class="veredict-main">
+{{result}}
+</div>
+
+<div class="veredict-text">
+
+Puede incorporarse al rol con seguimiento operacional,
+capacitación dirigida y acompañamiento durante los
+primeros 90 días.
+
+</div>
+
+</div>
+
+</div>
+
+<div class="section">
+
+<div class="section-title">
+01 · RESULTADOS POR EVALUACIÓN
+</div>
+
+<div class="kpi-grid">
+
+{{evaluationsCards}}
+
+</div>
+
+</div>
+
+<div class="risk-container">
+
+<div class="risk-title">
+Nivel de Riesgo de Incorporación
+</div>
+
+<div style="
+display:flex;
+justify-content:center;
+align-items:center;
+gap:24px;
+margin-top:20px;
+">
+
+<div class="risk-bar">
+
+<div class="risk-green">
+Bajo riesgo<br/>
+(Recomendable)
+</div>
+
+<div class="risk-orange">
+Riesgo medio<br/>
+(Observaciones)
+</div>
+
+<div class="risk-red">
+Riesgo alto<br/>
+(No recomendable)
+</div>
+
+</div>
+
+<div class="risk-arrow {{riskArrowClass}}">
+
+<div style="
+font-size:34px;
+color:#374151;
+font-weight:bold;
+">
+←
+</div>
+
+<div style="
+font-size:13px;
+color:#374151;
+line-height:1.4;
+">
+
+Posición<br/>
+actual
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="page-break"></div>
+
+<div class="section">
+
+<div class="section-title">
+02 · PERFIL INTEGRADO DE COMPETENCIAS
+</div>
+
+<div class="radar">
+{{radar}}
+</div>
+
+</div>
+
+<div class="section">
+
+<div class="section-title">
+03 · FORTALEZAS Y BRECHAS
+</div>
+
+<div class="summary-grid">
+
+<div class="good-box">
+
+<div class="summary-title green">
+Fortalezas clave
+</div>
+
+<div class="text">
+{{strengths}}
+</div>
+
+</div>
+
+<div class="bad-box">
+
+<div class="summary-title red">
+Brechas prioritarias
+</div>
+
+<div class="text">
+{{gaps}}
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="page-break"></div>
+
+<div class="section">
+
+<div class="section-title">
+04 · ACCIONES CONCRETAS DEL PLAN DE DESARROLLO
+</div>
+
+<div class="summary-grid">
+
+<div class="good-box">
+
+<div class="summary-title">
+Hombre Nuevo Minería
+</div>
+
+<div class="text">
+
+Capacitación inicial de seguridad,
+riesgos críticos, DAS y comportamiento seguro.
+
+</div>
+
+</div>
+
+<div class="good-box">
+
+<div class="summary-title">
+Tutor operacional
+</div>
+
+<div class="text">
+
+Asignación de mentor o supervisor
+durante los primeros 90 días.
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="section">
+
+<div class="section-title">
+05 · RESUMEN PARA SUPERVISOR Y ADMINISTRADOR
+</div>
+
+<div class="summary-grid">
+
+<div class="good-box">
+
+<div class="summary-title green">
+Lo que trae bien desarrollado
+</div>
+
+<div class="text">
+{{strengths}}
+</div>
+
+</div>
+
+<div class="bad-box">
+
+<div class="summary-title red">
+Lo que necesita acompañamiento
+</div>
+
+<div class="text">
+{{gaps}}
+</div>
+
+</div>
+
+</div>
+
+<div class="alert-box">
+
+<div class="alert-title">
+Atención supervisor / administrador
+</div>
+
+<div class="text">
+
+Se recomienda seguimiento directo,
+acompañamiento operacional y
+observaciones en terreno.
+
+</div>
+
+</div>
+
+</div>
+
+<div class="section">
+
+<div class="section-title">
+06 · RESPALDO PARA EL EMPLEADOR
+</div>
+
+<div class="text">
+
+Este informe contribuye al cumplimiento
+de la obligación del empleador en
+materia de seguridad y desempeño operacional.
+
+</div>
+
+<div class="legal-grid">
+
+<div class="legal-card">
+
+<div class="legal-title">
+Reducción de costos
+</div>
+
+<div class="legal-text">
+Accidentes, reemplazos y rotación.
+</div>
+
+</div>
+
+<div class="legal-card">
+
+<div class="legal-title">
+Continuidad operacional
+</div>
+
+<div class="legal-text">
+Reduce interrupciones operacionales.
+</div>
+
+</div>
+
+<div class="legal-card">
+
+<div class="legal-title">
+Alineamiento normativo
+</div>
+
+<div class="legal-text">
+Estándares DAS y requisitos minería.
+</div>
+
+</div>
+
+<div class="legal-card">
+
+<div class="legal-title">
+Debida diligencia
+</div>
+
+<div class="legal-text">
+Respaldo formal para contratación.
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="footer">
+
+Informe generado por ECOS · Plataforma de Evaluación de Competencias en Seguridad · Simotec
+
+</div>
 
 </div>
 

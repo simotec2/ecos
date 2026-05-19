@@ -1,44 +1,23 @@
-import prisma from "../db"
+/// <reference types="node" />
 
 async function main(){
 
-const questions = await prisma.evaluationQuestion.findMany({
-where:{
-type:"MCQ"
-}
-})
+  try{
 
-for(const q of questions){
+    console.log(
+      "Script deshabilitado"
+    )
 
-if(!q.optionsJson) continue
+    process.exit(0)
 
-const options = JSON.parse(q.optionsJson)
+  }catch(err){
 
-if(options.length === 3){
+    console.error(err)
 
-options.push("Opción no definida")
+    process.exit(1)
 
-await prisma.evaluationQuestion.update({
-
-where:{ id:q.id },
-
-data:{
-optionsJson: JSON.stringify(options)
-}
-
-})
-
-}
-
-}
-
-console.log("Preguntas de seguridad corregidas")
+  }
 
 }
 
 main()
-.then(()=>process.exit())
-.catch(e=>{
-console.error(e)
-process.exit(1)
-})
