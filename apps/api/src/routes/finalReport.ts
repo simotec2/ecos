@@ -6,7 +6,7 @@ import puppeteer from "puppeteer-core"
 
 import { generateOperationalFinalReport } from "../services/generateOperationalFinalReport"
 
-import { renderOperationalFinalReport } from "../templates/renderOperationalFinalReport"
+import { renderOperationalFinalReport } from "../services/renderOperationalFinalReport"
 
 import { generateRadarImage } from "../services/radarGenerator"
 
