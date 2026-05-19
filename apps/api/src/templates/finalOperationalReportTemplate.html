@@ -9,11 +9,11 @@
 
 @page{
   size: letter;
-  margin: 14mm;
+  margin: 12mm;
 }
 
 body{
-  font-family: Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   margin:0;
   padding:0;
   color:#1e293b;
@@ -32,119 +32,188 @@ HEADER
   display:flex;
   justify-content:space-between;
   align-items:flex-start;
-  margin-bottom:18px;
+  margin-bottom:16px;
 }
 
-.title-area{
-  width:70%;
+.logo{
+  width:180px;
+}
+
+.header-title{
+  text-align:right;
 }
 
 .main-title{
   font-size:28px;
   font-weight:700;
   color:#0f172a;
-  margin-bottom:6px;
+  margin-bottom:4px;
 }
 
 .sub-title{
-  font-size:13px;
+  font-size:12px;
   color:#64748b;
-  line-height:1.4;
-}
-
-.logo{
-  text-align:right;
 }
 
 .line{
-  height:6px;
-  background:linear-gradient(to right,#1e3a8a,#16a34a);
-  border-radius:4px;
-  margin-top:14px;
-  margin-bottom:22px;
-}
-
-/* ======================================
-IDENTIDAD
-====================================== */
-
-.identity{
-  background:#f8fafc;
-  border:1px solid #e2e8f0;
-  border-radius:14px;
-  padding:18px;
+  height:5px;
+  background:#0f766e;
+  margin-top:12px;
   margin-bottom:20px;
 }
 
-.identity-grid{
+/* ======================================
+PORTADA
+====================================== */
+
+.top-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:10px;
+  gap:14px;
+  margin-bottom:22px;
 }
 
-.identity-item{
+.identity-card{
+  background:#ecfdf5;
+  padding:22px;
+  border-radius:12px;
+}
+
+.identity-title{
   font-size:12px;
-  line-height:1.6;
+  color:#0f766e;
+  font-weight:bold;
+  margin-bottom:10px;
 }
 
-.identity-label{
-  color:#64748b;
-  font-size:11px;
-  margin-bottom:2px;
+.participant-name{
+  font-size:32px;
+  font-weight:700;
+  color:#0f172a;
+  margin-bottom:10px;
 }
 
-.identity-value{
+.identity-data{
+  font-size:13px;
+  line-height:1.8;
+}
+
+.veredict-card{
+  background:#065f46;
+  color:white;
+  padding:22px;
+  border-radius:12px;
+}
+
+.veredict-title{
   font-size:13px;
   font-weight:bold;
-  color:#0f172a;
+  margin-bottom:10px;
+}
+
+.veredict-main{
+  font-size:30px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+.veredict-text{
+  font-size:13px;
+  line-height:1.7;
 }
 
 /* ======================================
-KPI
+KPIS
 ====================================== */
 
 .kpi-grid{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr 1fr;
+  grid-template-columns:1fr 1fr 1fr;
   gap:12px;
   margin-bottom:24px;
 }
 
 .kpi{
-  border-radius:14px;
-  padding:16px;
-  color:white;
+  border:1px solid #e2e8f0;
+  padding:14px;
+  border-radius:10px;
 }
 
 .kpi-title{
-  font-size:11px;
-  opacity:0.9;
+  font-size:12px;
+  margin-bottom:8px;
+  color:#475569;
 }
 
-.kpi-value{
+.kpi-score{
+  font-size:42px;
+  font-weight:700;
+}
+
+.kpi-result{
   margin-top:8px;
-  font-size:24px;
+  font-size:12px;
   font-weight:bold;
 }
 
-.blue{
-  background:#2563eb;
-}
-
 .green{
-  background:#16a34a;
+  color:#16a34a;
 }
 
 .orange{
-  background:#f59e0b;
+  color:#d97706;
 }
 
 .red{
-  background:#dc2626;
+  color:#dc2626;
 }
 
-.gray{
-  background:#334155;
+/* ======================================
+RIESGO
+====================================== */
+
+.risk-container{
+  text-align:center;
+  margin-top:20px;
+  margin-bottom:30px;
+}
+
+.risk-title{
+  font-size:16px;
+  font-weight:bold;
+  margin-bottom:16px;
+}
+
+.risk-bar{
+  width:120px;
+  margin:auto;
+  border-radius:8px;
+  overflow:hidden;
+  border:1px solid #cbd5e1;
+}
+
+.risk-green{
+  background:#10b981;
+  color:white;
+  padding:18px;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.risk-orange{
+  background:#d97706;
+  color:white;
+  padding:18px;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.risk-red{
+  background:#ef4444;
+  color:white;
+  padding:18px;
+  font-size:12px;
+  font-weight:bold;
 }
 
 /* ======================================
@@ -152,26 +221,21 @@ SECCIONES
 ====================================== */
 
 .section{
-  margin-bottom:22px;
+  margin-bottom:26px;
   page-break-inside:avoid;
 }
 
 .section-title{
-  font-size:18px;
-  font-weight:bold;
-  color:#0f172a;
-  margin-bottom:12px;
-}
-
-.block{
-  background:#ffffff;
-  border:1px solid #e2e8f0;
-  border-radius:14px;
-  padding:18px;
+  font-size:22px;
+  font-weight:700;
+  color:#0f766e;
+  margin-bottom:14px;
+  border-bottom:1px solid #d1d5db;
+  padding-bottom:8px;
 }
 
 .text{
-  font-size:12px;
+  font-size:13px;
   line-height:1.8;
   text-align:justify;
 }
@@ -182,53 +246,117 @@ RADAR
 
 .radar{
   text-align:center;
-  margin-top:10px;
+  margin-top:20px;
+  margin-bottom:30px;
 }
 
 /* ======================================
-TABLAS
+PLANES
 ====================================== */
 
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-th{
-  background:#0f172a;
-  color:white;
-  padding:12px;
-  font-size:11px;
-  text-align:left;
-}
-
-td{
-  border:1px solid #e2e8f0;
-  padding:11px;
-  font-size:11px;
-}
-
-/* ======================================
-RESULTADO
-====================================== */
-
-.result-box{
-  padding:18px;
-  border-radius:14px;
-  text-align:center;
-  color:white;
-  font-size:20px;
-  font-weight:bold;
-}
-
-/* ======================================
-2 COLUMNAS
-====================================== */
-
-.two-columns{
+.plan-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:16px;
+  gap:14px;
+}
+
+.plan-card{
+  background:#ecfdf5;
+  border-radius:12px;
+  padding:18px;
+  min-height:120px;
+}
+
+.plan-title{
+  font-size:20px;
+  font-weight:700;
+  margin-bottom:10px;
+  color:#0f172a;
+}
+
+.plan-text{
+  font-size:13px;
+  line-height:1.6;
+}
+
+.priority{
+  margin-top:12px;
+  font-size:12px;
+  font-weight:bold;
+  color:#dc2626;
+}
+
+/* ======================================
+SUPERVISOR
+====================================== */
+
+.summary-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.good-box{
+  background:#ecfdf5;
+  padding:20px;
+  border-radius:12px;
+}
+
+.bad-box{
+  background:#fef2f2;
+  padding:20px;
+  border-radius:12px;
+}
+
+.summary-title{
+  font-size:18px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+.alert-box{
+  background:#fef3c7;
+  border:2px solid #f59e0b;
+  border-radius:12px;
+  padding:20px;
+  margin-top:18px;
+}
+
+.alert-title{
+  font-size:18px;
+  font-weight:700;
+  color:#92400e;
+  margin-bottom:10px;
+}
+
+/* ======================================
+RESPALDO
+====================================== */
+
+.legal-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr;
+  gap:8px;
+  margin-top:20px;
+}
+
+.legal-card{
+  background:#065f46;
+  color:white;
+  padding:16px;
+  border-radius:10px;
+  min-height:120px;
+}
+
+.legal-title{
+  font-size:16px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+.legal-text{
+  font-size:12px;
+  line-height:1.5;
 }
 
 /* ======================================
@@ -237,11 +365,11 @@ FOOTER
 
 .footer{
   margin-top:30px;
-  border-top:1px solid #cbd5e1;
-  padding-top:12px;
   text-align:center;
   font-size:10px;
   color:#64748b;
+  border-top:1px solid #cbd5e1;
+  padding-top:10px;
 }
 
 .page-break{
@@ -260,110 +388,117 @@ FOOTER
 
   <div class="header">
 
-    <div class="title-area">
+    <div class="logo">
+      {{logo}}
+    </div>
+
+    <div class="header-title">
 
       <div class="main-title">
         INFORME INTEGRADO DE EVALUACIÓN
       </div>
 
       <div class="sub-title">
-        Plataforma ECOS de Competencias en Seguridad · Simotec<br/>
-        Informe preventivo para procesos de acreditación minera
+        Plataforma ECOS de Competencias en Seguridad · Simotec
       </div>
 
-    </div>
-
-    <div class="logo">
-      {{logo}}
     </div>
 
   </div>
 
   <div class="line"></div>
 
-  <!-- IDENTIDAD -->
+  <!-- PORTADA -->
 
-  <div class="identity">
+  <div class="top-grid">
 
-    <div class="identity-grid">
+    <div class="identity-card">
 
-      <div class="identity-item">
-        <div class="identity-label">Participante</div>
-        <div class="identity-value">{{participant}}</div>
+      <div class="identity-title">
+        PARTICIPANTE
       </div>
 
-      <div class="identity-item">
-        <div class="identity-label">Perfil Evaluado</div>
-        <div class="identity-value">{{profile}}</div>
+      <div class="participant-name">
+        {{participant}}
       </div>
 
-      <div class="identity-item">
-        <div class="identity-label">Empresa</div>
-        <div class="identity-value">{{company}}</div>
+      <div class="identity-data">
+
+        Perfil evaluado:
+        <b>{{profile}}</b><br/>
+
+        Empresa:
+        <b>{{company}}</b><br/>
+
+        Fecha evaluación:
+        <b>{{date}}</b>
+
       </div>
 
-      <div class="identity-item">
-        <div class="identity-label">Fecha Evaluación</div>
-        <div class="identity-value">{{date}}</div>
+    </div>
+
+    <div class="veredict-card">
+
+      <div class="veredict-title">
+        VEREDICTO INTEGRADO
+      </div>
+
+      <div class="veredict-main">
+        {{result}}
+      </div>
+
+      <div class="veredict-text">
+
+        Puede incorporarse al rol con seguimiento operacional,
+        capacitación dirigida y acompañamiento durante los
+        primeros 90 días.
+
       </div>
 
     </div>
 
   </div>
 
-  <!-- KPI -->
-
-  <div class="kpi-grid">
-
-    <div class="kpi blue">
-      <div class="kpi-title">Puntaje Integrado</div>
-      <div class="kpi-value">{{score}}%</div>
-    </div>
-
-    <div class="kpi {{trafficClass}}">
-      <div class="kpi-title">Resultado Final</div>
-      <div class="kpi-value">{{result}}</div>
-    </div>
-
-    <div class="kpi gray">
-      <div class="kpi-title">Evaluaciones</div>
-      <div class="kpi-value">3</div>
-    </div>
-
-    <div class="kpi green">
-      <div class="kpi-title">Estado</div>
-      <div class="kpi-value">ECOS</div>
-    </div>
-
-  </div>
-
-  <!-- RESULTADOS -->
+  <!-- KPIS -->
 
   <div class="section">
 
     <div class="section-title">
-      Resultados por Evaluación
+      01 · RESULTADOS POR EVALUACIÓN
     </div>
 
-    <div class="block">
+    <div class="kpi-grid">
 
-      {{evaluationsTable}}
+      {{evaluationsCards}}
 
     </div>
 
   </div>
 
-  <!-- RADAR -->
+  <!-- RIESGO -->
 
-  <div class="section">
+  <div class="risk-container">
 
-    <div class="section-title">
-      Perfil Integrado de Competencias
+    <div class="risk-title">
+      Nivel de Riesgo de Incorporación
     </div>
 
-    <div class="block radar">
+    <div class="risk-bar">
 
-      {{radar}}
+      <div class="risk-green">
+        Bajo riesgo<br/>
+        (Recomendable)
+      </div>
+
+      <div class="risk-orange">
+        Riesgo medio<br/>
+        (Observaciones)
+      </div>
+
+      <div class="risk-red">
+        Riesgo alto<br/>
+        (No recomendable)
+      </div>
 
     </div>
 
@@ -373,33 +508,51 @@ FOOTER
 
   <div class="page-break"></div>
 
-  <!-- DOS COLUMNAS -->
+  <!-- RADAR -->
 
-  <div class="two-columns">
+  <div class="section">
 
-    <div class="section">
-
-      <div class="section-title">
-        Fortalezas Operacionales
-      </div>
-
-      <div class="block text">
-
-        {{strengths}}
-
-      </div>
-
+    <div class="section-title">
+      02 · PERFIL INTEGRADO DE COMPETENCIAS
     </div>
 
-    <div class="section">
+    <div class="radar">
+      {{radar}}
+    </div>
 
-      <div class="section-title">
-        Brechas Prioritarias
+  </div>
+
+  <!-- FORTALEZAS -->
+
+  <div class="section">
+
+    <div class="section-title">
+      03 · FORTALEZAS Y BRECHAS
+    </div>
+
+    <div class="summary-grid">
+
+      <div class="good-box">
+
+        <div class="summary-title green">
+          Fortalezas clave
+        </div>
+
+        <div class="text">
+          {{strengths}}
+        </div>
+
       </div>
 
-      <div class="block text">
+      <div class="bad-box">
 
-        {{gaps}}
+        <div class="summary-title red">
+          Brechas prioritarias
+        </div>
+
+        <div class="text">
+          {{gaps}}
+        </div>
 
       </div>
 
@@ -407,49 +560,98 @@ FOOTER
 
   </div>
 
-  <!-- DIAGNOSTICO -->
+  <!-- PAGE BREAK -->
+
+  <div class="page-break"></div>
+
+  <!-- PLAN -->
 
   <div class="section">
 
     <div class="section-title">
-      Diagnóstico Ejecutivo
+      04 · ACCIONES CONCRETAS DEL PLAN DE DESARROLLO
     </div>
 
-    <div class="block text">
+    <div class="plan-grid">
 
-      {{diagnostic}}
+      <div class="plan-card">
 
-    </div>
+        <div class="plan-title">
+          Hombre Nuevo Minería
+        </div>
 
-  </div>
+        <div class="plan-text">
 
-  <!-- IMPACTO -->
+          Capacitación inicial de seguridad,
+          estándares DAS, control de riesgos
+          y comportamiento seguro.
 
-  <div class="section">
+        </div>
 
-    <div class="section-title">
-      Impacto Operacional
-    </div>
+        <div class="priority">
+          Prioridad alta · Mes 1
+        </div>
 
-    <div class="block text">
+      </div>
 
-      {{impact}}
+      <div class="plan-card">
 
-    </div>
+        <div class="plan-title">
+          Tutor operacional
+        </div>
 
-  </div>
+        <div class="plan-text">
 
-  <!-- DESARROLLO -->
+          Asignación de supervisor o mentor
+          senior durante los primeros
+          90 días.
 
-  <div class="section">
+        </div>
 
-    <div class="section-title">
-      Plan de Desarrollo
-    </div>
+        <div class="priority">
+          Prioridad alta · Mes 1–3
+        </div>
 
-    <div class="block text">
+      </div>
 
-      {{development}}
+      <div class="plan-card">
+
+        <div class="plan-title">
+          Comunicación operacional
+        </div>
+
+        <div class="plan-text">
+
+          Taller de reportabilidad,
+          coordinación segura y
+          comunicación efectiva.
+
+        </div>
+
+        <div class="priority">
+          Prioridad media · Mes 1–2
+        </div>
+
+      </div>
+
+      <div class="plan-card">
+
+        <div class="plan-title">
+          Refuerzo técnico
+        </div>
+
+        <div class="plan-text">
+
+          Reinducción técnica del rol,
+          procedimientos y riesgos críticos.
+
+        </div>
+
+        <div class="priority">
+          Prioridad media · Mes 2–3
+        </div>
+
+      </div>
 
     </div>
 
@@ -460,28 +662,141 @@ FOOTER
   <div class="section">
 
     <div class="section-title">
-      Recomendaciones Supervisor / RRHH
+      05 · RESUMEN PARA SUPERVISOR Y ADMINISTRADOR
     </div>
 
-    <div class="block text">
+    <div class="summary-grid">
 
-      {{supervisor}}
+      <div class="good-box">
+
+        <div class="summary-title green">
+          Lo que trae bien desarrollado
+        </div>
+
+        <div class="text">
+          {{strengths}}
+        </div>
+
+      </div>
+
+      <div class="bad-box">
+
+        <div class="summary-title red">
+          Lo que necesita acompañamiento
+        </div>
+
+        <div class="text">
+          {{gaps}}
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="alert-box">
+
+      <div class="alert-title">
+        Atención supervisor / administrador
+      </div>
+
+      <div class="text">
+
+        Se recomienda seguimiento directo
+        durante los primeros 90 días,
+        acompañamiento operacional y
+        observaciones en terreno para
+        asegurar correcta adaptación al rol.
+
+      </div>
 
     </div>
 
   </div>
 
-  <!-- CONCLUSION -->
+  <!-- RESPALDO -->
 
   <div class="section">
 
     <div class="section-title">
-      Veredicto Integrado
+      06 · RESPALDO PARA EL EMPLEADOR
     </div>
 
-    <div class="result-box {{resultClass}}">
+    <div class="text">
 
-      {{conclusion}}
+      Este informe contribuye al cumplimiento
+      de la obligación del empleador en
+      materia de seguridad y desempeño
+      operacional.
+
+    </div>
+
+    <div class="legal-grid">
+
+      <div class="legal-card">
+
+        <div class="legal-title">
+          Reducción de costos
+        </div>
+
+        <div class="legal-text">
+
+          Accidentes,
+          reemplazos,
+          juicios y
+          rotación.
+
+        </div>
+
+      </div>
+
+      <div class="legal-card">
+
+        <div class="legal-title">
+          Continuidad operacional
+        </div>
+
+        <div class="legal-text">
+
+          Reduce
+          interrupciones
+          y pérdida
+          operacional.
+
+        </div>
+
+      </div>
+
+      <div class="legal-card">
+
+        <div class="legal-title">
+          Alineamiento normativo
+        </div>
+
+        <div class="legal-text">
+
+          Estándares DAS,
+          OTI y requisitos
+          minería.
+
+        </div>
+
+      </div>
+
+      <div class="legal-card">
+
+        <div class="legal-title">
+          Debida diligencia
+        </div>
+
+        <div class="legal-text">
+
+          Respaldo formal
+          para decisiones
+          de contratación.
+
+        </div>
+
+      </div>
 
     </div>
 
@@ -491,8 +806,7 @@ FOOTER
 
   <div class="footer">
 
-    ECOS · Plataforma de Evaluación de Competencias en Seguridad · Simotec<br/>
-    Documento confidencial para uso interno de supervisión y RRHH
+    Informe generado por ECOS · Plataforma de Evaluación de Competencias en Seguridad · Simotec
 
   </div>
 
