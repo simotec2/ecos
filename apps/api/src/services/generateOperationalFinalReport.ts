@@ -694,33 +694,63 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
 
   return {
 
-    participant,
+  participant,
 
-    date:new Date()
-      .toLocaleDateString("es-CL"),
+  date:new Date()
+    .toLocaleDateString("es-CL"),
 
-    score,
+  score,
 
-    traffic,
+  traffic,
 
-    competencies,
+  competencies,
 
-    strengths: strengthsHTML,
+  strengths: strengthsHTML,
 
-    gaps: gapsHTML,
+  gaps: gapsHTML,
 
-    evaluationsCards,
+  evaluationsCards,
 
-    radar:"",
+  radar:"",
 
-    riskArrowClass,
+  riskArrowClass,
 
-    developmentPlan,
+  developmentPlan,
 
-    supervisorSummary,
+  supervisorSummary,
 
-    employerSupport
+  employerSupport,
 
-  }
+  operationalExposureAnalysis:
+  `
+
+    <div class="alert-box">
+
+      <div class="alert-title">
+        Factores observados
+      </div>
+
+      <div class="text">
+
+        ${
+          risks.length
+
+            ? risks.map(r=>`
+                • ${r}<br/>
+              `).join("")
+
+            : `
+                No se observan factores críticos
+                de exposición operacional inmediata.
+              `
+        }
+
+      </div>
+
+    </div>
+
+  `
+
+}
 
 }
