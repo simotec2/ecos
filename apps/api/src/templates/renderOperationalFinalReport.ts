@@ -2,6 +2,27 @@ import fs from "fs"
 import path from "path"
 
 /* ======================================
+NOMBRE EVALUACION
+====================================== */
+function getEvaluationName(type:string){
+
+  if(type === "PETS"){
+    return "Evaluación Conductual"
+  }
+
+  if(type === "ICOM"){
+    return "Perfil Psicolaboral"
+  }
+
+  if(type === "SECURITY"){
+    return "Seguridad Operacional"
+  }
+
+  return type
+
+}
+
+/* ======================================
 SECCIONES IA
 ====================================== */
 function extractSection(
@@ -41,6 +62,9 @@ function extractSection(
   return text
     .substring(contentStart, contentEnd)
     .trim()
+    .replace(/\*\*/g,"")
+    .replace(/##/g,"")
+    .replace(/###/g,"")
     .replace(/\n/g,"<br/>")
     .replace(/- /g,"• ")
 
@@ -70,11 +94,11 @@ function buildEvaluationsTable(
         <tr>
 
           <td>
-            ${e.type}
+            ${getEvaluationName(e.type)}
           </td>
 
           <td>
-            ${e.score}%
+            ${Math.round(e.score)}%
           </td>
 
           <td>
@@ -101,24 +125,26 @@ function buildTopHTML(
   return competencies.map((c:any)=>`
 
     <div style="
-      margin-bottom:12px;
+      margin-bottom:14px;
     ">
 
       <div style="
         display:flex;
         justify-content:space-between;
-        margin-bottom:4px;
+        margin-bottom:5px;
       ">
 
         <span style="
           font-size:11px;
           font-weight:bold;
+          color:#0f172a;
         ">
           ${c.name}
         </span>
 
         <span style="
           font-size:11px;
+          color:#0f172a;
         ">
           ${c.score}%
         </span>
@@ -126,9 +152,9 @@ function buildTopHTML(
       </div>
 
       <div style="
-        height:10px;
+        height:11px;
         background:#dcfce7;
-        border-radius:10px;
+        border-radius:20px;
         overflow:hidden;
       ">
 
@@ -156,24 +182,26 @@ function buildBottomHTML(
   return competencies.map((c:any)=>`
 
     <div style="
-      margin-bottom:12px;
+      margin-bottom:14px;
     ">
 
       <div style="
         display:flex;
         justify-content:space-between;
-        margin-bottom:4px;
+        margin-bottom:5px;
       ">
 
         <span style="
           font-size:11px;
           font-weight:bold;
+          color:#0f172a;
         ">
           ${c.name}
         </span>
 
         <span style="
           font-size:11px;
+          color:#0f172a;
         ">
           ${c.score}%
         </span>
@@ -181,9 +209,9 @@ function buildBottomHTML(
       </div>
 
       <div style="
-        height:10px;
+        height:11px;
         background:#fee2e2;
-        border-radius:10px;
+        border-radius:20px;
         overflow:hidden;
       ">
 
@@ -271,7 +299,10 @@ export async function renderOperationalFinalReport(
   ====================================== */
 
   const analysis =
-    data.analysis || ""
+    (data.analysis || "")
+      .replace(/\*\*/g,"")
+      .replace(/##/g,"")
+      .replace(/###/g,"")
 
   const diagnostic = extractSection(
     analysis,
