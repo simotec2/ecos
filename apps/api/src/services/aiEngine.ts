@@ -194,6 +194,39 @@ RESPONDE EXACTAMENTE ESTE JSON:
   "finalConclusion":""
 }
 
+INSTRUCCIONES IMPORTANTES:
+
+- "executiveSummary":
+  resumen ejecutivo general del perfil.
+
+- "operationalImpact":
+  impacto operacional real de las brechas
+  sobre seguridad, adaptación y continuidad.
+
+- "exposureFactors":
+  NO repetir competencias ni scores.
+  Deben describir escenarios operacionales
+  donde el participante podría presentar
+  mayor exposición preventiva.
+
+- "developmentPlan":
+  acciones concretas de acompañamiento.
+
+- "recommendedCourses":
+  cursos específicos sugeridos.
+
+- "supervisorAdvice":
+  orientación EXCLUSIVA para supervisor.
+  NO repetir fortalezas ni brechas.
+  Debe enfocarse en:
+  acompañamiento,
+  integración,
+  seguimiento,
+  adaptación operacional.
+
+- "finalConclusion":
+  cierre ejecutivo preventivo breve.
+
 `.trim()
 
 }

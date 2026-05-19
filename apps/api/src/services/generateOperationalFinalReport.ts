@@ -401,72 +401,43 @@ export async function generateOperationalFinalReport(
 
   const supervisorSummary = `
 
-    <div class="executive-box">
+  <div class="executive-box">
 
-      <div class="summary-title">
-        Síntesis ejecutiva
-      </div>
-
-      <div class="text">
-        ${executiveSummary}
-      </div>
-
+    <div class="summary-title">
+      Síntesis ejecutiva
     </div>
 
-    <div class="summary-grid">
-
-      <div class="good-box">
-
-        <div class="summary-title green">
-          Fortalezas observadas
-        </div>
-
-        <div class="text">
-          ${strengthsHTML}
-        </div>
-
-      </div>
-
-      <div class="bad-box">
-
-        <div class="summary-title red">
-          Brechas prioritarias
-        </div>
-
-        <div class="text">
-          ${gapsHTML}
-        </div>
-
-      </div>
-
+    <div class="text">
+      ${executiveSummary}
     </div>
 
-    <div class="alert-box">
+  </div>
 
-      <div class="alert-title">
-        Impacto operacional observado
-      </div>
+  <div class="alert-box">
 
-      <div class="text">
-        ${operationalImpact}
-      </div>
-
+    <div class="alert-title">
+      Impacto operacional observado
     </div>
 
-    <div class="good-box">
-
-      <div class="summary-title">
-        Recomendación para supervisor
-      </div>
-
-      <div class="text">
-        ${supervisorAdvice}
-      </div>
-
+    <div class="text">
+      ${operationalImpact}
     </div>
 
-  `
+  </div>
 
+  <div class="good-box">
+
+    <div class="summary-title">
+      Orientación para supervisión directa
+    </div>
+
+    <div class="text">
+      ${supervisorAdvice}
+    </div>
+
+  </div>
+
+`
   /* ======================================
   RESPALDO EMPLEADOR
   ====================================== */
@@ -577,44 +548,50 @@ export async function generateOperationalFinalReport(
     employerSupport,
 
     operationalExposureAnalysis:
-    `
+`
 
-      <div class="alert-box">
+  <div class="alert-box">
 
-        <div class="alert-title">
-          Factores de exposición operacional
-        </div>
+    <div class="alert-title">
+      Factores de exposición operacional
+    </div>
 
-        <div class="text">
+    <div class="text">
 
-          ${
-            risks.length
+      <ul>
 
-              ? risks.map((r:string)=>`
-                  • ${r}<br/>
-                `).join("")
+        ${
+          risks.length
 
-              : `
+            ? risks.map((r:string)=>`
+                <li>${r}</li>
+              `).join("")
+
+            : `
+                <li>
                   No se observan factores críticos
                   de exposición operacional inmediata.
-                `
-          }
+                </li>
+              `
+        }
 
-          <br/><br/>
+      </ul>
 
-          <strong>
-            Conclusión operacional:
-          </strong>
+      <br/>
 
-          <br/><br/>
+      <strong>
+        Conclusión operacional:
+      </strong>
 
-          ${finalConclusion}
+      <br/><br/>
 
-        </div>
+      ${finalConclusion}
 
-      </div>
+    </div>
 
-    `
+  </div>
+
+`
 
   }
 
