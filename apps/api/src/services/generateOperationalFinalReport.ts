@@ -1,4 +1,5 @@
 import prisma from "../db"
+import { generateAIReport } from "./aiEngine"
 
 export async function generateOperationalFinalReport(
   participantId: string
@@ -207,154 +208,56 @@ export async function generateOperationalFinalReport(
 
   const profile =
 
-  participant.perfil ||
-  "Operador"
-
-  const isSupervisor =
-
-    String(profile)
-      .toLowerCase()
-      .includes("supervisor")
+    participant.perfil ||
+    "Operador"
 
   /* ======================================
-  SÍNTESIS EJECUTIVA IA
+  IA CONTEXTUAL
   ====================================== */
 
-  const strengthsText =
+  const aiInsights =
+    await generateAIReport({
 
-    topStrengths
-      .map((s:any)=>
-        s.name.toLowerCase()
-      )
-      .join(", ")
+      type:"FINAL",
 
-  const gapsText =
+      profile,
 
-    topGaps
-      .map((g:any)=>
-        g.name.toLowerCase()
-      )
-      .join(", ")
+      score,
 
-  let executiveSummary = ""
+      traffic,
 
-  if(isSupervisor){
+      competencies,
 
-    executiveSummary = `
+      evaluations: results.map((r:any)=>({
 
-El participante presenta un desempeño ${
-  score >= 85
-    ? "sólido"
-    : score >= 55
-    ? "adecuado con observaciones"
-    : "con exposición relevante"
-} en competencias asociadas a liderazgo preventivo y control operacional.
+        type:r.evaluation?.name,
 
-Destacan fortalezas relacionadas con ${strengthsText}, favoreciendo la supervisión de tareas críticas y la gestión preventiva de equipos.
+        score:r.score
 
-No obstante, persisten oportunidades de mejora vinculadas a ${gapsText}, las cuales podrían afectar la consistencia del liderazgo operacional bajo escenarios de presión y alta exigencia operacional.
+      }))
 
-    `.trim()
+    })
 
-  }else{
+  const executiveSummary =
+    aiInsights.executiveSummary || ""
 
-    executiveSummary = `
+  const operationalImpact =
+    aiInsights.operationalImpact || ""
 
-El participante presenta un desempeño ${
-  score >= 85
-    ? "sólido"
-    : score >= 55
-    ? "adecuado con observaciones"
-    : "con exposición relevante"
-} en competencias asociadas a seguridad operacional y ejecución segura de tareas críticas.
+  const risks =
+    aiInsights.exposureFactors || []
 
-Se observan fortalezas relacionadas con ${strengthsText}, favoreciendo la adherencia preventiva y el cumplimiento operacional.
+  const followUp =
+    aiInsights.developmentPlan || []
 
-Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionadas con ${gapsText}, las cuales podrían afectar la consistencia conductual bajo condiciones de presión operacional.
+  const recommendedCourses =
+    aiInsights.recommendedCourses || []
 
-    `.trim()
+  const supervisorAdvice =
+    aiInsights.supervisorAdvice || ""
 
-  }
-
-  /* ======================================
-  RIESGOS POTENCIALES
-  ====================================== */
-
-  const risks:string[] = []
-
-  topGaps.forEach((g:any)=>{
-
-    const name =
-      String(g.name || "")
-        .toLowerCase()
-
-    if(name.includes("equipo")){
-
-      risks.push(
-        "Dificultades de coordinación en tareas grupales."
-      )
-
-    }
-
-    if(name.includes("comunic")){
-
-      risks.push(
-        "Riesgo de desviaciones asociadas a comunicación operacional insuficiente."
-      )
-
-    }
-
-    if(name.includes("conduct")){
-
-      risks.push(
-        "Variabilidad conductual frente a escenarios operacionales exigentes."
-      )
-
-    }
-
-    if(name.includes("proced")){
-
-      risks.push(
-        "Posibles desviaciones asociadas a cumplimiento procedimental."
-      )
-
-    }
-
-  })
-
-  if(!risks.length){
-
-    risks.push(
-      "No se observan factores críticos de exposición operacional inmediata."
-    )
-
-  }
-
-  /* ======================================
-  SEGUIMIENTO
-  ====================================== */
-
-  const followUp = isSupervisor
-
-    ? [
-
-        "Seguimiento en liderazgo preventivo.",
-
-        "Refuerzo de control operacional.",
-
-        "Acompañamiento inicial en gestión preventiva."
-
-      ]
-
-    : [
-
-        "Observación conductual en terreno.",
-
-        "Refuerzo preventivo inicial.",
-
-        "Seguimiento operacional durante periodo de adaptación."
-
-      ]
+  const finalConclusion =
+    aiInsights.finalConclusion || ""
 
   /* ======================================
   EVALUATION CARDS
@@ -418,58 +321,8 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
     }).join("")
 
   /* ======================================
-  CURSOS RECOMENDADOS
+  CURSOS
   ====================================== */
-
-  const recommendedCourses:string[] = []
-
-  topGaps.forEach((gap:any)=>{
-
-    const name =
-      String(gap.name || "")
-        .toLowerCase()
-
-    if(name.includes("riesgo")){
-
-      recommendedCourses.push(
-        "Curso Identificación de Peligros y Control de Riesgos"
-      )
-
-    }
-
-    if(name.includes("proced")){
-
-      recommendedCourses.push(
-        "Curso Procedimientos Críticos de Trabajo"
-      )
-
-    }
-
-    if(name.includes("comun")){
-
-      recommendedCourses.push(
-        "Curso Comunicación Efectiva en Minería"
-      )
-
-    }
-
-    if(name.includes("equipo")){
-
-      recommendedCourses.push(
-        "Curso Trabajo en Equipo Operacional"
-      )
-
-    }
-
-    if(name.includes("conduct")){
-
-      recommendedCourses.push(
-        "Curso Conductas Seguras y Cultura Preventiva"
-      )
-
-    }
-
-  })
 
   const uniqueCourses =
     [...new Set(recommendedCourses)]
@@ -591,21 +444,23 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
     <div class="alert-box">
 
       <div class="alert-title">
-        Riesgos potenciales observados
+        Impacto operacional observado
       </div>
 
       <div class="text">
+        ${operationalImpact}
+      </div>
 
-        <ul>
+    </div>
 
-          ${risks
-            .map(r=>`
-              <li>${r}</li>
-            `)
-            .join("")}
+    <div class="good-box">
 
-        </ul>
+      <div class="summary-title">
+        Recomendación para supervisor
+      </div>
 
+      <div class="text">
+        ${supervisorAdvice}
       </div>
 
     </div>
@@ -694,63 +549,73 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
 
   return {
 
-  participant,
+    participant,
 
-  date:new Date()
-    .toLocaleDateString("es-CL"),
+    date:new Date()
+      .toLocaleDateString("es-CL"),
 
-  score,
+    score,
 
-  traffic,
+    traffic,
 
-  competencies,
+    competencies,
 
-  strengths: strengthsHTML,
+    strengths: strengthsHTML,
 
-  gaps: gapsHTML,
+    gaps: gapsHTML,
 
-  evaluationsCards,
+    evaluationsCards,
 
-  radar:"",
+    radar:"",
 
-  riskArrowClass,
+    riskArrowClass,
 
-  developmentPlan,
+    developmentPlan,
 
-  supervisorSummary,
+    supervisorSummary,
 
-  employerSupport,
+    employerSupport,
 
-  operationalExposureAnalysis:
-  `
+    operationalExposureAnalysis:
+    `
 
-    <div class="alert-box">
+      <div class="alert-box">
 
-      <div class="alert-title">
-        Factores observados
+        <div class="alert-title">
+          Factores de exposición operacional
+        </div>
+
+        <div class="text">
+
+          ${
+            risks.length
+
+              ? risks.map((r:string)=>`
+                  • ${r}<br/>
+                `).join("")
+
+              : `
+                  No se observan factores críticos
+                  de exposición operacional inmediata.
+                `
+          }
+
+          <br/><br/>
+
+          <strong>
+            Conclusión operacional:
+          </strong>
+
+          <br/><br/>
+
+          ${finalConclusion}
+
+        </div>
+
       </div>
 
-      <div class="text">
+    `
 
-        ${
-          risks.length
-
-            ? risks.map(r=>`
-                • ${r}<br/>
-              `).join("")
-
-            : `
-                No se observan factores críticos
-                de exposición operacional inmediata.
-              `
-        }
-
-      </div>
-
-    </div>
-
-  `
-
-}
+  }
 
 }
