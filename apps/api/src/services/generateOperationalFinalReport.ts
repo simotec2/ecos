@@ -212,14 +212,14 @@ export async function generateOperationalFinalReport(
       const score =
         Math.round(r.score || 0)
 
-      let color = "#dc2626"
+      let color = "#ee0f0f"
 
       let label =
         "Aun No Recomendable"
 
       if(score >= 85){
 
-        color = "#16a34a"
+        color = "#0fe22b"
 
         label =
           "Recomendable"

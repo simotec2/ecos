@@ -4,14 +4,14 @@ import path from "path"
 function getColor(color:string){
 
   if(color === "VERDE"){
-    return "#16a34a"
+    return "#0ddb59"
   }
 
   if(color === "AMARILLO"){
-    return "#d97706"
+    return "#d9c406"
   }
 
-  return "#dc2626"
+  return "#e71313"
 
 }
 
