@@ -5,9 +5,10 @@ import chromium from "@sparticuz/chromium"
 import puppeteer from "puppeteer-core"
 
 import { renderReportHTML } from "../services/reportRenderer"
-import { renderFinalReportHTML } from "../services/finalReportRenderer"
 
-import { generateFinalReport } from "../services/finalReportEngine"
+import { generateOperationalFinalReport } from "../services/generateOperationalFinalReport"
+
+import { renderOperationalFinalReport } from "../services/renderOperationalFinalReport"
 
 const router = Router()
 
@@ -22,9 +23,10 @@ function normalizeResult(result:any){
 
   try{
 
-    raw = typeof result.resultJson === "string"
-      ? JSON.parse(result.resultJson)
-      : result.resultJson || {}
+    raw =
+      typeof result.resultJson === "string"
+        ? JSON.parse(result.resultJson)
+        : result.resultJson || {}
 
   }catch{
 
@@ -92,36 +94,42 @@ async function generatePDF(html:string){
 
   }
 
-  const browser = await puppeteer.launch({
+  const browser =
+    await puppeteer.launch({
 
-    args: chromium.args,
+      args: chromium.args,
 
-    executablePath,
+      executablePath,
 
-    headless: true
+      headless: true
 
-  })
+    })
 
-  const page = await browser.newPage()
+  const page =
+    await browser.newPage()
 
-  await page.setContent(html,{
-    waitUntil:"networkidle0"
-  })
-
-  const pdf = await page.pdf({
-
-    format:"letter",
-
-    printBackground:true,
-
-    margin:{
-      top:"20px",
-      bottom:"20px",
-      left:"25px",
-      right:"25px"
+  await page.setContent(
+    html,
+    {
+      waitUntil:"networkidle0"
     }
+  )
 
-  })
+  const pdf =
+    await page.pdf({
+
+      format:"letter",
+
+      printBackground:true,
+
+      margin:{
+        top:"20px",
+        bottom:"20px",
+        left:"25px",
+        right:"25px"
+      }
+
+    })
 
   await browser.close()
 
@@ -134,7 +142,9 @@ async function generatePDF(html:string){
 PDF INDIVIDUAL
 =====================================
 */
-router.get("/:id/pdf", async (req,res)=>{
+router.get(
+  "/:id/pdf",
+  async (req,res)=>{
 
   try{
 
@@ -147,7 +157,9 @@ router.get("/:id/pdf", async (req,res)=>{
 
         include:{
           participant:{
-            include:{ company:true }
+            include:{
+              company:true
+            }
           },
           evaluation:true
         }
@@ -162,7 +174,8 @@ router.get("/:id/pdf", async (req,res)=>{
 
     }
 
-    const data = normalizeResult(result)
+    const data =
+      normalizeResult(result)
 
     const html =
       await renderReportHTML(data)
@@ -206,7 +219,9 @@ router.get("/:id/pdf", async (req,res)=>{
 PDF FINAL
 =====================================
 */
-router.get("/:id/final/pdf", async (req,res)=>{
+router.get(
+  "/:id/final/pdf",
+  async (req,res)=>{
 
   try{
 
@@ -232,20 +247,26 @@ router.get("/:id/final/pdf", async (req,res)=>{
     }
 
     /* =========================
-    ENGINE REAL
+    DATA FINAL
     ========================= */
 
-    const data =
-      await generateFinalReport(
+    const report =
+      await generateOperationalFinalReport(
         baseResult.participantId
       )
-      data.date = baseResult.createdAt
+
+    report.date =
+      new Date(baseResult.createdAt)
+        .toLocaleDateString("es-CL")
+
     /* =========================
     HTML
     ========================= */
 
     const html =
-      await renderFinalReportHTML(data)
+      await renderOperationalFinalReport(
+        report
+      )
 
     /* =========================
     PDF
