@@ -1,4 +1,14 @@
-import { Outlet, Link, useNavigate, useLocation } from "react-router-dom"
+import {
+  Outlet,
+  Link,
+  useNavigate,
+  useLocation
+} from "react-router-dom"
+
+import {
+  useState
+} from "react"
+
 import CompanySelector from "../components/CompanySelector"
 
 export default function AppLayout(){
@@ -8,15 +18,22 @@ export default function AppLayout(){
 
   const isMobile = window.innerWidth < 768
 
-  const userName = localStorage.getItem("userName") || "Usuario"
-  const role = localStorage.getItem("role") || ""
-  const originalRole = localStorage.getItem("originalRole")
+  const [menuOpen,setMenuOpen] = useState(false)
+
+  const userName =
+    localStorage.getItem("userName") || "Usuario"
+
+  const role =
+    localStorage.getItem("role") || ""
+
+  const originalRole =
+    localStorage.getItem("originalRole")
 
   function logout(){
 
     localStorage.clear()
 
-    navigate("/login", { replace:true })
+    navigate("/login",{replace:true})
 
   }
 
@@ -26,7 +43,17 @@ export default function AppLayout(){
 
     localStorage.removeItem("originalRole")
 
-    navigate("/app", { replace:true })
+    navigate("/app",{replace:true})
+
+  }
+
+  function closeMenu(){
+
+    if(isMobile){
+
+      setMenuOpen(false)
+
+    }
 
   }
 
@@ -38,7 +65,7 @@ export default function AppLayout(){
 
     if(isActive){
 
-      return {
+      return{
         ...styles.menuItem,
         ...styles.menuActive
       }
@@ -49,7 +76,7 @@ export default function AppLayout(){
 
   }
 
-  const menu:any = {
+  const menu:any={
 
     SUPERADMIN:[
       {path:"/app",label:"Dashboard"},
@@ -87,6 +114,8 @@ export default function AppLayout(){
 
     <div style={styles.container}>
 
+      {/* IMPERSONACIÓN */}
+
       {originalRole==="SUPERADMIN" && role!=="SUPERADMIN" && (
 
         <div style={styles.impersonationBar}>
@@ -106,40 +135,70 @@ export default function AppLayout(){
 
       )}
 
+      {/* OVERLAY MOBILE */}
+
+      {isMobile && menuOpen && (
+
+        <div
+          onClick={()=>
+            setMenuOpen(false)
+          }
+          style={styles.overlay}
+        />
+
+      )}
+
       {/* SIDEBAR */}
 
-      {!isMobile && (
+      <div style={{
+        ...styles.sidebar,
 
-        <div style={styles.sidebar}>
+        position:isMobile
+          ? "fixed"
+          : "relative",
 
-          <div style={styles.logoBox}>
+        left:isMobile
+          ? menuOpen
+            ? 0
+            : -260
+          : 0,
 
-            <img
-              src="/ecos-logo.jpg"
-              style={styles.logo}
-            />
+        top:0,
 
-          </div>
+        height:"100vh",
 
-          <nav style={styles.menu}>
+        zIndex:9999,
 
-            {menuItems.map((item:any)=>(
+        transition:"0.3s"
+      }}>
 
-              <Link
-                key={item.path}
-                to={item.path}
-                style={menuStyle(item.path)}
-              >
-                {item.label}
-              </Link>
+        <div style={styles.logoBox}>
 
-            ))}
-
-          </nav>
+          <img
+            src="/ecos-logo.jpg"
+            style={styles.logo}
+          />
 
         </div>
 
-      )}
+        <nav style={styles.menu}>
+
+          {menuItems.map((item:any)=>(
+
+            <Link
+              key={item.path}
+              to={item.path}
+              style={menuStyle(item.path)}
+              onClick={closeMenu}
+            >
+              {item.label}
+            </Link>
+
+          ))}
+
+        </nav>
+
+      </div>
 
       {/* MAIN */}
 
@@ -147,53 +206,40 @@ export default function AppLayout(){
 
         {/* TOPBAR */}
 
-        <div style={{
-          ...styles.topbar,
-          flexDirection:
-            isMobile
-            ? "column"
-            : "row",
-          alignItems:
-            isMobile
-            ? "flex-start"
-            : "center",
-          height:
-            isMobile
-            ? "auto"
-            : 64,
-          padding:
-            isMobile
-            ? 16
-            : "0 28px"
-        }}>
+        <div style={styles.topbar}>
 
           <div style={{
-            ...styles.topbarTitle,
-            fontSize:
-              isMobile
-              ? 13
-              : 16
+            display:"flex",
+            alignItems:"center",
+            gap:14
           }}>
-            Plataforma ECOS
+
+            {/* HAMBURGUESA */}
+
+            {isMobile && (
+
+              <button
+                onClick={()=>
+                  setMenuOpen(!menuOpen)
+                }
+                style={styles.hamburger}
+              >
+                ☰
+              </button>
+
+            )}
+
+            <div style={styles.topbarTitle}>
+              Plataforma ECOS
+            </div>
+
           </div>
 
-          <div style={{
-            ...styles.userBox,
-            width:
-              isMobile
-              ? "100%"
-              : "auto",
-            justifyContent:
-              isMobile
-              ? "space-between"
-              : "flex-end",
-            marginTop:
-              isMobile
-              ? 12
-              : 0
-          }}>
+          <div style={styles.userBox}>
 
-            <CompanySelector/>
+            {!isMobile && (
+              <CompanySelector/>
+            )}
 
             <div style={styles.userInfo}>
 
@@ -222,8 +268,7 @@ export default function AppLayout(){
 
         <div style={{
           ...styles.content,
-          padding:
-            isMobile
+          padding:isMobile
             ? 16
             : "30px 40px"
         }}>
@@ -263,6 +308,18 @@ const styles:any={
 
   },
 
+  overlay:{
+
+    position:"fixed",
+
+    inset:0,
+
+    background:"rgba(0,0,0,0.45)",
+
+    zIndex:9998
+
+  },
+
   impersonationBar:{
 
     position:"fixed",
@@ -285,7 +342,7 @@ const styles:any={
 
     alignItems:"center",
 
-    zIndex:9999
+    zIndex:99999
 
   },
 
@@ -398,6 +455,8 @@ const styles:any={
 
   topbar:{
 
+    height:64,
+
     background:
       "rgba(15,23,42,0.92)",
 
@@ -406,15 +465,41 @@ const styles:any={
 
     display:"flex",
 
+    alignItems:"center",
+
     justifyContent:"space-between",
 
+    padding:"0 20px",
+
     backdropFilter:"blur(10px)"
+
+  },
+
+  hamburger:{
+
+    width:42,
+
+    height:42,
+
+    borderRadius:10,
+
+    border:"none",
+
+    background:"#1e293b",
+
+    color:"#fff",
+
+    fontSize:22,
+
+    cursor:"pointer"
 
   },
 
   topbarTitle:{
 
     fontWeight:700,
+
+    fontSize:16,
 
     color:"#ffffff"
 
@@ -426,9 +511,7 @@ const styles:any={
 
     alignItems:"center",
 
-    gap:16,
-
-    flexWrap:"wrap"
+    gap:16
 
   },
 
@@ -436,7 +519,9 @@ const styles:any={
 
     display:"flex",
 
-    flexDirection:"column"
+    flexDirection:"column",
+
+    alignItems:"flex-end"
 
   },
 
