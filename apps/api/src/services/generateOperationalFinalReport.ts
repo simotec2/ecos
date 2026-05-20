@@ -1,9 +1,11 @@
 import prisma from "../db"
-import { generateAIReport } from "./aiEngine"
+
+import { generateFinalOperationalAI }
+from "./finalOperationalAI"
 
 export async function generateOperationalFinalReport(
-  participantId: string
-) {
+  participantId:string
+){
 
   const participant =
     await prisma.participant.findUnique({
@@ -96,11 +98,12 @@ export async function generateOperationalFinalReport(
   })
 
   /* ======================================
-  SCORE GENERAL
+  SCORE
   ====================================== */
 
   const score =
     results.length
+
       ? Math.round(
 
           results.reduce(
@@ -113,17 +116,18 @@ export async function generateOperationalFinalReport(
           ) / results.length
 
         )
+
       : 0
 
   /* ======================================
-  RESULTADO FINAL
+  TRAFFIC
   ====================================== */
 
   let traffic = {
 
     color:"ROJO",
 
-    result:"AUN NO RECOMENDABLE"
+    result:"NO RECOMENDABLE"
 
   }
 
@@ -144,14 +148,14 @@ export async function generateOperationalFinalReport(
 
       color:"AMARILLO",
 
-      result:"RECOMENDABLE CON SEGUIMIENTO"
+      result:"RECOMENDABLE CON OBSERVACIONES"
 
     }
 
   }
 
   /* ======================================
-  TOP FORTALEZAS
+  TOPS
   ====================================== */
 
   const topStrengths =
@@ -164,10 +168,6 @@ export async function generateOperationalFinalReport(
 
       .slice(0,3)
 
-  /* ======================================
-  TOP BRECHAS
-  ====================================== */
-
   const topGaps =
 
     [...competencies]
@@ -179,7 +179,7 @@ export async function generateOperationalFinalReport(
       .slice(0,3)
 
   /* ======================================
-  HTML FORTALEZAS
+  HTML
   ====================================== */
 
   const strengthsHTML =
@@ -190,10 +190,6 @@ export async function generateOperationalFinalReport(
 
     `).join("<br/>")
 
-  /* ======================================
-  HTML BRECHAS
-  ====================================== */
-
   const gapsHTML =
 
     topGaps.map((c:any)=>`
@@ -203,7 +199,7 @@ export async function generateOperationalFinalReport(
     `).join("<br/>")
 
   /* ======================================
-  PERFIL
+  PROFILE
   ====================================== */
 
   const profile =
@@ -212,13 +208,11 @@ export async function generateOperationalFinalReport(
     "Operador"
 
   /* ======================================
-  IA CONTEXTUAL
+  IA FINAL PREMIUM
   ====================================== */
 
   const aiInsights =
-    await generateAIReport({
-
-      type:"FINAL",
+    await generateFinalOperationalAI({
 
       profile,
 
@@ -228,13 +222,16 @@ export async function generateOperationalFinalReport(
 
       competencies,
 
-      evaluations: results.map((r:any)=>({
+      evaluations:
+        results.map((r:any)=>({
 
-        type:r.evaluation?.name,
+          type:
+            r.evaluation?.name,
 
-        score:r.score
+          score:
+            r.score
 
-      }))
+        }))
 
     })
 
@@ -260,7 +257,7 @@ export async function generateOperationalFinalReport(
     aiInsights.finalConclusion || ""
 
   /* ======================================
-  EVALUATION CARDS
+  CARDS
   ====================================== */
 
   const evaluationsCards =
@@ -270,25 +267,25 @@ export async function generateOperationalFinalReport(
       const score =
         Math.round(r.score || 0)
 
-      let color = "#ee0f0f"
+      let color = "#dc2626"
 
       let label =
-        "Aun No Recomendable"
+        "NO RECOMENDABLE"
 
       if(score >= 85){
 
-        color = "#0fe22b"
+        color = "#16a34a"
 
         label =
-          "Recomendable"
+          "RECOMENDABLE"
 
       }
       else if(score >= 55){
 
-        color = "#f5e509"
+        color = "#d97706"
 
         label =
-          "Recomendable con Seguimiento"
+          "RECOMENDABLE CON OBSERVACIONES"
 
       }
 
@@ -297,7 +294,7 @@ export async function generateOperationalFinalReport(
         <div class="kpi">
 
           <div class="kpi-title">
-            ${r.evaluation?.name || "Evaluación"}
+            ${r.evaluation?.name || ""}
           </div>
 
           <div
@@ -321,7 +318,7 @@ export async function generateOperationalFinalReport(
     }).join("")
 
   /* ======================================
-  CURSOS
+  COURSES
   ====================================== */
 
   const uniqueCourses =
@@ -331,7 +328,7 @@ export async function generateOperationalFinalReport(
 
     uniqueCourses.length
 
-      ? uniqueCourses.map(course=>`
+      ? uniqueCourses.map((course:string)=>`
 
           <li>${course}</li>
 
@@ -339,12 +336,12 @@ export async function generateOperationalFinalReport(
 
       : `
           <li>
-            Curso Seguridad Minera Operacional
+            Seguridad minera operacional
           </li>
         `
 
   /* ======================================
-  PLAN DESARROLLO
+  DEVELOPMENT PLAN
   ====================================== */
 
   const developmentPlan = `
@@ -362,7 +359,7 @@ export async function generateOperationalFinalReport(
           <ul>
 
             ${followUp
-              .map(item=>`
+              .map((item:string)=>`
                 <li>${item}</li>
               `)
               .join("")}
@@ -396,50 +393,51 @@ export async function generateOperationalFinalReport(
   `
 
   /* ======================================
-  RESUMEN EJECUTIVO
+  SUMMARY
   ====================================== */
 
   const supervisorSummary = `
 
-  <div class="executive-box">
+    <div class="executive-box">
 
-    <div class="summary-title">
-      Síntesis ejecutiva
+      <div class="summary-title">
+        Síntesis ejecutiva
+      </div>
+
+      <div class="text">
+        ${executiveSummary}
+      </div>
+
     </div>
 
-    <div class="text">
-      ${executiveSummary}
+    <div class="alert-box">
+
+      <div class="alert-title">
+        Impacto operacional observado
+      </div>
+
+      <div class="text">
+        ${operationalImpact}
+      </div>
+
     </div>
 
-  </div>
+    <div class="good-box">
 
-  <div class="alert-box">
+      <div class="summary-title">
+        Orientación para supervisión
+      </div>
 
-    <div class="alert-title">
-      Impacto operacional observado
+      <div class="text">
+        ${supervisorAdvice}
+      </div>
+
     </div>
 
-    <div class="text">
-      ${operationalImpact}
-    </div>
+  `
 
-  </div>
-
-  <div class="good-box">
-
-    <div class="summary-title">
-      Orientación para supervisión directa
-    </div>
-
-    <div class="text">
-      ${supervisorAdvice}
-    </div>
-
-  </div>
-
-`
   /* ======================================
-  RESPALDO EMPLEADOR
+  EMPLOYER SUPPORT
   ====================================== */
 
   const employerSupport = `
@@ -449,23 +447,12 @@ export async function generateOperationalFinalReport(
       <div class="legal-card">
 
         <div class="legal-title">
-          Reducción de costos
-        </div>
-
-        <div class="legal-text">
-          Prevención de accidentes y pérdidas operacionales.
-        </div>
-
-      </div>
-
-      <div class="legal-card">
-
-        <div class="legal-title">
           Continuidad operacional
         </div>
 
         <div class="legal-text">
-          Disminuye interrupciones y exposición operacional.
+          Favorece procesos preventivos
+          y reducción de exposición operacional.
         </div>
 
       </div>
@@ -473,11 +460,12 @@ export async function generateOperationalFinalReport(
       <div class="legal-card">
 
         <div class="legal-title">
-          Alineamiento preventivo
+          Respaldo preventivo
         </div>
 
         <div class="legal-text">
-          Compatible con estándares de seguridad minera.
+          Evidencia objetiva para procesos
+          de incorporación y seguimiento.
         </div>
 
       </div>
@@ -485,11 +473,25 @@ export async function generateOperationalFinalReport(
       <div class="legal-card">
 
         <div class="legal-title">
-          Respaldo documental
+          Gestión de riesgo
         </div>
 
         <div class="legal-text">
-          Evidencia objetiva para procesos de incorporación.
+          Permite detectar oportunidades
+          de mejora preventiva.
+        </div>
+
+      </div>
+
+      <div class="legal-card">
+
+        <div class="legal-title">
+          Seguridad operacional
+        </div>
+
+        <div class="legal-text">
+          Compatible con estándares
+          preventivos mineros.
         </div>
 
       </div>
@@ -531,9 +533,11 @@ export async function generateOperationalFinalReport(
 
     competencies,
 
-    strengths: strengthsHTML,
+    strengths:
+      strengthsHTML,
 
-    gaps: gapsHTML,
+    gaps:
+      gapsHTML,
 
     evaluationsCards,
 
@@ -548,50 +552,50 @@ export async function generateOperationalFinalReport(
     employerSupport,
 
     operationalExposureAnalysis:
-`
+    `
 
-  <div class="alert-box">
+      <div class="alert-box">
 
-    <div class="alert-title">
-      Factores de exposición operacional
-    </div>
+        <div class="alert-title">
+          Factores de exposición operacional
+        </div>
 
-    <div class="text">
+        <div class="text">
 
-      <ul>
+          <ul>
 
-        ${
-          risks.length
+            ${
+              risks.length
 
-            ? risks.map((r:string)=>`
-                <li>${r}</li>
-              `).join("")
+                ? risks.map((r:string)=>`
+                    <li>${r}</li>
+                  `).join("")
 
-            : `
-                <li>
-                  No se observan factores críticos
-                  de exposición operacional inmediata.
-                </li>
-              `
-        }
+                : `
+                    <li>
+                      No se observan factores críticos
+                      de exposición operacional inmediata.
+                    </li>
+                  `
+            }
 
-      </ul>
+          </ul>
 
-      <br/>
+          <br/>
 
-      <strong>
-        Conclusión operacional:
-      </strong>
+          <strong>
+            Conclusión operacional:
+          </strong>
 
-      <br/><br/>
+          <br/><br/>
 
-      ${finalConclusion}
+          ${finalConclusion}
 
-    </div>
+        </div>
 
-  </div>
+      </div>
 
-`
+    `
 
   }
 
