@@ -72,7 +72,9 @@ export async function evaluateCompetencyAI(
 
   for(const k of (keywords || [])){
 
-    if(text.includes(String(k).toLowerCase())){
+    if(text.includes(
+      String(k).toLowerCase()
+    )){
 
       matches++
 
@@ -107,8 +109,10 @@ export async function evaluateCompetencyAI(
   else depthScore = 20
 
   const finalScore = Math.round(
+
     (keywordScore * 0.6) +
     (depthScore * 0.4)
+
   )
 
   return {
@@ -133,8 +137,9 @@ function buildFinalPrompt(input:any){
   return `
 
 Eres un especialista senior en seguridad minera,
-riesgo operacional y procesos de incorporación
-de personal en minería.
+riesgo operacional,
+conducta preventiva
+y procesos de incorporación minera.
 
 Tu función es generar un análisis ejecutivo
 profesional y operacional.
@@ -148,6 +153,8 @@ IMPORTANTE:
 - NO contradigas scores
 - NO hagas diagnósticos clínicos
 - Usa lenguaje operacional minero
+- El informe será leído por supervisores
+  y administradores de contrato
 
 PERFIL:
 ${profile}
@@ -155,7 +162,7 @@ ${profile}
 RESULTADO:
 ${input.traffic?.result}
 
-SCORE:
+SCORE GLOBAL:
 ${input.score}
 
 COMPETENCIAS:
@@ -164,7 +171,7 @@ ${(input.competencies || []).map((c:any)=>`
 - ${c.name}: ${c.score}% (${getLevel(c.score)})
 `).join("\n")}
 
-EVALUACIONES:
+RESULTADOS POR EVALUACIÓN:
 
 ${(input.evaluations || []).map((e:any)=>`
 
@@ -197,17 +204,15 @@ RESPONDE EXACTAMENTE ESTE JSON:
 INSTRUCCIONES IMPORTANTES:
 
 - "executiveSummary":
-  resumen ejecutivo general del perfil.
+  resumen ejecutivo general.
 
 - "operationalImpact":
-  impacto operacional real de las brechas
-  sobre seguridad, adaptación y continuidad.
+  impacto operacional real de las brechas.
 
 - "exposureFactors":
   NO repetir competencias ni scores.
   Deben describir escenarios operacionales
-  donde el participante podría presentar
-  mayor exposición preventiva.
+  donde podría existir mayor exposición.
 
 - "developmentPlan":
   acciones concretas de acompañamiento.
@@ -218,11 +223,6 @@ INSTRUCCIONES IMPORTANTES:
 - "supervisorAdvice":
   orientación EXCLUSIVA para supervisor.
   NO repetir fortalezas ni brechas.
-  Debe enfocarse en:
-  acompañamiento,
-  integración,
-  seguimiento,
-  adaptación operacional.
 
 - "finalConclusion":
   cierre ejecutivo preventivo breve.
@@ -232,10 +232,10 @@ INSTRUCCIONES IMPORTANTES:
 }
 
 /* ======================================
-CALL AI
+CALL AI JSON
 ====================================== */
 
-async function callAI(prompt:string){
+async function callAIJSON(prompt:string){
 
   try{
 
@@ -244,7 +244,7 @@ async function callAI(prompt:string){
 
         model:"gpt-4o-mini",
 
-        temperature:0.4,
+        temperature:0.5,
 
         response_format:{
           type:"json_object"
@@ -257,8 +257,9 @@ async function callAI(prompt:string){
             content:`
 Eres un especialista senior
 en seguridad minera,
-riesgo operacional
-y desarrollo preventivo.
+riesgo operacional,
+conducta preventiva
+y continuidad operacional.
 `
           },
 
@@ -279,7 +280,7 @@ y desarrollo preventivo.
   }catch(err){
 
     console.error(
-      "ERROR IA:",
+      "ERROR IA JSON:",
       err
     )
 
@@ -316,26 +317,55 @@ y desarrollo preventivo.
 }
 
 /* ======================================
-ENGINE
+CALL AI TEXTO SIMPLE
+====================================== */
+
+async function callAIText(
+  input:any
+){
+
+  return `
+
+El participante presenta un desempeño ${
+    input.score >= 85
+      ? "sólido"
+      : input.score >= 55
+      ? "adecuado con observaciones"
+      : "con brechas relevantes"
+  } en las competencias evaluadas.
+
+Se recomienda reforzar acompañamiento preventivo y seguimiento operacional de acuerdo con las áreas de mejora detectadas.
+
+  `.trim()
+
+}
+
+/* ======================================
+ENGINE PRINCIPAL
 ====================================== */
 
 export async function generateAIReport(
   input:any
 ){
 
-  if(input.type !== "FINAL"){
+  /* ======================================
+  INFORME FINAL → JSON
+  ====================================== */
 
-    return {
-      text:
-        "Análisis individual no disponible."
-    }
+  if(input.type === "FINAL"){
+
+    const prompt =
+      buildFinalPrompt(input)
+
+    return await callAIJSON(prompt)
 
   }
 
-  const prompt =
-    buildFinalPrompt(input)
+  /* ======================================
+  INFORMES PARCIALES → STRING
+  ====================================== */
 
-  return await callAI(prompt)
+  return await callAIText(input)
 
 }
 
