@@ -2,7 +2,9 @@
   box-sizing:border-box;
 }
 
-/* ROOT */
+/* =========================
+ROOT
+========================= */
 
 html,
 body,
@@ -16,7 +18,9 @@ body,
 
 }
 
-/* BODY */
+/* =========================
+BODY
+========================= */
 
 body{
 
@@ -36,13 +40,15 @@ body{
       #071426 100%
     );
 
-  color:var(--text-primary);
+  color:#ffffff;
 
   overflow-x:hidden;
 
 }
 
-/* LINKS */
+/* =========================
+LINKS
+========================= */
 
 a{
 
@@ -62,7 +68,9 @@ a:hover{
 
 }
 
-/* BUTTONS */
+/* =========================
+BUTTONS
+========================= */
 
 button{
 
@@ -102,7 +110,9 @@ button:hover{
 
 }
 
-/* SCROLLBAR */
+/* =========================
+SCROLLBAR
+========================= */
 
 ::-webkit-scrollbar{
   width:10px;
@@ -124,7 +134,9 @@ button:hover{
   background:#334155;
 }
 
-/* CARDS */
+/* =========================
+CARDS
+========================= */
 
 .dark-card{
 
@@ -144,7 +156,9 @@ button:hover{
 
 }
 
-/* INPUTS */
+/* =========================
+INPUTS
+========================= */
 
 .dark-input{
 
@@ -165,7 +179,9 @@ button:hover{
 
 }
 
-/* TABLES */
+/* =========================
+TABLES
+========================= */
 
 .dark-table{
 
@@ -216,7 +232,9 @@ button:hover{
 
 }
 
-/* GREEN BUTTON */
+/* =========================
+GREEN BUTTON
+========================= */
 
 .btn-green{
 
@@ -252,7 +270,9 @@ button:hover{
 
 }
 
-/* BLUE BUTTON */
+/* =========================
+BLUE BUTTON
+========================= */
 
 .btn-blue{
 
@@ -274,5 +294,194 @@ button:hover{
   font-weight:600;
 
   cursor:pointer;
+
+}
+
+/* =========================
+GLOBAL DARK FIXES
+========================= */
+
+/* CARDS BLANCAS */
+
+div[style*="background:#fff"],
+div[style*="background: #fff"],
+div[style*='background:"#fff"'],
+div[style*="background:#ffffff"],
+div[style*="background: #ffffff"]{
+
+  background:
+    rgba(17,36,58,0.92) !important;
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  color:
+    white !important;
+
+  box-shadow:
+    0 8px 30px rgba(0,0,0,0.35);
+
+  backdrop-filter:
+    blur(10px);
+
+}
+
+/* INPUTS GLOBALES */
+
+input,
+select,
+textarea{
+
+  background:
+    #0f172a !important;
+
+  border:
+    1px solid #223548 !important;
+
+  color:
+    white !important;
+
+  border-radius:
+    10px;
+
+  padding:
+    10px 12px;
+
+}
+
+/* PLACEHOLDER */
+
+input::placeholder,
+textarea::placeholder{
+
+  color:
+    #94a3b8 !important;
+
+}
+
+/* TABLAS */
+
+table{
+
+  background:
+    rgba(17,36,58,0.92);
+
+  color:
+    white;
+
+  border-collapse:
+    collapse;
+
+}
+
+th{
+
+  background:
+    #14532d;
+
+  color:
+    white !important;
+
+}
+
+td{
+
+  color:
+    #e2e8f0 !important;
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.05);
+
+}
+
+/* LABELS */
+
+label,
+span,
+p,
+small{
+
+  color:
+    #e2e8f0;
+
+}
+
+/* TEXTOS GENERALES */
+
+div,
+section{
+
+  color:
+    inherit;
+
+}
+
+/* TITULOS */
+
+h1,
+h2,
+h3,
+h4,
+h5{
+
+  color:
+    white;
+
+}
+
+/* FORMULARIOS */
+
+form{
+
+  color:
+    white;
+
+}
+
+/* SELECT OPTIONS */
+
+option{
+
+  background:
+    #0f172a;
+
+  color:
+    white;
+
+}
+
+/* BOTONES ROJOS */
+
+button[style*="#ef4444"],
+button[style*="#dc2626"]{
+
+  background:
+    linear-gradient(
+      135deg,
+      #dc2626,
+      #ef4444
+    ) !important;
+
+}
+
+/* BOTONES VERDES */
+
+button[style*="#16a34a"]{
+
+  background:
+    linear-gradient(
+      135deg,
+      #16a34a,
+      #22c55e
+    ) !important;
+
+}
+
+/* HOVER FILAS */
+
+tr:hover{
+
+  background:
+    rgba(255,255,255,0.03);
 
 }
