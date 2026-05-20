@@ -22,11 +22,11 @@ function buildPrompt(input:any){
 
 Eres un especialista senior en:
 
-- seguridad minera,
-- psicología preventiva,
-- continuidad operacional,
-- comportamiento humano en minería,
-- gestión preventiva operacional.
+- seguridad minera
+- psicología preventiva
+- continuidad operacional
+- comportamiento humano en minería
+- gestión preventiva operacional
 
 Tu función es generar un análisis ejecutivo
 premium para un informe final integrado.
@@ -104,10 +104,6 @@ export async function generateFinalOperationalAI(
 
         temperature:0.5,
 
-        response_format:{
-          type:"json_object"
-        },
-
         messages:[
 
           {
@@ -128,10 +124,49 @@ conductual operacional.
 
       })
 
-    const text =
-      response.choices[0]?.message?.content || "{}"
+    const raw =
+      response.choices[0]?.message?.content || ""
 
-    return JSON.parse(text)
+    const clean =
+
+      raw
+        .replace(/```json/gi,"")
+        .replace(/```/gi,"")
+        .trim()
+
+    const parsed =
+      JSON.parse(clean)
+
+    return {
+
+      executiveSummary:
+        parsed.executiveSummary || "",
+
+      operationalImpact:
+        parsed.operationalImpact || "",
+
+      exposureFactors:
+        Array.isArray(parsed.exposureFactors)
+          ? parsed.exposureFactors
+          : [],
+
+      developmentPlan:
+        Array.isArray(parsed.developmentPlan)
+          ? parsed.developmentPlan
+          : [],
+
+      recommendedCourses:
+        Array.isArray(parsed.recommendedCourses)
+          ? parsed.recommendedCourses
+          : [],
+
+      supervisorAdvice:
+        parsed.supervisorAdvice || "",
+
+      finalConclusion:
+        parsed.finalConclusion || ""
+
+    }
 
   }catch(err){
 
