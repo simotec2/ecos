@@ -295,83 +295,32 @@ BLUE BUTTON
 
   cursor:pointer;
 /* =========================================
-FINAL DARK MODE FIX
+FINAL CLEAN DARK FIX
 ========================================= */
 
-/* INLINE WHITE BACKGROUNDS */
+/* WHITE INLINE BLOCKS */
 
 [style*="background:#fff"],
 [style*="background: #fff"],
 [style*="background:#ffffff"],
-[style*="background: #ffffff"],
-[style*='background:"#fff"'],
-[style*='background:"#ffffff"']{
+[style*="background: #ffffff"]{
 
-  background:
-    rgba(17,36,58,0.96) !important;
+  background:#ffffff !important;
 
-  border:
-    1px solid rgba(255,255,255,0.08) !important;
-
-  box-shadow:
-    0 8px 30px rgba(0,0,0,0.35) !important;
-
-  backdrop-filter:
-    blur(10px);
+  color:#111827 !important;
 
 }
 
-/* TABLE BACKGROUND */
+/* TABLES */
 
-table{
-
-  background:
-    rgba(17,36,58,0.96) !important;
-
-  color:
-    #ffffff !important;
-
-}
-
-/* TABLE HEADER */
-
-thead{
-
-  background:
-    #14532d !important;
-
-}
-
-/* TH */
-
+table,
+thead,
+tbody,
+tr,
+td,
 th{
 
-  color:
-    #ffffff !important;
-
-  background:
-    #14532d !important;
-
-}
-
-/* TD */
-
-td{
-
-  color:
-    #e2e8f0 !important;
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.05) !important;
-
-}
-
-/* TR */
-
-tr{
-
-  background:
-    transparent !important;
+  color:#111827 !important;
 
 }
 
@@ -381,61 +330,7 @@ input,
 select,
 textarea{
 
-  background:
-    #081226 !important;
-
-  color:
-    #ffffff !important;
-
-  border:
-    1px solid #223548 !important;
-
-  border-radius:
-    12px !important;
-
-}
-
-/* CHECKBOX */
-
-input[type="checkbox"]{
-
-  accent-color:
-    #2563eb;
-
-}
-
-/* PLACEHOLDER */
-
-input::placeholder,
-textarea::placeholder{
-
-  color:
-    #94a3b8 !important;
-
-}
-
-/* OPTION */
-
-option{
-
-  background:
-    #0f172a;
-
-  color:
-    white;
-
-}
-
-/* TITLES */
-
-h1,
-h2,
-h3,
-h4,
-h5{
-
-  color:
-    #ffffff !important;
+  color:#111827 !important;
 
 }
 
@@ -443,40 +338,14 @@ h5{
 
 label,
 span,
-small{
-
-  color:
-    #cbd5e1 !important;
-
-}
-
-/* BUTTONS */
-
-button{
-
-  border:none !important;
-
-}
-/* =========================================
-TEXT FIX
-========================================= */
-
-div,
-p,
-span,
-label,
-td,
-th,
 small,
-input,
-select,
-textarea{
+p{
 
   color:#111827 !important;
 
 }
 
-/* TITULOS */
+/* HEADINGS */
 
 h1,
 h2,
@@ -488,32 +357,25 @@ h5{
 
 }
 
-/* SIDEBAR */
+/* DARK AREAS KEEP WHITE */
 
-nav a{
+.dark-card,
+.dark-card *,
+nav,
+nav *,
+aside,
+aside *{
 
-  color:#cbd5e1 !important;
+  color:white !important;
 
 }
 
 /* TOPBAR */
 
-[style*="rgba(15,23,42"] h1,
-[style*="rgba(15,23,42"] h2,
-[style*="rgba(15,23,42"] h3,
-[style*="rgba(15,23,42"] div{
-
-  color:white !important;
-
-}
-
-/* DASHBOARD DARK CARDS */
-
-.dark-card,
-.dark-card *{
+[style*="rgba(15,23,42"],
+[style*="rgba(15,23,42"] *{
 
   color:white !important;
 
 }
 }
-
