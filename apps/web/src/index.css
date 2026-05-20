@@ -294,6 +294,143 @@ BLUE BUTTON
   font-weight:600;
 
   cursor:pointer;
+/* =========================================
+ENTERPRISE DARK MODE FIX
+========================================= */
 
+/* CARDS INLINE */
+
+[style*="background:#fff"],
+[style*="background: #fff"],
+[style*="background:#ffffff"],
+[style*="background: #ffffff"]{
+
+  background:
+    rgba(17,36,58,0.96) !important;
+
+  border:
+    1px solid rgba(255,255,255,0.08) !important;
+
+  color:
+    #ffffff !important;
+
+  box-shadow:
+    0 8px 30px rgba(0,0,0,0.35) !important;
+
+  backdrop-filter:
+    blur(10px);
+
+}
+
+/* INPUTS */
+
+input,
+select,
+textarea{
+
+  background:
+    #081226 !important;
+
+  color:
+    #ffffff !important;
+
+  border:
+    1px solid #223548 !important;
+
+  border-radius:
+    12px !important;
+
+  padding:
+    12px 14px !important;
+
+}
+
+/* PLACEHOLDERS */
+
+input::placeholder,
+textarea::placeholder{
+
+  color:
+    #94a3b8 !important;
+
+}
+
+/* TABLES */
+
+table{
+
+  background:
+    rgba(17,36,58,0.96) !important;
+
+  color:
+    #ffffff !important;
+
+}
+
+/* HEADERS */
+
+th{
+
+  background:
+    #14532d !important;
+
+  color:
+    #ffffff !important;
+
+}
+
+/* TD */
+
+td{
+
+  color:
+    #e2e8f0 !important;
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.05);
+
+}
+
+/* TITLES */
+
+h1,
+h2,
+h3,
+h4,
+h5{
+
+  color:
+    #ffffff !important;
+
+}
+
+/* LABELS */
+
+label,
+span,
+small{
+
+  color:
+    #cbd5e1 !important;
+
+}
+
+/* ROWS */
+
+tr{
+
+  background:
+    transparent !important;
+
+}
+
+/* ROW HOVER */
+
+tbody tr:hover{
+
+  background:
+    rgba(255,255,255,0.03) !important;
+
+}
 }
 
