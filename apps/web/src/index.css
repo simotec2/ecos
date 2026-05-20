@@ -457,5 +457,63 @@ button{
   border:none !important;
 
 }
+/* =========================================
+TEXT FIX
+========================================= */
+
+div,
+p,
+span,
+label,
+td,
+th,
+small,
+input,
+select,
+textarea{
+
+  color:#111827 !important;
+
+}
+
+/* TITULOS */
+
+h1,
+h2,
+h3,
+h4,
+h5{
+
+  color:#111827 !important;
+
+}
+
+/* SIDEBAR */
+
+nav a{
+
+  color:#cbd5e1 !important;
+
+}
+
+/* TOPBAR */
+
+[style*="rgba(15,23,42"] h1,
+[style*="rgba(15,23,42"] h2,
+[style*="rgba(15,23,42"] h3,
+[style*="rgba(15,23,42"] div{
+
+  color:white !important;
+
+}
+
+/* DASHBOARD DARK CARDS */
+
+.dark-card,
+.dark-card *{
+
+  color:white !important;
+
+}
 }
 
