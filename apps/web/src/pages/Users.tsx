@@ -57,18 +57,12 @@ export default function Users(){
 
     }
 
-    /* ======================================
-    COMPANY ADMIN DEBE TENER EMPRESA
-    ====================================== */
-
     if(
       role === "COMPANY_ADMIN" &&
       !companyId
     ){
 
-      alert(
-        "Debe seleccionar una empresa"
-      )
+      alert("Debe seleccionar una empresa")
 
       return
 
@@ -122,28 +116,34 @@ export default function Users(){
     load()
 
   }
+
+  /* ======================================
+  RESET PASSWORD
+  ====================================== */
+
   async function resetPassword(id:string){
 
-  const password = prompt(
-    "Nueva contraseña:"
-  )
+    const password = prompt(
+      "Nueva contraseña:"
+    )
 
-  if(!password) return
+    if(!password) return
 
-  await apiFetch(
-    `/api/users/${id}/reset-password`,
-    {
-      method:"PUT",
+    await apiFetch(
+      `/api/users/${id}/reset-password`,
+      {
+        method:"PUT",
 
-      body: JSON.stringify({
-        password
-      })
-    }
-  )
+        body: JSON.stringify({
+          password
+        })
+      }
+    )
 
-  alert("Contraseña actualizada")
+    alert("Contraseña actualizada")
 
-}
+  }
+
   /* ======================================
   LOGIN AS
   ====================================== */
@@ -172,10 +172,6 @@ export default function Users(){
       data.user.role
     )
 
-    /* ======================================
-    REDIRECCIÓN
-    ====================================== */
-
     if(data.user.role === "PARTICIPANT"){
 
       window.location.href =
@@ -192,33 +188,28 @@ export default function Users(){
 
   return(
 
-    <div style={{padding:40}}>
+    <div style={styles.container}>
 
-      <h2>Usuarios</h2>
+      <h1 style={styles.title}>
+        Gestión de Usuarios
+      </h1>
 
       {/* ======================================
       CREAR USUARIO
       ====================================== */}
 
-      <div style={{
-        background:"#fff",
-        padding:20,
-        borderRadius:10,
-        marginTop:20
-      }}>
+      <div style={styles.card}>
 
-        <h3>Crear usuario</h3>
+        <h3 style={styles.cardTitle}>
+          Crear usuario
+        </h3>
 
-        <div style={{
-          display:"flex",
-          gap:10,
-          marginTop:10,
-          flexWrap:"wrap"
-        }}>
+        <div style={styles.formGrid}>
 
           {/* NOMBRE */}
 
           <input
+            style={styles.input}
             placeholder="Nombre"
             value={name}
             onChange={(e)=>
@@ -229,6 +220,7 @@ export default function Users(){
           {/* RUT */}
 
           <input
+            style={styles.input}
             placeholder="RUT"
             value={rut}
             onChange={(e)=>
@@ -239,6 +231,7 @@ export default function Users(){
           {/* PASSWORD */}
 
           <input
+            style={styles.input}
             placeholder="Password"
             type="password"
             value={password}
@@ -250,6 +243,7 @@ export default function Users(){
           {/* ROL */}
 
           <select
+            style={styles.input}
             value={role}
             onChange={(e)=>{
               setRole(e.target.value)
@@ -275,11 +269,12 @@ export default function Users(){
 
           </select>
 
-          {/* EMPRESA SOLO COMPANY ADMIN */}
+          {/* EMPRESA */}
 
           {role === "COMPANY_ADMIN" && (
 
             <select
+              style={styles.input}
               value={companyId}
               onChange={(e)=>
                 setCompanyId(e.target.value)
@@ -311,17 +306,10 @@ export default function Users(){
 
           <button
             onClick={createUser}
-            style={{
-              background:"#2563eb",
-              color:"#fff",
-              border:"none",
-              padding:"8px 14px",
-              borderRadius:6,
-              cursor:"pointer"
-            }}
+            style={styles.createButton}
           >
 
-            Crear
+            Crear usuario
 
           </button>
 
@@ -333,150 +321,352 @@ export default function Users(){
       TABLA
       ====================================== */}
 
-      <table style={{
-        width:"100%",
-        marginTop:30,
-        background:"#fff",
-        borderRadius:10
-      }}>
+      <div style={styles.tableCard}>
 
-        <thead>
+        <table style={styles.table}>
 
-          <tr>
+          <thead>
 
-            <th style={{
-              padding:10,
-              textAlign:"left"
-            }}>
-              Nombre
-            </th>
+            <tr>
 
-            <th style={{
-              padding:10,
-              textAlign:"left"
-            }}>
-              RUT
-            </th>
+              <th style={styles.th}>
+                Nombre
+              </th>
 
-            <th style={{
-              padding:10,
-              textAlign:"left"
-            }}>
-              Rol
-            </th>
+              <th style={styles.th}>
+                RUT
+              </th>
 
-            <th style={{
-              padding:10,
-              textAlign:"left"
-            }}>
-              Empresa
-            </th>
+              <th style={styles.th}>
+                Rol
+              </th>
 
-            <th style={{
-              padding:10
-            }}>
-              Acciones
-            </th>
+              <th style={styles.th}>
+                Empresa
+              </th>
 
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-          {users.map((u:any)=>(
-
-            <tr key={u.id}>
-
-              <td style={{padding:10}}>
-                {u.name}
-              </td>
-
-              <td style={{padding:10}}>
-                {u.rut}
-              </td>
-
-              <td style={{padding:10}}>
-                {u.role}
-              </td>
-
-              <td style={{padding:10}}>
-                {u.company?.name || "-"}
-              </td>
-
-              <td style={{padding:10}}>
-
-                {/* LOGIN AS */}
-
-                <button
-                  onClick={()=>
-                    loginAs(u.id)
-                  }
-                  style={{
-                    background:"#16a34a",
-                    color:"#fff",
-                    border:"none",
-                    padding:"6px 10px",
-                    borderRadius:6,
-                    marginRight:6,
-                    cursor:"pointer"
-                  }}
-                >
-
-                  Ver como
-
-                </button>
-                {/* RESET PASSWORD */}
-                <button
-                  onClick={()=>
-                    resetPassword(u.id)
-                  }
-                  style={{
-                    background:"#f59e0b",
-                    color:"#fff",
-                    border:"none",
-                    padding:"6px 10px",
-                    borderRadius:6,
-                    marginRight:6,
-                    cursor:"pointer"
-                  }}
-                >
-
-                  Reset Pass
-
-                </button>
-                {/* ELIMINAR */}
-
-                <button
-                  onClick={()=>
-                    deleteUser(u.id)
-                  }
-                  style={{
-                    background:"#dc2626",
-                    color:"#fff",
-                    border:"none",
-                    padding:"6px 10px",
-                    borderRadius:6,
-                    cursor:"pointer"
-                  }}
-                >
-
-                  Eliminar
-
-                </button>
-
-              </td>
+              <th style={styles.th}>
+                Acciones
+              </th>
 
             </tr>
 
-          ))}
+          </thead>
 
-        </tbody>
+          <tbody>
 
-      </table>
+            {users.map((u:any)=>(
+
+              <tr
+                key={u.id}
+                style={styles.tr}
+              >
+
+                <td style={styles.td}>
+                  {u.name}
+                </td>
+
+                <td style={styles.td}>
+                  {u.rut}
+                </td>
+
+                <td style={styles.td}>
+                  {u.role}
+                </td>
+
+                <td style={styles.td}>
+                  {u.company?.name || "-"}
+                </td>
+
+                <td style={styles.td}>
+
+                  <div style={styles.actions}>
+
+                    {/* LOGIN AS */}
+
+                    <button
+                      onClick={()=>
+                        loginAs(u.id)
+                      }
+                      style={styles.greenButton}
+                    >
+
+                      Ver como
+
+                    </button>
+
+                    {/* RESET */}
+
+                    <button
+                      onClick={()=>
+                        resetPassword(u.id)
+                      }
+                      style={styles.yellowButton}
+                    >
+
+                      Reset Pass
+
+                    </button>
+
+                    {/* DELETE */}
+
+                    <button
+                      onClick={()=>
+                        deleteUser(u.id)
+                      }
+                      style={styles.redButton}
+                    >
+
+                      Eliminar
+
+                    </button>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
 
     </div>
 
   )
+
+}
+
+/* ======================================
+STYLES
+====================================== */
+
+const styles:any = {
+
+  container:{
+
+    padding:20
+
+  },
+
+  title:{
+
+    color:"#ffffff",
+
+    fontSize:32,
+
+    fontWeight:700,
+
+    marginBottom:24
+
+  },
+
+  card:{
+
+    background:
+      "rgba(17,36,58,0.92)",
+
+    border:
+      "1px solid rgba(255,255,255,0.08)",
+
+    borderRadius:20,
+
+    padding:24,
+
+    boxShadow:
+      "0 8px 30px rgba(0,0,0,0.35)",
+
+    backdropFilter:
+      "blur(10px)"
+
+  },
+
+  cardTitle:{
+
+    color:"#ffffff",
+
+    marginBottom:20,
+
+    fontSize:20,
+
+    fontWeight:600
+
+  },
+
+  formGrid:{
+
+    display:"flex",
+
+    gap:12,
+
+    flexWrap:"wrap",
+
+    alignItems:"center"
+
+  },
+
+  input:{
+
+    background:"#0f172a",
+
+    border:"1px solid #223548",
+
+    color:"#ffffff",
+
+    borderRadius:12,
+
+    padding:"12px 14px",
+
+    minWidth:200,
+
+    outline:"none"
+
+  },
+
+  createButton:{
+
+    background:
+      "linear-gradient(135deg,#2563eb,#1d4ed8)",
+
+    color:"#ffffff",
+
+    border:"none",
+
+    padding:"12px 18px",
+
+    borderRadius:12,
+
+    cursor:"pointer",
+
+    fontWeight:600
+
+  },
+
+  tableCard:{
+
+    marginTop:30,
+
+    background:
+      "rgba(17,36,58,0.92)",
+
+    border:
+      "1px solid rgba(255,255,255,0.08)",
+
+    borderRadius:20,
+
+    overflow:"hidden",
+
+    boxShadow:
+      "0 8px 30px rgba(0,0,0,0.35)"
+
+  },
+
+  table:{
+
+    width:"100%",
+
+    borderCollapse:"collapse"
+
+  },
+
+  th:{
+
+    background:"#14532d",
+
+    color:"#ffffff",
+
+    padding:16,
+
+    textAlign:"left",
+
+    fontWeight:600
+
+  },
+
+  tr:{
+
+    borderBottom:
+      "1px solid rgba(255,255,255,0.05)"
+
+  },
+
+  td:{
+
+    padding:16,
+
+    color:"#e2e8f0"
+
+  },
+
+  actions:{
+
+    display:"flex",
+
+    gap:8,
+
+    flexWrap:"wrap"
+
+  },
+
+  greenButton:{
+
+    background:
+      "linear-gradient(135deg,#16a34a,#22c55e)",
+
+    color:"#ffffff",
+
+    border:"none",
+
+    padding:"8px 12px",
+
+    borderRadius:10,
+
+    cursor:"pointer",
+
+    fontWeight:600
+
+  },
+
+  yellowButton:{
+
+    background:
+      "linear-gradient(135deg,#f59e0b,#fbbf24)",
+
+    color:"#ffffff",
+
+    border:"none",
+
+    padding:"8px 12px",
+
+    borderRadius:10,
+
+    cursor:"pointer",
+
+    fontWeight:600
+
+  },
+
+  redButton:{
+
+    background:
+      "linear-gradient(135deg,#dc2626,#ef4444)",
+
+    color:"#ffffff",
+
+    border:"none",
+
+    padding:"8px 12px",
+
+    borderRadius:10,
+
+    cursor:"pointer",
+
+    fontWeight:600
+
+  }
 
 }
