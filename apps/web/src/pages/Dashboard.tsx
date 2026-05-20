@@ -83,12 +83,20 @@ export default function Dashboard(){
 
       }
 
-      const raw = parse(r)
+      const score =
+        Number(r.score || 0)
 
-      const color =
-        String(raw?.traffic?.color || "")
-          .trim()
-          .toUpperCase()
+      let color = "VERDE"
+
+      if(score < 55){
+
+        color = "ROJO"
+
+      }else if(score < 85){
+
+        color = "AMARILLO"
+
+      }
 
       map[pid].push(color)
 
@@ -100,24 +108,11 @@ export default function Dashboard(){
 
     Object.values(map).forEach((colors:any)=>{
 
-      const normalized =
-        colors.map((c:any)=>
-          String(c)
-            .trim()
-            .toUpperCase()
-        )
-
-      if(
-        normalized.includes("ROJO") ||
-        normalized.includes("RED")
-      ){
+      if(colors.includes("ROJO")){
 
         rojo++
 
-      }else if(
-        normalized.includes("AMARILLO") ||
-        normalized.includes("YELLOW")
-      ){
+      }else if(colors.includes("AMARILLO")){
 
         amarillo++
 
@@ -130,8 +125,12 @@ export default function Dashboard(){
     })
 
     const total = participants.length
-    const rendidos = Object.keys(map).length
-    const pendientes = total - rendidos
+
+    const rendidos =
+      Object.keys(map).length
+
+    const pendientes =
+      total - rendidos
 
     return {
 
