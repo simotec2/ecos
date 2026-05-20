@@ -295,15 +295,17 @@ BLUE BUTTON
 
   cursor:pointer;
 /* =========================================
-ENTERPRISE DARK MODE FIX
+FINAL DARK MODE FIX
 ========================================= */
 
-/* CARDS INLINE */
+/* INLINE WHITE BACKGROUNDS */
 
 [style*="background:#fff"],
 [style*="background: #fff"],
 [style*="background:#ffffff"],
-[style*="background: #ffffff"]{
+[style*="background: #ffffff"],
+[style*='background:"#fff"'],
+[style*='background:"#ffffff"']{
 
   background:
     rgba(17,36,58,0.96) !important;
@@ -311,14 +313,65 @@ ENTERPRISE DARK MODE FIX
   border:
     1px solid rgba(255,255,255,0.08) !important;
 
-  color:
-    #ffffff !important;
-
   box-shadow:
     0 8px 30px rgba(0,0,0,0.35) !important;
 
   backdrop-filter:
     blur(10px);
+
+}
+
+/* TABLE BACKGROUND */
+
+table{
+
+  background:
+    rgba(17,36,58,0.96) !important;
+
+  color:
+    #ffffff !important;
+
+}
+
+/* TABLE HEADER */
+
+thead{
+
+  background:
+    #14532d !important;
+
+}
+
+/* TH */
+
+th{
+
+  color:
+    #ffffff !important;
+
+  background:
+    #14532d !important;
+
+}
+
+/* TD */
+
+td{
+
+  color:
+    #e2e8f0 !important;
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.05) !important;
+
+}
+
+/* TR */
+
+tr{
+
+  background:
+    transparent !important;
 
 }
 
@@ -340,12 +393,18 @@ textarea{
   border-radius:
     12px !important;
 
-  padding:
-    12px 14px !important;
+}
+
+/* CHECKBOX */
+
+input[type="checkbox"]{
+
+  accent-color:
+    #2563eb;
 
 }
 
-/* PLACEHOLDERS */
+/* PLACEHOLDER */
 
 input::placeholder,
 textarea::placeholder{
@@ -355,39 +414,15 @@ textarea::placeholder{
 
 }
 
-/* TABLES */
+/* OPTION */
 
-table{
-
-  background:
-    rgba(17,36,58,0.96) !important;
-
-  color:
-    #ffffff !important;
-
-}
-
-/* HEADERS */
-
-th{
+option{
 
   background:
-    #14532d !important;
+    #0f172a;
 
   color:
-    #ffffff !important;
-
-}
-
-/* TD */
-
-td{
-
-  color:
-    #e2e8f0 !important;
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.05);
+    white;
 
 }
 
@@ -415,21 +450,11 @@ small{
 
 }
 
-/* ROWS */
+/* BUTTONS */
 
-tr{
+button{
 
-  background:
-    transparent !important;
-
-}
-
-/* ROW HOVER */
-
-tbody tr:hover{
-
-  background:
-    rgba(255,255,255,0.03) !important;
+  border:none !important;
 
 }
 }
