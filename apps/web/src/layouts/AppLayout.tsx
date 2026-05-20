@@ -6,7 +6,8 @@ import {
 } from "react-router-dom"
 
 import {
-  useState
+  useState,
+  useEffect
 } from "react"
 
 import CompanySelector from "../components/CompanySelector"
@@ -16,9 +17,47 @@ export default function AppLayout(){
   const navigate = useNavigate()
   const location = useLocation()
 
-  const isMobile = window.innerWidth < 768
+  /* =========================
+  MOBILE DETECTION
+  ========================= */
+
+  const [isMobile,setIsMobile] = useState(
+    window.innerWidth < 768
+  )
 
   const [menuOpen,setMenuOpen] = useState(false)
+
+  useEffect(()=>{
+
+    function handleResize(){
+
+      setIsMobile(
+        window.innerWidth < 768
+      )
+
+    }
+
+    window.addEventListener(
+      "resize",
+      handleResize
+    )
+
+    handleResize()
+
+    return ()=>{
+
+      window.removeEventListener(
+        "resize",
+        handleResize
+      )
+
+    }
+
+  },[])
+
+  /* =========================
+  USER
+  ========================= */
 
   const userName =
     localStorage.getItem("userName") || "Usuario"
@@ -28,6 +67,10 @@ export default function AppLayout(){
 
   const originalRole =
     localStorage.getItem("originalRole")
+
+  /* =========================
+  ACTIONS
+  ========================= */
 
   function logout(){
 
@@ -39,9 +82,14 @@ export default function AppLayout(){
 
   function backToAdmin(){
 
-    localStorage.setItem("role","SUPERADMIN")
+    localStorage.setItem(
+      "role",
+      "SUPERADMIN"
+    )
 
-    localStorage.removeItem("originalRole")
+    localStorage.removeItem(
+      "originalRole"
+    )
 
     navigate("/app",{replace:true})
 
@@ -75,6 +123,10 @@ export default function AppLayout(){
     return styles.menuItem
 
   }
+
+  /* =========================
+  MENU
+  ========================= */
 
   const menu:any={
 
@@ -110,11 +162,17 @@ export default function AppLayout(){
 
   const menuItems = menu[role] || []
 
+  /* =========================
+  UI
+  ========================= */
+
   return(
 
     <div style={styles.container}>
 
-      {/* IMPERSONACIÓN */}
+      {/* =========================
+      IMPERSONATION
+      ========================= */}
 
       {originalRole==="SUPERADMIN" && role!=="SUPERADMIN" && (
 
@@ -135,29 +193,35 @@ export default function AppLayout(){
 
       )}
 
-      {/* OVERLAY MOBILE */}
+      {/* =========================
+      MOBILE OVERLAY
+      ========================= */}
 
       {isMobile && menuOpen && (
 
         <div
+          style={styles.overlay}
           onClick={()=>
             setMenuOpen(false)
           }
-          style={styles.overlay}
         />
 
       )}
 
-      {/* SIDEBAR */}
+      {/* =========================
+      SIDEBAR
+      ========================= */}
 
       <div style={{
         ...styles.sidebar,
 
-        position:isMobile
+        position:
+          isMobile
           ? "fixed"
           : "relative",
 
-        left:isMobile
+        left:
+          isMobile
           ? menuOpen
             ? 0
             : -260
@@ -165,11 +229,11 @@ export default function AppLayout(){
 
         top:0,
 
-        height:"100vh",
-
         zIndex:9999,
 
-        transition:"0.3s"
+        transition:"0.3s",
+
+        height:"100vh"
       }}>
 
         <div style={styles.logoBox}>
@@ -200,13 +264,23 @@ export default function AppLayout(){
 
       </div>
 
-      {/* MAIN */}
+      {/* =========================
+      MAIN
+      ========================= */}
 
       <div style={styles.main}>
 
-        {/* TOPBAR */}
+        {/* =========================
+        TOPBAR
+        ========================= */}
 
-        <div style={styles.topbar}>
+        <div style={{
+          ...styles.topbar,
+          height:
+            isMobile
+            ? 58
+            : 64
+        }}>
 
           <div style={{
             display:"flex",
@@ -214,7 +288,7 @@ export default function AppLayout(){
             gap:14
           }}>
 
-            {/* HAMBURGUESA */}
+            {/* HAMBURGER */}
 
             {isMobile && (
 
@@ -229,7 +303,13 @@ export default function AppLayout(){
 
             )}
 
-            <div style={styles.topbarTitle}>
+            <div style={{
+              ...styles.topbarTitle,
+              fontSize:
+                isMobile
+                ? 14
+                : 16
+            }}>
               Plataforma ECOS
             </div>
 
@@ -264,11 +344,14 @@ export default function AppLayout(){
 
         </div>
 
-        {/* CONTENT */}
+        {/* =========================
+        CONTENT
+        ========================= */}
 
         <div style={{
           ...styles.content,
-          padding:isMobile
+          padding:
+            isMobile
             ? 16
             : "30px 40px"
         }}>
@@ -288,6 +371,10 @@ export default function AppLayout(){
   )
 
 }
+
+/* =========================
+STYLES
+========================= */
 
 const styles:any={
 
@@ -455,8 +542,6 @@ const styles:any={
 
   topbar:{
 
-    height:64,
-
     background:
       "rgba(15,23,42,0.92)",
 
@@ -469,7 +554,7 @@ const styles:any={
 
     justifyContent:"space-between",
 
-    padding:"0 20px",
+    padding:"0 18px",
 
     backdropFilter:"blur(10px)"
 
@@ -491,15 +576,19 @@ const styles:any={
 
     fontSize:22,
 
-    cursor:"pointer"
+    cursor:"pointer",
+
+    display:"flex",
+
+    alignItems:"center",
+
+    justifyContent:"center"
 
   },
 
   topbarTitle:{
 
     fontWeight:700,
-
-    fontSize:16,
 
     color:"#ffffff"
 
@@ -511,7 +600,7 @@ const styles:any={
 
     alignItems:"center",
 
-    gap:16
+    gap:14
 
   },
 
