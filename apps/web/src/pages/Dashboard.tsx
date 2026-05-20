@@ -73,23 +73,23 @@ export default function Dashboard(){
 
   function getKPIs(){
 
-    const map:any = {}
+    let verde = 0
+    let amarillo = 0
+    let rojo = 0
 
-    results.forEach(r=>{
+    const participantMap:any = {}
+
+    results.forEach((r:any)=>{
 
       const pid = r.participantId
 
-      if(!map[pid]){
+      if(!participantMap[pid]){
 
-        map[pid] = []
+        participantMap[pid] = []
 
       }
 
       const raw = parse(r)
-
-      /* =========================
-      SCORE REAL
-      ========================= */
 
       const score = Number(
 
@@ -100,43 +100,30 @@ export default function Dashboard(){
 
       )
 
-      /* =========================
-      ESTADO
-      ========================= */
-
-      let color = "VERDE"
-
-      if(score < 55){
-
-        color = "ROJO"
-
-      }else if(score < 85){
-
-        color = "AMARILLO"
-
-      }
-
-      map[pid].push(color)
+      participantMap[pid].push(score)
 
     })
 
-    let verde = 0
-    let amarillo = 0
-    let rojo = 0
+    Object.values(participantMap).forEach((scores:any)=>{
 
-    Object.values(map).forEach((colors:any)=>{
+      const avg =
 
-      if(colors.includes("ROJO")){
+        scores.reduce(
+          (a:number,b:number)=>a+b,
+          0
+        ) / scores.length
 
-        rojo++
+      if(avg >= 85){
 
-      }else if(colors.includes("AMARILLO")){
+        verde++
+
+      }else if(avg >= 55){
 
         amarillo++
 
       }else{
 
-        verde++
+        rojo++
 
       }
 
@@ -145,7 +132,7 @@ export default function Dashboard(){
     const total = participants.length
 
     const rendidos =
-      Object.keys(map).length
+      Object.keys(participantMap).length
 
     const pendientes =
       total - rendidos
@@ -306,8 +293,6 @@ export default function Dashboard(){
         Dashboard ECOS
       </h1>
 
-      {/* KPI */}
-
       <div style={styles.kpiGrid}>
 
         <KPI
@@ -344,8 +329,6 @@ export default function Dashboard(){
         />
 
       </div>
-
-      {/* GRAFICOS */}
 
       <div style={styles.grid}>
 
@@ -506,8 +489,6 @@ const pieOptions:any = {
   }
 
 }
-
-/* STYLES */
 
 const styles:any = {
 
