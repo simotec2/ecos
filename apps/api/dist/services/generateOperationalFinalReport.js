@@ -5,6 +5,99 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateOperationalFinalReport = generateOperationalFinalReport;
 const db_1 = __importDefault(require("../db"));
+const finalOperationalAI_1 = require("./finalOperationalAI");
+const competencyActions = {
+    "Comunicación preventiva": {
+        risks: [
+            "Posibles desviaciones en transmisión de información crítica.",
+            "Riesgo de descoordinación operacional en tareas grupales."
+        ],
+        followUp: [
+            "Retroalimentación semanal en reuniones preturno.",
+            "Observación directa en interacción con cuadrillas."
+        ],
+        courses: [
+            "Comunicación efectiva en operaciones mineras.",
+            "Coordinación operacional segura."
+        ],
+        supervisor: "Verificar comprensión de instrucciones críticas y fomentar comunicación activa durante actividades operacionales."
+    },
+    "Trabajo en equipo": {
+        risks: [
+            "Dificultades de coordinación en tareas colaborativas.",
+            "Posibles desviaciones durante actividades grupales."
+        ],
+        followUp: [
+            "Seguimiento en integración operacional.",
+            "Observación de interacción con equipos de trabajo."
+        ],
+        courses: [
+            "Trabajo colaborativo en minería.",
+            "Coordinación segura de tareas críticas."
+        ],
+        supervisor: "Favorecer integración progresiva en equipos de trabajo y reforzar comunicación entre pares."
+    },
+    "Identificación de riesgos": {
+        risks: [
+            "Riesgo de exposición frente a condiciones inseguras.",
+            "Posibles dificultades en reconocimiento preventivo de riesgos."
+        ],
+        followUp: [
+            "Refuerzo preventivo en terreno.",
+            "Acompañamiento en identificación de riesgos críticos."
+        ],
+        courses: [
+            "Identificación de peligros y evaluación de riesgos.",
+            "Control preventivo operacional."
+        ],
+        supervisor: "Reforzar observación preventiva y validación de riesgos antes de iniciar tareas."
+    },
+    "Conducta preventiva": {
+        risks: [
+            "Variabilidad conductual frente a exigencias operacionales.",
+            "Posibles desviaciones en adherencia preventiva."
+        ],
+        followUp: [
+            "Observación conductual en terreno.",
+            "Seguimiento preventivo inicial."
+        ],
+        courses: [
+            "Conductas seguras en minería.",
+            "Cultura preventiva operacional."
+        ],
+        supervisor: "Mantener seguimiento cercano sobre adherencia a procedimientos y conductas preventivas."
+    },
+    "Análisis operacional": {
+        risks: [
+            "Posibles desviaciones asociadas a interpretación de procedimientos.",
+            "Riesgo operacional frente a escenarios dinámicos."
+        ],
+        followUp: [
+            "Validación periódica de procedimientos.",
+            "Acompañamiento en planificación de tareas."
+        ],
+        courses: [
+            "Análisis seguro de tareas.",
+            "Procedimientos críticos y control operacional."
+        ],
+        supervisor: "Validar comprensión procedimental y reforzar planificación preventiva."
+    },
+    "Liderazgo preventivo": {
+        risks: [
+            "Dificultades en intervención preventiva oportuna.",
+            "Posible baja consistencia en control operacional."
+        ],
+        followUp: [
+            "Coaching preventivo en liderazgo operacional.",
+            "Refuerzo en toma de decisiones preventivas."
+        ],
+        courses: [
+            "Liderazgo preventivo en minería.",
+            "Gestión de equipos y seguridad operacional."
+        ],
+        supervisor: "Potenciar autonomía preventiva y reforzar liderazgo en escenarios críticos."
+    }
+};
 async function generateOperationalFinalReport(participantId) {
     const participant = await db_1.default.participant.findUnique({
         where: {
@@ -58,17 +151,17 @@ async function generateOperationalFinalReport(participantId) {
         });
     });
     /* ======================================
-    SCORE GENERAL
+    SCORE
     ====================================== */
     const score = results.length
         ? Math.round(results.reduce((acc, r) => acc + (r.score || 0), 0) / results.length)
         : 0;
     /* ======================================
-    RESULTADO FINAL
+    TRAFFIC
     ====================================== */
     let traffic = {
         color: "ROJO",
-        result: "AUN NO RECOMENDABLE"
+        result: "NO RECOMENDABLE"
     };
     if (score >= 85) {
         traffic = {
@@ -79,145 +172,113 @@ async function generateOperationalFinalReport(participantId) {
     else if (score >= 55) {
         traffic = {
             color: "AMARILLO",
-            result: "RECOMENDABLE CON SEGUIMIENTO"
+            result: "RECOMENDABLE CON OBSERVACIONES"
         };
     }
     /* ======================================
-    TOP FORTALEZAS
+    TOPS
     ====================================== */
     const topStrengths = [...competencies]
         .sort((a, b) => b.score - a.score)
         .slice(0, 3);
-    /* ======================================
-    TOP BRECHAS
-    ====================================== */
     const topGaps = [...competencies]
         .sort((a, b) => a.score - b.score)
         .slice(0, 3);
     /* ======================================
-    HTML FORTALEZAS
+    HTML
     ====================================== */
     const strengthsHTML = topStrengths.map((c) => `
 
       • ${c.name} (${c.score}%)
 
     `).join("<br/>");
-    /* ======================================
-    HTML BRECHAS
-    ====================================== */
     const gapsHTML = topGaps.map((c) => `
 
       • ${c.name} (${c.score}%)
 
     `).join("<br/>");
     /* ======================================
-    PERFIL
+    PROFILE
     ====================================== */
     const profile = participant.perfil ||
         "Operador";
-    const isSupervisor = String(profile)
-        .toLowerCase()
-        .includes("supervisor");
     /* ======================================
-    SÍNTESIS EJECUTIVA IA
+    IA FINAL
     ====================================== */
-    const strengthsText = topStrengths
-        .map((s) => s.name.toLowerCase())
-        .join(", ");
-    const gapsText = topGaps
-        .map((g) => g.name.toLowerCase())
-        .join(", ");
-    let executiveSummary = "";
-    if (isSupervisor) {
-        executiveSummary = `
-
-El participante presenta un desempeño ${score >= 85
-            ? "sólido"
-            : score >= 55
-                ? "adecuado con observaciones"
-                : "con exposición relevante"} en competencias asociadas a liderazgo preventivo y control operacional.
-
-Destacan fortalezas relacionadas con ${strengthsText}, favoreciendo la supervisión de tareas críticas y la gestión preventiva de equipos.
-
-No obstante, persisten oportunidades de mejora vinculadas a ${gapsText}, las cuales podrían afectar la consistencia del liderazgo operacional bajo escenarios de presión y alta exigencia operacional.
-
-    `.trim();
-    }
-    else {
-        executiveSummary = `
-
-El participante presenta un desempeño ${score >= 85
-            ? "sólido"
-            : score >= 55
-                ? "adecuado con observaciones"
-                : "con exposición relevante"} en competencias asociadas a seguridad operacional y ejecución segura de tareas críticas.
-
-Se observan fortalezas relacionadas con ${strengthsText}, favoreciendo la adherencia preventiva y el cumplimiento operacional.
-
-Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionadas con ${gapsText}, las cuales podrían afectar la consistencia conductual bajo condiciones de presión operacional.
-
-    `.trim();
-    }
-    /* ======================================
-    RIESGOS POTENCIALES
-    ====================================== */
-    const risks = [];
-    topGaps.forEach((g) => {
-        const name = String(g.name || "")
-            .toLowerCase();
-        if (name.includes("equipo")) {
-            risks.push("Dificultades de coordinación en tareas grupales.");
-        }
-        if (name.includes("comunic")) {
-            risks.push("Riesgo de desviaciones asociadas a comunicación operacional insuficiente.");
-        }
-        if (name.includes("conduct")) {
-            risks.push("Variabilidad conductual frente a escenarios operacionales exigentes.");
-        }
-        if (name.includes("proced")) {
-            risks.push("Posibles desviaciones asociadas a cumplimiento procedimental.");
-        }
+    const aiInsights = await (0, finalOperationalAI_1.generateFinalOperationalAI)({
+        profile,
+        score,
+        traffic,
+        competencies,
+        evaluations: results.map((r) => ({
+            type: r.evaluation?.name,
+            score: r.score
+        }))
     });
-    if (!risks.length) {
-        risks.push("No se observan factores críticos de exposición operacional inmediata.");
-    }
     /* ======================================
-    SEGUIMIENTO
+    REGLAS OPERACIONALES
     ====================================== */
-    const followUp = isSupervisor
-        ? [
-            "Seguimiento en liderazgo preventivo.",
-            "Refuerzo de control operacional.",
-            "Acompañamiento inicial en gestión preventiva."
-        ]
-        : [
-            "Observación conductual en terreno.",
-            "Refuerzo preventivo inicial.",
-            "Seguimiento operacional durante periodo de adaptación."
-        ];
+    const dynamicRisks = [];
+    const dynamicFollowUp = [];
+    const dynamicCourses = [];
+    const dynamicSupervisor = [];
+    topGaps.forEach((gap) => {
+        const config = competencyActions[gap.name];
+        if (!config)
+            return;
+        dynamicRisks.push(...config.risks);
+        dynamicFollowUp.push(...config.followUp);
+        dynamicCourses.push(...config.courses);
+        dynamicSupervisor.push(config.supervisor);
+    });
     /* ======================================
-    EVALUATION CARDS
+    IA + REGLAS
+    ====================================== */
+    const executiveSummary = aiInsights.executiveSummary || "";
+    const operationalImpact = aiInsights.operationalImpact || "";
+    const risks = [
+        ...(aiInsights.exposureFactors || []),
+        ...dynamicRisks
+    ];
+    const followUp = [
+        ...(aiInsights.developmentPlan || []),
+        ...dynamicFollowUp
+    ];
+    const recommendedCourses = [
+        ...(aiInsights.recommendedCourses || []),
+        ...dynamicCourses
+    ];
+    const supervisorAdvice = `
+
+${aiInsights.supervisorAdvice || ""}
+
+${dynamicSupervisor.join(" ")}
+
+`;
+    const finalConclusion = aiInsights.finalConclusion || "";
+    /* ======================================
+    CARDS
     ====================================== */
     const evaluationsCards = results.map((r) => {
         const score = Math.round(r.score || 0);
-        let color = "#ee0f0f";
-        let label = "Aun No Recomendable";
+        let color = "#dc2626";
+        let label = "NO RECOMENDABLE";
         if (score >= 85) {
-            color = "#0fe22b";
+            color = "#16a34a";
             label =
-                "Recomendable";
+                "RECOMENDABLE";
         }
         else if (score >= 55) {
-            color = "#f5e509";
+            color = "#d97706";
             label =
-                "Recomendable con Seguimiento";
+                "RECOMENDABLE CON OBSERVACIONES";
         }
         return `
 
         <div class="kpi">
 
           <div class="kpi-title">
-            ${r.evaluation?.name || "Evaluación"}
+            ${r.evaluation?.name || ""}
           </div>
 
           <div
@@ -239,42 +300,26 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
       `;
     }).join("");
     /* ======================================
-    CURSOS RECOMENDADOS
+    COURSES
     ====================================== */
-    const recommendedCourses = [];
-    topGaps.forEach((gap) => {
-        const name = String(gap.name || "")
-            .toLowerCase();
-        if (name.includes("riesgo")) {
-            recommendedCourses.push("Curso Identificación de Peligros y Control de Riesgos");
-        }
-        if (name.includes("proced")) {
-            recommendedCourses.push("Curso Procedimientos Críticos de Trabajo");
-        }
-        if (name.includes("comun")) {
-            recommendedCourses.push("Curso Comunicación Efectiva en Minería");
-        }
-        if (name.includes("equipo")) {
-            recommendedCourses.push("Curso Trabajo en Equipo Operacional");
-        }
-        if (name.includes("conduct")) {
-            recommendedCourses.push("Curso Conductas Seguras y Cultura Preventiva");
-        }
-    });
     const uniqueCourses = [...new Set(recommendedCourses)];
     const coursesHTML = uniqueCourses.length
-        ? uniqueCourses.map(course => `
+        ? uniqueCourses.map((course) => `
 
           <li>${course}</li>
 
         `).join("")
         : `
           <li>
-            Curso Seguridad Minera Operacional
+            Seguridad minera operacional
           </li>
         `;
     /* ======================================
-    PLAN DESARROLLO
+    FOLLOW UP
+    ====================================== */
+    const uniqueFollowUp = [...new Set(followUp)];
+    /* ======================================
+    DEVELOPMENT PLAN
     ====================================== */
     const developmentPlan = `
 
@@ -290,8 +335,8 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
 
           <ul>
 
-            ${followUp
-        .map(item => `
+            ${uniqueFollowUp
+        .map((item) => `
                 <li>${item}</li>
               `)
         .join("")}
@@ -324,7 +369,7 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
 
   `;
     /* ======================================
-    RESUMEN EJECUTIVO
+    SUMMARY
     ====================================== */
     const supervisorSummary = `
 
@@ -340,59 +385,33 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
 
     </div>
 
-    <div class="summary-grid">
+    <div class="alert-box">
 
-      <div class="good-box">
-
-        <div class="summary-title green">
-          Fortalezas observadas
-        </div>
-
-        <div class="text">
-          ${strengthsHTML}
-        </div>
-
+      <div class="alert-title">
+        Impacto operacional observado
       </div>
 
-      <div class="bad-box">
-
-        <div class="summary-title red">
-          Brechas prioritarias
-        </div>
-
-        <div class="text">
-          ${gapsHTML}
-        </div>
-
+      <div class="text">
+        ${operationalImpact}
       </div>
 
     </div>
 
-    <div class="alert-box">
+    <div class="good-box">
 
-      <div class="alert-title">
-        Riesgos potenciales observados
+      <div class="summary-title">
+        Orientación para supervisión
       </div>
 
       <div class="text">
-
-        <ul>
-
-          ${risks
-        .map(r => `
-              <li>${r}</li>
-            `)
-        .join("")}
-
-        </ul>
-
+        ${supervisorAdvice}
       </div>
 
     </div>
 
   `;
     /* ======================================
-    RESPALDO EMPLEADOR
+    EMPLOYER SUPPORT
     ====================================== */
     const employerSupport = `
 
@@ -401,23 +420,12 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
       <div class="legal-card">
 
         <div class="legal-title">
-          Reducción de costos
-        </div>
-
-        <div class="legal-text">
-          Prevención de accidentes y pérdidas operacionales.
-        </div>
-
-      </div>
-
-      <div class="legal-card">
-
-        <div class="legal-title">
           Continuidad operacional
         </div>
 
         <div class="legal-text">
-          Disminuye interrupciones y exposición operacional.
+          Favorece procesos preventivos
+          y reducción de exposición operacional.
         </div>
 
       </div>
@@ -425,11 +433,12 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
       <div class="legal-card">
 
         <div class="legal-title">
-          Alineamiento preventivo
+          Respaldo preventivo
         </div>
 
         <div class="legal-text">
-          Compatible con estándares de seguridad minera.
+          Evidencia objetiva para procesos
+          de incorporación y seguimiento.
         </div>
 
       </div>
@@ -437,11 +446,25 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
       <div class="legal-card">
 
         <div class="legal-title">
-          Respaldo documental
+          Gestión de riesgo
         </div>
 
         <div class="legal-text">
-          Evidencia objetiva para procesos de incorporación.
+          Permite detectar oportunidades
+          de mejora preventiva.
+        </div>
+
+      </div>
+
+      <div class="legal-card">
+
+        <div class="legal-title">
+          Seguridad operacional
+        </div>
+
+        <div class="legal-text">
+          Compatible con estándares
+          preventivos mineros.
         </div>
 
       </div>
@@ -477,27 +500,44 @@ Sin perjuicio de lo anterior, se identifican oportunidades de mejora relacionada
         employerSupport,
         operationalExposureAnalysis: `
 
-    <div class="alert-box">
+      <div class="alert-box">
 
-      <div class="alert-title">
-        Factores observados
-      </div>
+        <div class="alert-title">
+          Factores de exposición operacional
+        </div>
 
-      <div class="text">
+        <div class="text">
 
-        ${risks.length
-            ? risks.map(r => `
-                • ${r}<br/>
-              `).join("")
+          <ul>
+
+            ${risks.length
+            ? [...new Set(risks)]
+                .map((r) => `
+                      <li>${r}</li>
+                    `).join("")
             : `
-                No se observan factores críticos
-                de exposición operacional inmediata.
-              `}
+                    <li>
+                      No se observan factores críticos
+                      de exposición operacional inmediata.
+                    </li>
+                  `}
+
+          </ul>
+
+          <br/>
+
+          <strong>
+            Conclusión operacional:
+          </strong>
+
+          <br/><br/>
+
+          ${finalConclusion}
+
+        </div>
 
       </div>
 
-    </div>
-
-  `
+    `
     };
 }

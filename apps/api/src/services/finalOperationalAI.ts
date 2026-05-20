@@ -170,10 +170,21 @@ conductual operacional.
 
   }catch(err){
 
-    console.error(
-      "ERROR FINAL AI:",
-      err
-    )
+    console.error("================================")
+console.error("ERROR FINAL AI")
+console.error("================================")
+
+console.error(err)
+
+if(err instanceof Error){
+
+  console.error("MESSAGE:")
+  console.error(err.message)
+
+  console.error("STACK:")
+  console.error(err.stack)
+
+}
 
     return {
 

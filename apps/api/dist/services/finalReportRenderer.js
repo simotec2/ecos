@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.renderFinalReportHTML = renderFinalReportHTML;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const safeText_1 = require("../utils/safeText");
 function getColor(color) {
     if (color === "VERDE") {
         return "#16a34a";
@@ -25,13 +26,13 @@ async function renderFinalReportHTML(data) {
     PARTICIPANTE
     ====================================== */
     const participant = data.participant || {};
-    const participantProfile = participant.perfil ||
+    const participantProfile = (0, safeText_1.safeText)(participant.perfil ||
         participant.profile ||
-        "";
+        "");
     /* ======================================
     FECHA REAL
     ====================================== */
-    const reportDate = String(data.date || "");
+    const reportDate = (0, safeText_1.safeText)(data.date || "");
     console.log("FINAL REPORT:", {
         participant,
         participantProfile,
@@ -53,22 +54,25 @@ async function renderFinalReportHTML(data) {
     /* ======================================
     ANALISIS
     ====================================== */
-    const analysis = (data.analysis || "").replace(/\n/g, "<br/>");
+    const analysis = (0, safeText_1.safeText)(data.analysis).replace(/\n/g, "<br/>");
     /* ======================================
     RADAR
     ====================================== */
-    const radar = data.radar || "";
+    const radar = (0, safeText_1.safeText)(data.radar || "");
     /* ======================================
     REEMPLAZOS
     ====================================== */
     html = html
         .replace(/{{logo}}/gi, logo)
-        .replace(/{{participant}}/gi, `${participant.nombre || ""} ${participant.apellido || ""}`)
+        .replace(/{{participant}}/gi, `
+      ${(0, safeText_1.safeText)(participant.nombre)}
+      ${(0, safeText_1.safeText)(participant.apellido)}
+      `)
         .replace(/{{profile}}/gi, participantProfile)
-        .replace(/{{company}}/gi, participant.company?.name || "")
+        .replace(/{{company}}/gi, (0, safeText_1.safeText)(participant.company?.name || ""))
         .replace(/{{date}}/gi, reportDate)
-        .replace(/{{score}}/gi, String(data.score || 0))
-        .replace(/{{result}}/gi, data.traffic?.result || "")
+        .replace(/{{score}}/gi, (0, safeText_1.safeText)(data.score || 0))
+        .replace(/{{result}}/gi, (0, safeText_1.safeText)(data.traffic?.result || ""))
         .replace(/{{color}}/gi, getColor(data.traffic?.color))
         .replace(/{{analysis}}/gi, analysis)
         .replace(/{{radar}}/gi, radar);

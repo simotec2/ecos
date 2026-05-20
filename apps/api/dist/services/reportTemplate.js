@@ -1,8 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateReportHTML = generateReportHTML;
+const safeText_1 = require("../utils/safeText");
 function generateReportHTML(report) {
-    const data = JSON.parse(report.resultJson || "{}");
+    let data = {};
+    try {
+        data =
+            typeof report.resultJson === "string"
+                ? JSON.parse(report.resultJson || "{}")
+                : report.resultJson || {};
+    }
+    catch (error) {
+        console.error("ERROR PARSING RESULT JSON:", error);
+        data = {};
+    }
     return `
   <html>
   <head>
@@ -62,37 +73,71 @@ function generateReportHTML(report) {
     <h1>Informe ECOS</h1>
 
     <div class="section card">
-      <div><b>Participante:</b> ${report.participant?.nombre} ${report.participant?.apellido}</div>
-      <div><b>Empresa:</b> ${report.participant?.company?.name || "N/A"}</div>
-      <div><b>Evaluación:</b> ${report.evaluation?.name}</div>
+      <div>
+        <b>Participante:</b>
+        ${(0, safeText_1.safeText)(report.participant?.nombre)}
+        ${(0, safeText_1.safeText)(report.participant?.apellido)}
+      </div>
+
+      <div>
+        <b>Empresa:</b>
+        ${(0, safeText_1.safeText)(report.participant?.company?.name || "N/A")}
+      </div>
+
+      <div>
+        <b>Evaluación:</b>
+        ${(0, safeText_1.safeText)(report.evaluation?.name)}
+      </div>
 
       <div class="score">
-        <b>Puntaje:</b> ${data.score}%
+        <b>Puntaje:</b>
+        ${(0, safeText_1.safeText)(data.score)}%
       </div>
 
-      <div class="badge ${data.traffic?.color === "VERDE" ? "verde" :
-        data.traffic?.color === "AMARILLO" ? "amarillo" : "rojo"}">
-        ${data.traffic?.result}
+      <div class="badge ${data.traffic?.color === "VERDE"
+        ? "verde"
+        : data.traffic?.color === "AMARILLO"
+            ? "amarillo"
+            : "rojo"}">
+        ${(0, safeText_1.safeText)(data.traffic?.result)}
       </div>
     </div>
 
     <div class="section">
-      <div class="title"><b>Análisis General</b></div>
+      <div class="title">
+        <b>Análisis General</b>
+      </div>
+
       <div class="card">
-        ${data.aiText || ""}
+        ${(0, safeText_1.safeText)(data.aiText)
+        .replace(/\n/g, "<br/>")}
       </div>
     </div>
 
     <div class="section">
-      <div class="title"><b>Competencias</b></div>
 
-      ${(data.competencies || []).map((c) => `
+      <div class="title">
+        <b>Competencias</b>
+      </div>
+
+      ${(data.competencies || [])
+        .map((c) => `
+
           <div class="card competency">
-            <b>${c.name}</b><br/>
-            Nivel: ${c.level} <br/>
-            Puntaje: ${c.score}%
+
+            <b>${(0, safeText_1.safeText)(c.name)}</b><br/>
+
+            Nivel:
+            ${(0, safeText_1.safeText)(c.level)}
+            <br/>
+
+            Puntaje:
+            ${(0, safeText_1.safeText)(c.score)}%
+
           </div>
-        `).join("")}
+
+        `)
+        .join("")}
 
     </div>
 

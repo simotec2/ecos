@@ -3,6 +3,142 @@ import prisma from "../db"
 import { generateFinalOperationalAI }
 from "./finalOperationalAI"
 
+const competencyActions:any = {
+
+  "Comunicación preventiva": {
+
+    risks:[
+      "Posibles desviaciones en transmisión de información crítica.",
+      "Riesgo de descoordinación operacional en tareas grupales."
+    ],
+
+    followUp:[
+      "Retroalimentación semanal en reuniones preturno.",
+      "Observación directa en interacción con cuadrillas."
+    ],
+
+    courses:[
+      "Comunicación efectiva en operaciones mineras.",
+      "Coordinación operacional segura."
+    ],
+
+    supervisor:
+      "Verificar comprensión de instrucciones críticas y fomentar comunicación activa durante actividades operacionales."
+
+  },
+
+  "Trabajo en equipo": {
+
+    risks:[
+      "Dificultades de coordinación en tareas colaborativas.",
+      "Posibles desviaciones durante actividades grupales."
+    ],
+
+    followUp:[
+      "Seguimiento en integración operacional.",
+      "Observación de interacción con equipos de trabajo."
+    ],
+
+    courses:[
+      "Trabajo colaborativo en minería.",
+      "Coordinación segura de tareas críticas."
+    ],
+
+    supervisor:
+      "Favorecer integración progresiva en equipos de trabajo y reforzar comunicación entre pares."
+
+  },
+
+  "Identificación de riesgos": {
+
+    risks:[
+      "Riesgo de exposición frente a condiciones inseguras.",
+      "Posibles dificultades en reconocimiento preventivo de riesgos."
+    ],
+
+    followUp:[
+      "Refuerzo preventivo en terreno.",
+      "Acompañamiento en identificación de riesgos críticos."
+    ],
+
+    courses:[
+      "Identificación de peligros y evaluación de riesgos.",
+      "Control preventivo operacional."
+    ],
+
+    supervisor:
+      "Reforzar observación preventiva y validación de riesgos antes de iniciar tareas."
+
+  },
+
+  "Conducta preventiva": {
+
+    risks:[
+      "Variabilidad conductual frente a exigencias operacionales.",
+      "Posibles desviaciones en adherencia preventiva."
+    ],
+
+    followUp:[
+      "Observación conductual en terreno.",
+      "Seguimiento preventivo inicial."
+    ],
+
+    courses:[
+      "Conductas seguras en minería.",
+      "Cultura preventiva operacional."
+    ],
+
+    supervisor:
+      "Mantener seguimiento cercano sobre adherencia a procedimientos y conductas preventivas."
+
+  },
+
+  "Análisis operacional": {
+
+    risks:[
+      "Posibles desviaciones asociadas a interpretación de procedimientos.",
+      "Riesgo operacional frente a escenarios dinámicos."
+    ],
+
+    followUp:[
+      "Validación periódica de procedimientos.",
+      "Acompañamiento en planificación de tareas."
+    ],
+
+    courses:[
+      "Análisis seguro de tareas.",
+      "Procedimientos críticos y control operacional."
+    ],
+
+    supervisor:
+      "Validar comprensión procedimental y reforzar planificación preventiva."
+
+  },
+
+  "Liderazgo preventivo": {
+
+    risks:[
+      "Dificultades en intervención preventiva oportuna.",
+      "Posible baja consistencia en control operacional."
+    ],
+
+    followUp:[
+      "Coaching preventivo en liderazgo operacional.",
+      "Refuerzo en toma de decisiones preventivas."
+    ],
+
+    courses:[
+      "Liderazgo preventivo en minería.",
+      "Gestión de equipos y seguridad operacional."
+    ],
+
+    supervisor:
+      "Potenciar autonomía preventiva y reforzar liderazgo en escenarios críticos."
+
+  }
+
+}
+
 export async function generateOperationalFinalReport(
   participantId:string
 ){
@@ -208,7 +344,7 @@ export async function generateOperationalFinalReport(
     "Operador"
 
   /* ======================================
-  IA FINAL PREMIUM
+  IA FINAL
   ====================================== */
 
   const aiInsights =
@@ -235,23 +371,81 @@ export async function generateOperationalFinalReport(
 
     })
 
+  /* ======================================
+  REGLAS OPERACIONALES
+  ====================================== */
+
+  const dynamicRisks:string[] = []
+  const dynamicFollowUp:string[] = []
+  const dynamicCourses:string[] = []
+  const dynamicSupervisor:string[] = []
+
+  topGaps.forEach((gap:any)=>{
+
+    const config =
+      competencyActions[gap.name]
+
+    if(!config) return
+
+    dynamicRisks.push(
+      ...config.risks
+    )
+
+    dynamicFollowUp.push(
+      ...config.followUp
+    )
+
+    dynamicCourses.push(
+      ...config.courses
+    )
+
+    dynamicSupervisor.push(
+      config.supervisor
+    )
+
+  })
+
+  /* ======================================
+  IA + REGLAS
+  ====================================== */
+
   const executiveSummary =
     aiInsights.executiveSummary || ""
 
   const operationalImpact =
     aiInsights.operationalImpact || ""
 
-  const risks =
-    aiInsights.exposureFactors || []
+  const risks = [
 
-  const followUp =
-    aiInsights.developmentPlan || []
+    ...(aiInsights.exposureFactors || []),
 
-  const recommendedCourses =
-    aiInsights.recommendedCourses || []
+    ...dynamicRisks
 
-  const supervisorAdvice =
-    aiInsights.supervisorAdvice || ""
+  ]
+
+  const followUp = [
+
+    ...(aiInsights.developmentPlan || []),
+
+    ...dynamicFollowUp
+
+  ]
+
+  const recommendedCourses = [
+
+    ...(aiInsights.recommendedCourses || []),
+
+    ...dynamicCourses
+
+  ]
+
+  const supervisorAdvice = `
+
+${aiInsights.supervisorAdvice || ""}
+
+${dynamicSupervisor.join(" ")}
+
+`
 
   const finalConclusion =
     aiInsights.finalConclusion || ""
@@ -341,6 +535,13 @@ export async function generateOperationalFinalReport(
         `
 
   /* ======================================
+  FOLLOW UP
+  ====================================== */
+
+  const uniqueFollowUp =
+    [...new Set(followUp)]
+
+  /* ======================================
   DEVELOPMENT PLAN
   ====================================== */
 
@@ -358,7 +559,7 @@ export async function generateOperationalFinalReport(
 
           <ul>
 
-            ${followUp
+            ${uniqueFollowUp
               .map((item:string)=>`
                 <li>${item}</li>
               `)
@@ -567,9 +768,10 @@ export async function generateOperationalFinalReport(
             ${
               risks.length
 
-                ? risks.map((r:string)=>`
-                    <li>${r}</li>
-                  `).join("")
+                ? [...new Set(risks)]
+                    .map((r:string)=>`
+                      <li>${r}</li>
+                    `).join("")
 
                 : `
                     <li>

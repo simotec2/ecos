@@ -7,6 +7,7 @@ exports.renderReportHTML = renderReportHTML;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const radarGenerator_1 = require("./radarGenerator");
+const safeText_1 = require("../utils/safeText");
 /* ======================================
 MAPA NOMBRES
 ====================================== */
@@ -19,7 +20,7 @@ const evaluationLabels = {
 UTILS
 ====================================== */
 function clean(text) {
-    return (text || "")
+    return (0, safeText_1.safeText)(text)
         .replace(/[#*]/g, "")
         .replace(/\n/g, "<br/>")
         .trim();

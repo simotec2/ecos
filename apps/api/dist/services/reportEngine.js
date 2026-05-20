@@ -39,23 +39,39 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateEvaluationReport = generateEvaluationReport;
 const db_1 = __importDefault(require("../db"));
 const ai = __importStar(require("./aiEngine"));
+const safeText_1 = require("../utils/safeText");
 /* ======================================
 UTILS
 ====================================== */
 function normalize(value) {
-    return (value || "").toLowerCase().trim();
+    return (0, safeText_1.safeText)(value)
+        .toLowerCase()
+        .trim();
 }
 function calculateTrafficLight(score) {
-    if (score >= 85)
-        return { color: "VERDE", result: "RECOMENDABLE" };
-    if (score >= 55)
-        return { color: "AMARILLO", result: "RECOMENDABLE CON OBSERVACIONES" };
-    return { color: "ROJO", result: "NO RECOMENDABLE" };
+    if (score >= 85) {
+        return {
+            color: "VERDE",
+            result: "RECOMENDABLE"
+        };
+    }
+    if (score >= 55) {
+        return {
+            color: "AMARILLO",
+            result: "RECOMENDABLE CON OBSERVACIONES"
+        };
+    }
+    return {
+        color: "ROJO",
+        result: "NO RECOMENDABLE"
+    };
 }
 function mapLikert(value) {
     if (!value)
         return 0;
-    const v = String(value).toLowerCase().trim();
+    const v = (0, safeText_1.safeText)(value)
+        .toLowerCase()
+        .trim();
     if (v.includes("nunca"))
         return 0;
     if (v.includes("casi nunca"))
@@ -86,12 +102,21 @@ async function generateEvaluationReport(sessionId) {
         where: { id: sessionId },
         include: {
             evaluation: true,
-            participant: { include: { company: true } },
-            answers: { include: { question: true } }
+            participant: {
+                include: {
+                    company: true
+                }
+            },
+            answers: {
+                include: {
+                    question: true
+                }
+            }
         }
     });
-    if (!session)
+    if (!session) {
         throw new Error("Sesión no encontrada");
+    }
     const type = session.evaluation.type;
     let score = 0;
     let competencies = [];
@@ -100,23 +125,25 @@ async function generateEvaluationReport(sessionId) {
         const results = await Promise.all(session.answers.map(async (a) => {
             let keywords = [];
             try {
-                keywords = typeof a.question.keywordsJson === "string"
-                    ? JSON.parse(a.question.keywordsJson)
-                    : a.question.keywordsJson || [];
+                keywords =
+                    typeof a.question.keywordsJson === "string"
+                        ? JSON.parse(a.question.keywordsJson)
+                        : a.question.keywordsJson || [];
             }
             catch {
                 keywords = [];
             }
-            const r = await ai.evaluateCompetencyAI(a.question.text, a.answer || "", keywords);
+            const r = await ai.evaluateCompetencyAI((0, safeText_1.safeText)(a.question.text), (0, safeText_1.safeText)(a.answer), keywords);
             return {
-                competency: a.question.competency || "General",
-                score: r.score || 30
+                competency: (0, safeText_1.safeText)(a.question.competency) || "General",
+                score: Number(r?.score) || 30
             };
         }));
         const grouped = {};
-        results.forEach(r => {
-            if (!grouped[r.competency])
+        results.forEach((r) => {
+            if (!grouped[r.competency]) {
                 grouped[r.competency] = [];
+            }
             grouped[r.competency].push(r.score);
         });
         competencies = Object.entries(grouped).map(([name, arr]) => ({
@@ -130,11 +157,12 @@ async function generateEvaluationReport(sessionId) {
     /* ================= ICOM ================= */
     if (type === "ICOM") {
         const grouped = {};
-        session.answers.forEach(a => {
-            const val = mapLikert(a.answer || "");
-            const comp = a.question.competency || "General";
-            if (!grouped[comp])
+        session.answers.forEach((a) => {
+            const val = mapLikert(a.answer);
+            const comp = (0, safeText_1.safeText)(a.question.competency) || "General";
+            if (!grouped[comp]) {
                 grouped[comp] = [];
+            }
             grouped[comp].push(val);
         });
         competencies = Object.entries(grouped).map(([name, arr]) => ({
@@ -148,18 +176,27 @@ async function generateEvaluationReport(sessionId) {
     /* ================= SECURITY ================= */
     if (type === "SECURITY") {
         const grouped = {};
-        session.answers.forEach(a => {
-            let user = normalize(a.answer || "");
-            const map = { "0": "a", "1": "b", "2": "c" };
-            if (map[user])
+        session.answers.forEach((a) => {
+            let user = normalize(a.answer);
+            const map = {
+                "0": "a",
+                "1": "b",
+                "2": "c",
+                "3": "d"
+            };
+            if (map[user]) {
                 user = map[user];
-            user = user.replace(/[^\w]/g, "");
-            let good = normalize(a.question.correctAnswer || "");
-            good = good.replace(/[^\w]/g, "");
+            }
+            user = (0, safeText_1.safeText)(user)
+                .replace(/[^\w]/g, "");
+            let good = normalize(a.question.correctAnswer);
+            good = (0, safeText_1.safeText)(good)
+                .replace(/[^\w]/g, "");
             const val = user === good ? 100 : 0;
-            const comp = a.question.competency || "General";
-            if (!grouped[comp])
+            const comp = (0, safeText_1.safeText)(a.question.competency) || "General";
+            if (!grouped[comp]) {
                 grouped[comp] = [];
+            }
             grouped[comp].push(val);
         });
         competencies = Object.entries(grouped).map(([name, arr]) => ({
@@ -171,35 +208,58 @@ async function generateEvaluationReport(sessionId) {
             : 0;
     }
     /* ================= LIMPIEZA ================= */
-    const clean = competencies.filter(c => !c.name.toLowerCase().includes("debe sumarse"));
+    const clean = competencies.filter((c) => !(0, safeText_1.safeText)(c.name)
+        .toLowerCase()
+        .includes("debe sumarse"));
     const traffic = calculateTrafficLight(score);
     const enriched = ai.enrichCompetencies(clean);
     const answersText = session.answers
-        .filter(a => a.answer && a.answer.trim().length > 0)
-        .map(a => ({
-        question: a.question.text,
-        answer: a.answer,
-        competency: a.question.competency
+        .filter((a) => (0, safeText_1.safeText)(a.answer)
+        .trim()
+        .length > 0)
+        .map((a) => ({
+        question: (0, safeText_1.safeText)(a.question.text),
+        answer: (0, safeText_1.safeText)(a.answer),
+        competency: (0, safeText_1.safeText)(a.question.competency)
     }));
+    /* ================= IA ================= */
     let aiText = "";
     try {
-        aiText = await ai.generateAIReport({
+        const aiResult = await ai.generateAIReport({
             score,
             competencies: enriched,
             type,
             traffic,
             answers: answersText
         });
+        // STRING
+        if (typeof aiResult === "string") {
+            aiText = aiResult;
+        }
+        // OBJETO IA
+        else if (typeof aiResult === "object") {
+            aiText = JSON.stringify(aiResult, null, 2);
+        }
+        // OTROS
+        else {
+            aiText = String(aiResult || "");
+        }
     }
     catch (error) {
         console.error("❌ ERROR IA:", error);
-        aiText = "No fue posible generar el análisis automático.";
+        aiText =
+            "No fue posible generar el análisis automático.";
     }
+    /* ================= EXTRA ================= */
     const recommendations = ai.generateRecommendations(enriched);
     const risk = ai.calculateRisk(score);
+    /* ================= DELETE OLD ================= */
     await db_1.default.evaluationResult.deleteMany({
-        where: { sessionId: session.id }
+        where: {
+            sessionId: session.id
+        }
     });
+    /* ================= SAVE ================= */
     return await db_1.default.evaluationResult.create({
         data: {
             sessionId: session.id,
