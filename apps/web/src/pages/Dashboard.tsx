@@ -32,26 +32,35 @@ export default function Dashboard(){
   },[])
 
   async function loadData(){
+
     try{
+
       const p = await apiFetch("/api/participants")
       const r = await apiFetch("/api/results")
 
       setParticipants(p || [])
       setResults(r || [])
+
     }catch(err){
+
       console.error(err)
+
     }
+
   }
 
   function parse(r:any){
+
     return typeof r.resultJson === "string"
       ? JSON.parse(r.resultJson)
       : r.resultJson
+
   }
 
   /* ===============================
-  KPI CONSOLIDADO POR PARTICIPANTE
+  KPI CONSOLIDADO
   =============================== */
+
   function getKPIs(){
 
     const map:any = {}
@@ -63,6 +72,7 @@ export default function Dashboard(){
       if(!map[pid]) map[pid] = []
 
       const raw = parse(r)
+
       map[pid].push(raw?.traffic?.color)
 
     })
@@ -83,12 +93,21 @@ export default function Dashboard(){
     const rendidos = Object.keys(map).length
     const pendientes = total - rendidos
 
-    return { total, rendidos, pendientes, verde, amarillo, rojo }
+    return {
+      total,
+      rendidos,
+      pendientes,
+      verde,
+      amarillo,
+      rojo
+    }
+
   }
 
   /* ===============================
-  COMPETENCIAS (PROMEDIO GLOBAL)
+  COMPETENCIAS
   =============================== */
+
   function getCompetencias(){
 
     const map:any = {}
@@ -96,6 +115,7 @@ export default function Dashboard(){
     results.forEach(r=>{
 
       const raw = parse(r)
+
       const comps = raw?.competencies || []
 
       comps.forEach((c:any)=>{
@@ -111,16 +131,28 @@ export default function Dashboard(){
     })
 
     const avg = Object.entries(map).map(([name,arr]:any)=>({
+
       name,
-      score: arr.reduce((a:number,b:number)=>a+b,0) / arr.length
+
+      score:
+        arr.reduce((a:number,b:number)=>a+b,0)
+        / arr.length
+
     }))
 
-    const sorted = avg.sort((a,b)=>b.score-a.score)
+    const sorted =
+      avg.sort((a,b)=>b.score-a.score)
 
     return {
-      top: sorted.slice(0,5),
-      bottom: sorted.slice(-5).reverse()
+
+      top:
+        sorted.slice(0,5),
+
+      bottom:
+        sorted.slice(-5).reverse()
+
     }
+
   }
 
   const kpi = getKPIs()
@@ -129,65 +161,165 @@ export default function Dashboard(){
   /* ===============================
   DATA GRAFICOS
   =============================== */
+
   const pieData = {
-    labels:["Verde","Amarillo","Rojo"],
+
+    labels:[
+      "Verde",
+      "Amarillo",
+      "Rojo"
+    ],
+
     datasets:[{
-      data:[kpi.verde, kpi.amarillo, kpi.rojo],
-      backgroundColor:["#16a34a","#eab308","#dc2626"]
+
+      data:[
+        kpi.verde,
+        kpi.amarillo,
+        kpi.rojo
+      ],
+
+      backgroundColor:[
+        "#16a34a",
+        "#eab308",
+        "#dc2626"
+      ],
+
+      borderWidth:0
+
     }]
+
   }
 
   const topBar = {
-    labels: comp.top.map(c=>c.name),
+
+    labels:
+      comp.top.map(c=>c.name),
+
     datasets:[{
-      data: comp.top.map(c=>c.score),
-      backgroundColor:"#2563eb"
+
+      data:
+        comp.top.map(c=>c.score),
+
+      backgroundColor:"#2563eb",
+
+      borderRadius:8
+
     }]
+
   }
 
   const bottomBar = {
-    labels: comp.bottom.map(c=>c.name),
+
+    labels:
+      comp.bottom.map(c=>c.name),
+
     datasets:[{
-      data: comp.bottom.map(c=>c.score),
-      backgroundColor:"#dc2626"
+
+      data:
+        comp.bottom.map(c=>c.score),
+
+      backgroundColor:"#dc2626",
+
+      borderRadius:8
+
     }]
+
   }
 
   return (
 
     <div style={{ padding:20 }}>
 
-      <h1>Dashboard ECOS</h1>
+      <h1 style={styles.title}>
+        Dashboard ECOS
+      </h1>
 
       {/* KPI */}
+
       <div style={styles.kpiGrid}>
 
-        <KPI title="Total" value={kpi.total} />
-        <KPI title="Rendidos" value={kpi.rendidos} />
-        <KPI title="Pendientes" value={kpi.pendientes} />
+        <KPI
+          title="Total"
+          value={kpi.total}
+        />
 
-        <KPI title="Verde" value={kpi.verde} color="#16a34a"/>
-        <KPI title="Amarillo" value={kpi.amarillo} color="#eab308"/>
-        <KPI title="Rojo" value={kpi.rojo} color="#dc2626"/>
+        <KPI
+          title="Rendidos"
+          value={kpi.rendidos}
+        />
+
+        <KPI
+          title="Pendientes"
+          value={kpi.pendientes}
+        />
+
+        <KPI
+          title="Verde"
+          value={kpi.verde}
+          color="#16a34a"
+        />
+
+        <KPI
+          title="Amarillo"
+          value={kpi.amarillo}
+          color="#eab308"
+        />
+
+        <KPI
+          title="Rojo"
+          value={kpi.rojo}
+          color="#dc2626"
+        />
 
       </div>
 
       {/* GRAFICOS */}
+
       <div style={styles.grid}>
 
         <div style={styles.card}>
-          <h3>Semáforo</h3>
-          <Pie data={pieData} />
+
+          <h3 style={styles.cardTitle}>
+            Semáforo
+          </h3>
+
+          <div style={styles.chartBox}>
+            <Pie
+              data={pieData}
+              options={pieOptions}
+            />
+          </div>
+
         </div>
 
         <div style={styles.card}>
-          <h3>Top Competencias</h3>
-          <Bar data={topBar} options={chartOptions}/>
+
+          <h3 style={styles.cardTitle}>
+            Top Competencias
+          </h3>
+
+          <div style={styles.chartBox}>
+            <Bar
+              data={topBar}
+              options={chartOptions}
+            />
+          </div>
+
         </div>
 
         <div style={styles.card}>
-          <h3>Brechas (Bottom)</h3>
-          <Bar data={bottomBar} options={chartOptions}/>
+
+          <h3 style={styles.cardTitle}>
+            Brechas Críticas
+          </h3>
+
+          <div style={styles.chartBox}>
+            <Bar
+              data={bottomBar}
+              options={chartOptions}
+            />
+          </div>
+
         </div>
 
       </div>
@@ -195,59 +327,224 @@ export default function Dashboard(){
     </div>
 
   )
+
 }
 
-/* KPI COMPONENT */
-function KPI({title,value,color="#2563eb"}:any){
+/* KPI */
+
+function KPI({
+  title,
+  value,
+  color="#2563eb"
+}:any){
+
   return(
-    <div style={{...styles.kpi, borderTop:`4px solid ${color}`}}>
-      <div>{title}</div>
-      <div style={styles.kpiValue}>{value}</div>
+
+    <div
+      style={{
+        ...styles.kpi,
+        borderTop:`4px solid ${color}`
+      }}
+    >
+
+      <div style={styles.kpiTitle}>
+        {title}
+      </div>
+
+      <div style={styles.kpiValue}>
+        {value}
+      </div>
+
     </div>
+
   )
+
 }
 
 /* CHART OPTIONS */
-const chartOptions = {
+
+const chartOptions:any = {
+
   responsive:true,
+
   maintainAspectRatio:false,
-  plugins:{ legend:{ display:false } },
-  scales:{ y:{ beginAtZero:true } }
+
+  plugins:{
+
+    legend:{
+      display:false
+    }
+
+  },
+
+  scales:{
+
+    x:{
+
+      ticks:{
+        color:"#cbd5e1"
+      },
+
+      grid:{
+        color:"rgba(255,255,255,0.05)"
+      }
+
+    },
+
+    y:{
+
+      beginAtZero:true,
+
+      ticks:{
+        color:"#cbd5e1"
+      },
+
+      grid:{
+        color:"rgba(255,255,255,0.05)"
+      }
+
+    }
+
+  }
+
+}
+
+const pieOptions:any = {
+
+  plugins:{
+
+    legend:{
+
+      labels:{
+        color:"#ffffff"
+      }
+
+    }
+
+  }
+
 }
 
 /* STYLES */
+
 const styles:any = {
 
+  title:{
+
+    color:"#ffffff",
+
+    fontSize:32,
+
+    fontWeight:700,
+
+    marginBottom:24
+
+  },
+
   kpiGrid:{
+
     display:"grid",
-    gridTemplateColumns:"repeat(auto-fit, minmax(140px,1fr))",
-    gap:10
+
+    gridTemplateColumns:
+      "repeat(auto-fit, minmax(180px,1fr))",
+
+    gap:16
+
   },
 
   kpi:{
-    background:"#fff",
-    padding:12,
-    borderRadius:8,
-    textAlign:"center"
+
+    background:
+      "rgba(17,36,58,0.92)",
+
+    border:
+      "1px solid rgba(255,255,255,0.08)",
+
+    borderRadius:18,
+
+    padding:20,
+
+    textAlign:"center",
+
+    boxShadow:
+      "0 8px 30px rgba(0,0,0,0.35)",
+
+    backdropFilter:
+      "blur(10px)"
+
+  },
+
+  kpiTitle:{
+
+    color:"#94a3b8",
+
+    fontSize:14,
+
+    marginBottom:8
+
   },
 
   kpiValue:{
-    fontSize:22,
-    fontWeight:"bold"
+
+    fontSize:34,
+
+    fontWeight:"bold",
+
+    color:"#ffffff"
+
   },
 
   grid:{
+
     display:"grid",
-    gridTemplateColumns:"repeat(3, 1fr)",
-    gap:15,
-    marginTop:20
+
+    gridTemplateColumns:
+      "repeat(3, 1fr)",
+
+    gap:20,
+
+    marginTop:24
+
   },
 
   card:{
-    background:"#fff",
-    padding:12,
-    borderRadius:8,
+
+    background:
+      "rgba(17,36,58,0.92)",
+
+    border:
+      "1px solid rgba(255,255,255,0.08)",
+
+    borderRadius:20,
+
+    padding:20,
+
+    height:360,
+
+    boxShadow:
+      "0 8px 30px rgba(0,0,0,0.35)",
+
+    backdropFilter:
+      "blur(10px)"
+
+  },
+
+  cardTitle:{
+
+    color:"#ffffff",
+
+    marginBottom:18,
+
+    fontSize:18,
+
+    fontWeight:600
+
+  },
+
+  chartBox:{
+
     height:260
+
   }
 
 }
