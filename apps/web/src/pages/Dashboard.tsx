@@ -51,9 +51,17 @@ export default function Dashboard(){
 
   function parse(r:any){
 
-    return typeof r.resultJson === "string"
-      ? JSON.parse(r.resultJson)
-      : r.resultJson
+    try{
+
+      return typeof r.resultJson === "string"
+        ? JSON.parse(r.resultJson)
+        : r.resultJson
+
+    }catch{
+
+      return {}
+
+    }
 
   }
 
@@ -69,11 +77,20 @@ export default function Dashboard(){
 
       const pid = r.participantId
 
-      if(!map[pid]) map[pid] = []
+      if(!map[pid]){
+
+        map[pid] = []
+
+      }
 
       const raw = parse(r)
 
-      map[pid].push(raw?.traffic?.color)
+      const color =
+        String(raw?.traffic?.color || "")
+          .trim()
+          .toUpperCase()
+
+      map[pid].push(color)
 
     })
 
@@ -83,9 +100,32 @@ export default function Dashboard(){
 
     Object.values(map).forEach((colors:any)=>{
 
-      if(colors.includes("ROJO")) rojo++
-      else if(colors.includes("AMARILLO")) amarillo++
-      else verde++
+      const normalized =
+        colors.map((c:any)=>
+          String(c)
+            .trim()
+            .toUpperCase()
+        )
+
+      if(
+        normalized.includes("ROJO") ||
+        normalized.includes("RED")
+      ){
+
+        rojo++
+
+      }else if(
+        normalized.includes("AMARILLO") ||
+        normalized.includes("YELLOW")
+      ){
+
+        amarillo++
+
+      }else{
+
+        verde++
+
+      }
 
     })
 
@@ -94,12 +134,14 @@ export default function Dashboard(){
     const pendientes = total - rendidos
 
     return {
+
       total,
       rendidos,
       pendientes,
       verde,
       amarillo,
       rojo
+
     }
 
   }
@@ -116,13 +158,18 @@ export default function Dashboard(){
 
       const raw = parse(r)
 
-      const comps = raw?.competencies || []
+      const comps =
+        raw?.competencies || []
 
       comps.forEach((c:any)=>{
 
         if(!c?.name) return
 
-        if(!map[c.name]) map[c.name] = []
+        if(!map[c.name]){
+
+          map[c.name] = []
+
+        }
 
         map[c.name].push(c.score)
 
@@ -159,7 +206,7 @@ export default function Dashboard(){
   const comp = getCompetencias()
 
   /* ===============================
-  DATA GRAFICOS
+  PIE DATA
   =============================== */
 
   const pieData = {
@@ -190,6 +237,10 @@ export default function Dashboard(){
 
   }
 
+  /* ===============================
+  TOP BAR
+  =============================== */
+
   const topBar = {
 
     labels:
@@ -207,6 +258,10 @@ export default function Dashboard(){
     }]
 
   }
+
+  /* ===============================
+  BOTTOM BAR
+  =============================== */
 
   const bottomBar = {
 
@@ -228,7 +283,7 @@ export default function Dashboard(){
 
   return (
 
-    <div style={{ padding:20 }}>
+    <div style={{padding:20}}>
 
       <h1 style={styles.title}>
         Dashboard ECOS
@@ -277,20 +332,26 @@ export default function Dashboard(){
 
       <div style={styles.grid}>
 
+        {/* PIE */}
+
         <div style={styles.card}>
 
           <h3 style={styles.cardTitle}>
-            Semáforo
+            Resultados Generales
           </h3>
 
           <div style={styles.chartBox}>
+
             <Pie
               data={pieData}
               options={pieOptions}
             />
+
           </div>
 
         </div>
+
+        {/* TOP */}
 
         <div style={styles.card}>
 
@@ -299,13 +360,17 @@ export default function Dashboard(){
           </h3>
 
           <div style={styles.chartBox}>
+
             <Bar
               data={topBar}
               options={chartOptions}
             />
+
           </div>
 
         </div>
+
+        {/* BOTTOM */}
 
         <div style={styles.card}>
 
@@ -314,10 +379,12 @@ export default function Dashboard(){
           </h3>
 
           <div style={styles.chartBox}>
+
             <Bar
               data={bottomBar}
               options={chartOptions}
             />
+
           </div>
 
         </div>
@@ -330,7 +397,9 @@ export default function Dashboard(){
 
 }
 
-/* KPI */
+/* ===============================
+KPI
+=============================== */
 
 function KPI({
   title,
@@ -361,7 +430,9 @@ function KPI({
 
 }
 
-/* CHART OPTIONS */
+/* ===============================
+CHART OPTIONS
+=============================== */
 
 const chartOptions:any = {
 
@@ -411,6 +482,10 @@ const chartOptions:any = {
 
 const pieOptions:any = {
 
+  responsive:true,
+
+  maintainAspectRatio:false,
+
   plugins:{
 
     legend:{
@@ -425,7 +500,9 @@ const pieOptions:any = {
 
 }
 
-/* STYLES */
+/* ===============================
+STYLES
+=============================== */
 
 const styles:any = {
 
