@@ -6,6 +6,8 @@ export default function AppLayout(){
   const navigate = useNavigate()
   const location = useLocation()
 
+  const isMobile = window.innerWidth < 768
+
   const userName = localStorage.getItem("userName") || "Usuario"
   const role = localStorage.getItem("role") || ""
   const originalRole = localStorage.getItem("originalRole")
@@ -47,10 +49,6 @@ export default function AppLayout(){
 
   }
 
-  /* =======================
-  MENÚ SEGÚN ROL
-  ======================= */
-
   const menu:any = {
 
     SUPERADMIN:[
@@ -89,10 +87,6 @@ export default function AppLayout(){
 
     <div style={styles.container}>
 
-      {/* =======================
-      IMPERSONACIÓN
-      ======================= */}
-
       {originalRole==="SUPERADMIN" && role!=="SUPERADMIN" && (
 
         <div style={styles.impersonationBar}>
@@ -112,54 +106,92 @@ export default function AppLayout(){
 
       )}
 
-      {/* =======================
-      SIDEBAR
-      ======================= */}
+      {/* SIDEBAR */}
 
-      <div style={styles.sidebar}>
+      {!isMobile && (
 
-        <div style={styles.logoBox}>
+        <div style={styles.sidebar}>
 
-          <img
-            src="/ecos-logo.jpg"
-            style={styles.logo}
-          />
+          <div style={styles.logoBox}>
+
+            <img
+              src="/ecos-logo.jpg"
+              style={styles.logo}
+            />
+
+          </div>
+
+          <nav style={styles.menu}>
+
+            {menuItems.map((item:any)=>(
+
+              <Link
+                key={item.path}
+                to={item.path}
+                style={menuStyle(item.path)}
+              >
+                {item.label}
+              </Link>
+
+            ))}
+
+          </nav>
 
         </div>
 
-        <nav style={styles.menu}>
+      )}
 
-          {menuItems.map((item:any)=>(
-
-            <Link
-              key={item.path}
-              to={item.path}
-              style={menuStyle(item.path)}
-            >
-              {item.label}
-            </Link>
-
-          ))}
-
-        </nav>
-
-      </div>
-
-      {/* =======================
-      MAIN
-      ======================= */}
+      {/* MAIN */}
 
       <div style={styles.main}>
 
         {/* TOPBAR */}
 
-        <div style={styles.topbar}>
+        <div style={{
+          ...styles.topbar,
+          flexDirection:
+            isMobile
+            ? "column"
+            : "row",
+          alignItems:
+            isMobile
+            ? "flex-start"
+            : "center",
+          height:
+            isMobile
+            ? "auto"
+            : 64,
+          padding:
+            isMobile
+            ? 16
+            : "0 28px"
+        }}>
 
-          <div style={styles.topbarTitle}>
-            Plataforma de Evaluación de Competencias Laborales en Seguridad
+          <div style={{
+            ...styles.topbarTitle,
+            fontSize:
+              isMobile
+              ? 13
+              : 16
+          }}>
+            Plataforma ECOS
           </div>
 
-          <div style={styles.userBox}>
+          <div style={{
+            ...styles.userBox,
+            width:
+              isMobile
+              ? "100%"
+              : "auto",
+            justifyContent:
+              isMobile
+              ? "space-between"
+              : "flex-end",
+            marginTop:
+              isMobile
+              ? 12
+              : 0
+          }}>
 
             <CompanySelector/>
 
@@ -179,16 +211,22 @@ export default function AppLayout(){
               onClick={logout}
               style={styles.logoutButton}
             >
-              Cerrar sesión
+              Salir
             </button>
 
           </div>
 
         </div>
 
-        {/* CONTENIDO */}
+        {/* CONTENT */}
 
-        <div style={styles.content}>
+        <div style={{
+          ...styles.content,
+          padding:
+            isMobile
+            ? 16
+            : "30px 40px"
+        }}>
 
           <div style={styles.pageContainer}>
 
@@ -206,17 +244,13 @@ export default function AppLayout(){
 
 }
 
-/* =======================
-ESTILOS
-======================= */
-
 const styles:any={
 
   container:{
 
     display:"flex",
 
-    height:"100vh",
+    minHeight:"100vh",
 
     width:"100%",
 
@@ -278,8 +312,6 @@ const styles:any={
     background:
       "linear-gradient(180deg,#071426 0%,#0f172a 100%)",
 
-    color:"#86efac",
-
     display:"flex",
 
     flexDirection:"column",
@@ -303,10 +335,7 @@ const styles:any={
     padding:20,
 
     borderBottom:
-      "1px solid rgba(255,255,255,0.08)",
-
-    background:
-      "rgba(255,255,255,0.02)"
+      "1px solid rgba(255,255,255,0.08)"
 
   },
 
@@ -342,9 +371,7 @@ const styles:any={
 
     borderRadius:12,
 
-    fontSize:14,
-
-    transition:"0.25s"
+    fontSize:14
 
   },
 
@@ -353,10 +380,7 @@ const styles:any={
     background:
       "linear-gradient(135deg,#1d4ed8,#2563eb)",
 
-    color:"#ffffff",
-
-    boxShadow:
-      "0 8px 20px rgba(37,99,235,0.35)"
+    color:"#ffffff"
 
   },
 
@@ -374,8 +398,6 @@ const styles:any={
 
   topbar:{
 
-    height:64,
-
     background:
       "rgba(15,23,42,0.92)",
 
@@ -384,11 +406,7 @@ const styles:any={
 
     display:"flex",
 
-    alignItems:"center",
-
     justifyContent:"space-between",
-
-    padding:"0 28px",
 
     backdropFilter:"blur(10px)"
 
@@ -396,9 +414,7 @@ const styles:any={
 
   topbarTitle:{
 
-    fontWeight:600,
-
-    fontSize:16,
+    fontWeight:700,
 
     color:"#ffffff"
 
@@ -410,7 +426,9 @@ const styles:any={
 
     alignItems:"center",
 
-    gap:20
+    gap:16,
+
+    flexWrap:"wrap"
 
   },
 
@@ -418,9 +436,7 @@ const styles:any={
 
     display:"flex",
 
-    flexDirection:"column",
-
-    alignItems:"flex-end"
+    flexDirection:"column"
 
   },
 
@@ -428,9 +444,7 @@ const styles:any={
 
     fontWeight:600,
 
-    fontSize:14,
-
-    color:"#ffffff"
+    fontSize:14
 
   },
 
@@ -467,11 +481,7 @@ const styles:any={
 
     flex:1,
 
-    overflow:"auto",
-
-    padding:"30px 40px",
-
-    background:"transparent"
+    overflow:"auto"
 
   },
 
