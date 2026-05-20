@@ -384,5 +384,18 @@ aside *{
 [style*="rgba(15,23,42"] *{
 
   color:white !important;
+/* WHITE CARDS FIX */
 
+[style*="backgroundColor:#fff"],
+[style*="backgroundColor: #fff"],
+[style*="backgroundColor:white"],
+[style*="backgroundColor: white"],
+[style*='backgroundColor:"#fff"'],
+[style*='backgroundColor:"white"']{
+
+  background:#11243a !important;
+
+  color:white !important;
+
+}
 }
