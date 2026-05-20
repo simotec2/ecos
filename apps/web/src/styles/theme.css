@@ -1,0 +1,47 @@
+:root {
+
+  /* BACKGROUNDS */
+
+  --bg-primary: #071426;
+  --bg-secondary: #0d1b2a;
+  --bg-card: #11243a;
+  --bg-hover: #16324d;
+
+  /* TEXT */
+
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  /* CORPORATE */
+
+  --green-primary: #22c55e;
+  --green-secondary: #16a34a;
+
+  --blue-primary: #2563eb;
+  --blue-secondary: #1d4ed8;
+
+  --red-primary: #ef4444;
+  --yellow-primary: #f59e0b;
+
+  /* BORDERS */
+
+  --border-color: rgba(255,255,255,0.08);
+
+  /* SHADOWS */
+
+  --shadow-card:
+    0 8px 30px rgba(0,0,0,0.35);
+
+  /* INPUTS */
+
+  --input-bg: #0f172a;
+  --input-border: #223548;
+
+  /* TABLES */
+
+  --table-header: #14532d;
+  --table-row: #0f172a;
+  --table-row-alt: #132238;
+
+}
