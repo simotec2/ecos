@@ -38,6 +38,8 @@ export default function Dashboard(){
       const p = await apiFetch("/api/participants")
       const r = await apiFetch("/api/results")
 
+      console.log("RESULTS DASHBOARD", r)
+
       setParticipants(p || [])
       setResults(r || [])
 
@@ -85,8 +87,22 @@ export default function Dashboard(){
 
       const raw = parse(r)
 
-      const score =
-        Number(raw?.score || 0)
+      /* =========================
+      SCORE REAL
+      ========================= */
+
+      const score = Number(
+
+        r.score ??
+        raw?.score ??
+        raw?.finalScore ??
+        0
+
+      )
+
+      /* =========================
+      ESTADO
+      ========================= */
 
       let color = "VERDE"
 
