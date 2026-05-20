@@ -1,6 +1,23 @@
+import { safeText } from "../utils/safeText"
+
 export function generateReportHTML(report:any){
 
-  const data = JSON.parse(report.resultJson || "{}")
+  let data:any = {}
+
+  try {
+
+    data =
+      typeof report.resultJson === "string"
+        ? JSON.parse(report.resultJson || "{}")
+        : report.resultJson || {}
+
+  } catch(error){
+
+    console.error("ERROR PARSING RESULT JSON:", error)
+
+    data = {}
+
+  }
 
   return `
   <html>
@@ -61,40 +78,74 @@ export function generateReportHTML(report:any){
     <h1>Informe ECOS</h1>
 
     <div class="section card">
-      <div><b>Participante:</b> ${report.participant?.nombre} ${report.participant?.apellido}</div>
-      <div><b>Empresa:</b> ${report.participant?.company?.name || "N/A"}</div>
-      <div><b>Evaluación:</b> ${report.evaluation?.name}</div>
+      <div>
+        <b>Participante:</b>
+        ${safeText(report.participant?.nombre)}
+        ${safeText(report.participant?.apellido)}
+      </div>
+
+      <div>
+        <b>Empresa:</b>
+        ${safeText(report.participant?.company?.name || "N/A")}
+      </div>
+
+      <div>
+        <b>Evaluación:</b>
+        ${safeText(report.evaluation?.name)}
+      </div>
 
       <div class="score">
-        <b>Puntaje:</b> ${data.score}%
+        <b>Puntaje:</b>
+        ${safeText(data.score)}%
       </div>
 
       <div class="badge ${
-        data.traffic?.color === "VERDE" ? "verde" :
-        data.traffic?.color === "AMARILLO" ? "amarillo" : "rojo"
+        data.traffic?.color === "VERDE"
+          ? "verde"
+          : data.traffic?.color === "AMARILLO"
+          ? "amarillo"
+          : "rojo"
       }">
-        ${data.traffic?.result}
+        ${safeText(data.traffic?.result)}
       </div>
     </div>
 
     <div class="section">
-      <div class="title"><b>Análisis General</b></div>
+      <div class="title">
+        <b>Análisis General</b>
+      </div>
+
       <div class="card">
-        ${data.aiText || ""}
+        ${safeText(data.aiText)
+          .replace(/\n/g,"<br/>")}
       </div>
     </div>
 
     <div class="section">
-      <div class="title"><b>Competencias</b></div>
+
+      <div class="title">
+        <b>Competencias</b>
+      </div>
 
       ${
-        (data.competencies || []).map((c:any)=>`
+        (data.competencies || [])
+          .map((c:any)=>`
+
           <div class="card competency">
-            <b>${c.name}</b><br/>
-            Nivel: ${c.level} <br/>
-            Puntaje: ${c.score}%
+
+            <b>${safeText(c.name)}</b><br/>
+
+            Nivel:
+            ${safeText(c.level)}
+            <br/>
+
+            Puntaje:
+            ${safeText(c.score)}%
+
           </div>
-        `).join("")
+
+        `)
+        .join("")
       }
 
     </div>

@@ -1,6 +1,7 @@
 import fs from "fs"
 import path from "path"
 import { generateRadarImage } from "./radarGenerator"
+import { safeText } from "../utils/safeText"
 
 /* ======================================
 MAPA NOMBRES
@@ -14,9 +15,9 @@ const evaluationLabels:any = {
 /* ======================================
 UTILS
 ====================================== */
-function clean(text:string){
+function clean(text:any){
 
-  return (text || "")
+  return safeText(text)
     .replace(/[#*]/g,"")
     .replace(/\n/g,"<br/>")
     .trim()

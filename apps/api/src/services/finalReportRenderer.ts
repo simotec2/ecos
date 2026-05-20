@@ -1,5 +1,6 @@
 import fs from "fs"
 import path from "path"
+import { safeText } from "../utils/safeText"
 
 function getColor(color:string){
 
@@ -40,18 +41,21 @@ export async function renderFinalReportHTML(data:any){
   const participant = data.participant || {}
 
   const participantProfile =
-    participant.perfil ||
-    participant.profile ||
-    ""
+    safeText(
+      participant.perfil ||
+      participant.profile ||
+      ""
+    )
 
   /* ======================================
   FECHA REAL
   ====================================== */
 
-  const reportDate = String(
+  const reportDate = safeText(
     data.date || ""
   )
-    console.log("FINAL REPORT:", {
+
+  console.log("FINAL REPORT:", {
     participant,
     participantProfile,
     reportDate
@@ -85,71 +89,81 @@ export async function renderFinalReportHTML(data:any){
   ANALISIS
   ====================================== */
 
-  const analysis = (
-    data.analysis || ""
+  const analysis = safeText(
+    data.analysis
   ).replace(/\n/g,"<br/>")
 
   /* ======================================
   RADAR
   ====================================== */
 
-  const radar = data.radar || ""
+  const radar = safeText(
+    data.radar || ""
+  )
 
   /* ======================================
   REEMPLAZOS
   ====================================== */
 
- html = html
+  html = html
 
-  .replace(
-    /{{logo}}/gi,
-    logo
-  )
+    .replace(
+      /{{logo}}/gi,
+      logo
+    )
 
-  .replace(
-    /{{participant}}/gi,
-    `${participant.nombre || ""} ${participant.apellido || ""}`
-  )
+    .replace(
+      /{{participant}}/gi,
+      `
+      ${safeText(participant.nombre)}
+      ${safeText(participant.apellido)}
+      `
+    )
 
-  .replace(
-    /{{profile}}/gi,
-    participantProfile
-  )
+    .replace(
+      /{{profile}}/gi,
+      participantProfile
+    )
 
-  .replace(
-    /{{company}}/gi,
-    participant.company?.name || ""
-  )
+    .replace(
+      /{{company}}/gi,
+      safeText(
+        participant.company?.name || ""
+      )
+    )
 
-  .replace(
-    /{{date}}/gi,
-    reportDate
-  )
+    .replace(
+      /{{date}}/gi,
+      reportDate
+    )
 
-  .replace(
-    /{{score}}/gi,
-    String(data.score || 0)
-  )
+    .replace(
+      /{{score}}/gi,
+      safeText(data.score || 0)
+    )
 
-  .replace(
-    /{{result}}/gi,
-    data.traffic?.result || ""
-  )
+    .replace(
+      /{{result}}/gi,
+      safeText(
+        data.traffic?.result || ""
+      )
+    )
 
-  .replace(
-    /{{color}}/gi,
-    getColor(data.traffic?.color)
-  )
+    .replace(
+      /{{color}}/gi,
+      getColor(data.traffic?.color)
+    )
 
-  .replace(
-    /{{analysis}}/gi,
-    analysis
-  )
+    .replace(
+      /{{analysis}}/gi,
+      analysis
+    )
 
-  .replace(
-    /{{radar}}/gi,
-    radar
-  )
+    .replace(
+      /{{radar}}/gi,
+      radar
+    )
+
   /* ======================================
   LIMPIEZA FINAL
   ====================================== */
