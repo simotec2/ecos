@@ -12,15 +12,21 @@ export default function Evaluations(){
   const role = localStorage.getItem("role")
 
   if(role !== "SUPERADMIN" && role !== "PSYCHOLOGIST"){
+
     return (
+
       <div style={{padding:40}}>
         No tienes acceso a este módulo
       </div>
+
     )
+
   }
 
   useEffect(()=>{
+
     load()
+
   },[])
 
   async function load(){
@@ -29,7 +35,6 @@ export default function Evaluations(){
 
       const data = await apiFetch("/api/evaluations")
 
-      // 🔥 limpieza + protección
       const clean = (data || []).filter((ev:any)=>
         ev &&
         ev.name &&
@@ -40,11 +45,13 @@ export default function Evaluations(){
 
     }catch(err){
 
-      console.error("Error cargando evaluaciones",err)
+      console.error(
+        "Error cargando evaluaciones",
+        err
+      )
 
     }finally{
 
-      // 🔥 asegurar salida de loading SIEMPRE
       setLoading(false)
 
     }
@@ -52,124 +59,144 @@ export default function Evaluations(){
   }
 
   function formatName(name:string){
+
     return name
       .split("_").join(" ")
       .toLowerCase()
       .replace(/\b\w/g, l => l.toUpperCase())
+
   }
 
   function testEvaluation(id:string){
+
     navigate(`/app/evaluations/${id}/test`)
+
   }
 
   function editEvaluation(id:string){
+
     navigate(`/app/evaluations/${id}/edit`)
+
   }
 
   function viewEvaluation(id:string){
+
     navigate(`/app/evaluations/${id}/view`)
+
   }
 
   if(loading){
-    return <div style={{padding:40}}>Cargando evaluaciones...</div>
+
+    return (
+      <div style={{padding:40}}>
+        Cargando evaluaciones...
+      </div>
+    )
+
   }
 
   return(
 
     <div style={{padding:40}}>
 
-      <h2>Evaluaciones</h2>
+      <h2 style={styles.title}>
+        Evaluaciones
+      </h2>
 
-      <div style={{marginTop:10, marginBottom:20}}>
+      <div style={{
+        marginTop:10,
+        marginBottom:20
+      }}>
 
         <button
-          onClick={()=>navigate("/app/evaluations/new")}
-          style={{
-            padding:"10px 16px",
-            background:"#16a34a",
-            color:"#fff",
-            border:"none",
-            borderRadius:6,
-            cursor:"pointer"
-          }}
+          onClick={()=>
+            navigate("/app/evaluations/new")
+          }
+          style={styles.newButton}
         >
           Nueva evaluación
         </button>
 
       </div>
 
-      <div style={{
-        marginTop:10,
-        background:"#fff",
-        padding:20,
-        borderRadius:10,
-        boxShadow:"0 2px 8px rgba(0,0,0,0.1)"
-      }}>
+      {/* CARD */}
 
-        <table style={{width:"100%",borderCollapse:"collapse"}}>
+      <div style={styles.card}>
+
+        <table style={styles.table}>
 
           <thead>
-            <tr style={{textAlign:"left",borderBottom:"1px solid #ddd"}}>
-              <th style={{padding:10}}>Nombre</th>
-              <th style={{padding:10}}>Tipo</th>
-              <th style={{padding:10}}>Acciones</th>
+
+            <tr style={styles.headerRow}>
+
+              <th style={styles.th}>
+                Nombre
+              </th>
+
+              <th style={styles.th}>
+                Tipo
+              </th>
+
+              <th style={styles.th}>
+                Acciones
+              </th>
+
             </tr>
+
           </thead>
 
           <tbody>
 
             {evaluations.map(ev=>(
 
-              <tr key={ev.id} style={{borderBottom:"1px solid #eee"}}>
+              <tr
+                key={ev.id}
+                style={styles.row}
+              >
 
-                <td style={{padding:10}}>
+                <td style={styles.td}>
                   {formatName(ev.name)}
                 </td>
 
-                <td style={{padding:10}}>
+                <td style={styles.td}>
                   {ev.type}
                 </td>
 
-                <td style={{padding:10,display:"flex",gap:10}}>
+                <td style={{
+                  ...styles.td,
+                  display:"flex",
+                  gap:10
+                }}>
+
+                  {/* VER */}
 
                   <button
-                    onClick={()=>viewEvaluation(ev.id)}
-                    style={{
-                      padding:"6px 12px",
-                      background:"#16a34a",
-                      color:"#fff",
-                      border:"none",
-                      borderRadius:6,
-                      cursor:"pointer"
-                    }}
+                    onClick={()=>
+                      viewEvaluation(ev.id)
+                    }
+                    style={styles.greenButton}
                   >
                     Ver
                   </button>
 
+                  {/* EDITAR */}
+
                   <button
-                    onClick={()=>editEvaluation(ev.id)}
-                    style={{
-                      padding:"6px 12px",
-                      background:"#f59e0b",
-                      color:"#fff",
-                      border:"none",
-                      borderRadius:6,
-                      cursor:"pointer"
-                    }}
+                    onClick={()=>
+                      editEvaluation(ev.id)
+                    }
+                    style={styles.yellowButton}
                   >
                     Editar
                   </button>
 
+                  {/* PROBAR */}
+
                   <button
-                    onClick={()=>testEvaluation(ev.id)}
-                    style={{
-                      padding:"6px 12px",
-                      background:"#2563eb",
-                      color:"#fff",
-                      border:"none",
-                      borderRadius:6,
-                      cursor:"pointer"
-                    }}
+                    onClick={()=>
+                      testEvaluation(ev.id)
+                    }
+                    style={styles.blueButton}
                   >
                     Probar
                   </button>
@@ -189,5 +216,161 @@ export default function Evaluations(){
     </div>
 
   )
+
+}
+
+const styles:any = {
+
+  title:{
+
+    color:"#ffffff",
+
+    fontSize:32,
+
+    fontWeight:700,
+
+    marginBottom:20
+
+  },
+
+  newButton:{
+
+    padding:"10px 16px",
+
+    background:
+      "linear-gradient(135deg,#16a34a,#22c55e)",
+
+    color:"#fff",
+
+    border:"none",
+
+    borderRadius:10,
+
+    cursor:"pointer",
+
+    fontWeight:600
+
+  },
+
+  card:{
+
+    marginTop:10,
+
+    background:
+      "rgba(17,36,58,0.96)",
+
+    border:
+      "1px solid rgba(255,255,255,0.08)",
+
+    padding:20,
+
+    borderRadius:18,
+
+    boxShadow:
+      "0 8px 30px rgba(0,0,0,0.35)",
+
+    backdropFilter:
+      "blur(10px)"
+
+  },
+
+  table:{
+
+    width:"100%",
+
+    borderCollapse:"collapse"
+
+  },
+
+  headerRow:{
+
+    textAlign:"left",
+
+    borderBottom:
+      "1px solid rgba(255,255,255,0.08)"
+
+  },
+
+  row:{
+
+    borderBottom:
+      "1px solid rgba(255,255,255,0.05)"
+
+  },
+
+  th:{
+
+    padding:14,
+
+    color:"#ffffff",
+
+    fontWeight:600
+
+  },
+
+  td:{
+
+    padding:14,
+
+    color:"#e2e8f0"
+
+  },
+
+  greenButton:{
+
+    padding:"6px 12px",
+
+    background:
+      "linear-gradient(135deg,#16a34a,#22c55e)",
+
+    color:"#fff",
+
+    border:"none",
+
+    borderRadius:8,
+
+    cursor:"pointer",
+
+    fontWeight:600
+
+  },
+
+  yellowButton:{
+
+    padding:"6px 12px",
+
+    background:
+      "linear-gradient(135deg,#f59e0b,#fbbf24)",
+
+    color:"#fff",
+
+    border:"none",
+
+    borderRadius:8,
+
+    cursor:"pointer",
+
+    fontWeight:600
+
+  },
+
+  blueButton:{
+
+    padding:"6px 12px",
+
+    background:
+      "linear-gradient(135deg,#2563eb,#1d4ed8)",
+
+    color:"#fff",
+
+    border:"none",
+
+    borderRadius:8,
+
+    cursor:"pointer",
+
+    fontWeight:600
+
+  }
 
 }

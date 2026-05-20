@@ -3,179 +3,395 @@ import { apiFetch } from "../api"
 
 export default function Companies(){
 
-const [companies,setCompanies] = useState<any[]>([])
+  const [companies,setCompanies] = useState<any[]>([])
 
-const [form,setForm] = useState({
-name:"",
-razonSocial:"",
-rut:"",
-direccion:"",
-giro:"",
-contactoNombre:"",
-contactoTelefono:"",
-contactoEmail:"",
-usuarioEmpresaNombre:"",
-usuarioEmpresaTelefono:"",
-usuarioEmpresaEmail:""
-})
+  const [form,setForm] = useState({
 
-function update(e:any){
+    name:"",
+    razonSocial:"",
+    rut:"",
+    direccion:"",
+    giro:"",
+    contactoNombre:"",
+    contactoTelefono:"",
+    contactoEmail:"",
+    usuarioEmpresaNombre:"",
+    usuarioEmpresaTelefono:"",
+    usuarioEmpresaEmail:""
 
-setForm({
-...form,
-[e.target.name]:e.target.value
-})
+  })
+
+  function update(e:any){
+
+    setForm({
+
+      ...form,
+      [e.target.name]:e.target.value
+
+    })
+
+  }
+
+  async function load(){
+
+    const data = await apiFetch("/api/companies")
+
+    setCompanies(data)
+
+  }
+
+  async function create(){
+
+    await apiFetch("/api/companies",{
+
+      method:"POST",
+
+      body:JSON.stringify(form)
+
+    })
+
+    load()
+
+  }
+
+  useEffect(()=>{
+
+    load()
+
+  },[])
+
+  return(
+
+    <div style={styles.page}>
+
+      {/* TITLE */}
+
+      <h1 style={styles.title}>
+        Empresas
+      </h1>
+
+      {/* FORM CARD */}
+
+      <div style={styles.card}>
+
+        <div style={styles.formGrid}>
+
+          <input
+            style={styles.input}
+            name="name"
+            placeholder="Nombre empresa"
+            onChange={update}
+          />
+
+          <input
+            style={styles.input}
+            name="razonSocial"
+            placeholder="Razón social"
+            onChange={update}
+          />
+
+          <input
+            style={styles.input}
+            name="rut"
+            placeholder="RUT empresa"
+            onChange={update}
+          />
+
+          <input
+            style={styles.input}
+            name="direccion"
+            placeholder="Dirección"
+            onChange={update}
+          />
+
+          <input
+            style={styles.input}
+            name="giro"
+            placeholder="Giro"
+            onChange={update}
+          />
+
+        </div>
+
+        {/* CONTACTO */}
+
+        <h3 style={styles.sectionTitle}>
+          Contacto empresa
+        </h3>
+
+        <div style={styles.formGrid}>
+
+          <input
+            style={styles.input}
+            name="contactoNombre"
+            placeholder="Nombre contacto"
+            onChange={update}
+          />
+
+          <input
+            style={styles.input}
+            name="contactoTelefono"
+            placeholder="Teléfono contacto"
+            onChange={update}
+          />
+
+          <input
+            style={styles.input}
+            name="contactoEmail"
+            placeholder="Email contacto"
+            onChange={update}
+          />
+
+        </div>
+
+        {/* USUARIO EMPRESA */}
+
+        <h3 style={styles.sectionTitle}>
+          Usuario empresa
+        </h3>
+
+        <div style={styles.formGrid}>
+
+          <input
+            style={styles.input}
+            name="usuarioEmpresaNombre"
+            placeholder="Nombre usuario empresa"
+            onChange={update}
+          />
+
+          <input
+            style={styles.input}
+            name="usuarioEmpresaTelefono"
+            placeholder="Teléfono usuario empresa"
+            onChange={update}
+          />
+
+          <input
+            style={styles.input}
+            name="usuarioEmpresaEmail"
+            placeholder="Email usuario empresa"
+            onChange={update}
+          />
+
+        </div>
+
+        <button
+          style={styles.button}
+          onClick={create}
+        >
+
+          Crear empresa
+
+        </button>
+
+      </div>
+
+      {/* LISTADO */}
+
+      <h2 style={styles.listTitle}>
+        Listado
+      </h2>
+
+      <div style={styles.list}>
+
+        {companies.map(c=>(
+
+          <div
+            key={c.id}
+            style={styles.companyItem}
+          >
+
+            <div style={styles.companyName}>
+              {c.name}
+            </div>
+
+            <div style={styles.companyRut}>
+              {c.rut}
+            </div>
+
+          </div>
+
+        ))}
+
+      </div>
+
+    </div>
+
+  )
 
 }
 
-async function load(){
+const styles:any = {
 
-const data = await apiFetch("/api/companies")
+  page:{
 
-setCompanies(data)
+    width:"100%",
 
-}
+    maxWidth:"1600px",
 
-async function create(){
+    margin:"0 auto"
 
-await apiFetch("/api/companies",{
-method:"POST",
-body:JSON.stringify(form)
-})
+  },
 
-load()
+  title:{
 
-}
+    marginBottom:30,
 
-useEffect(()=>{
-load()
-},[])
+    fontSize:32,
 
-return(
+    fontWeight:700,
 
-<div style={styles.page}>
+    color:"#ffffff"
 
-<h1 style={styles.title}>Empresas</h1>
+  },
 
-<div style={styles.formGrid}>
+  card:{
 
-<input style={styles.input} name="name" placeholder="Nombre empresa" onChange={update}/>
-<input style={styles.input} name="razonSocial" placeholder="Razón social" onChange={update}/>
+    background:
+      "rgba(17,36,58,0.96)",
 
-<input style={styles.input} name="rut" placeholder="RUT empresa" onChange={update}/>
-<input style={styles.input} name="direccion" placeholder="Dirección" onChange={update}/>
+    border:
+      "1px solid rgba(255,255,255,0.08)",
 
-<input style={styles.input} name="giro" placeholder="Giro" onChange={update}/>
+    borderRadius:18,
 
-</div>
+    padding:24,
 
-<h3 style={styles.sectionTitle}>Contacto empresa</h3>
+    boxShadow:
+      "0 8px 30px rgba(0,0,0,0.35)",
 
-<div style={styles.formGrid}>
+    backdropFilter:
+      "blur(10px)"
 
-<input style={styles.input} name="contactoNombre" placeholder="Nombre contacto" onChange={update}/>
-<input style={styles.input} name="contactoTelefono" placeholder="Teléfono contacto" onChange={update}/>
+  },
 
-<input style={styles.input} name="contactoEmail" placeholder="Email contacto" onChange={update}/>
+  sectionTitle:{
 
-</div>
+    marginTop:30,
 
-<h3 style={styles.sectionTitle}>Usuario empresa</h3>
+    marginBottom:12,
 
-<div style={styles.formGrid}>
+    color:"#ffffff",
 
-<input style={styles.input} name="usuarioEmpresaNombre" placeholder="Nombre usuario empresa" onChange={update}/>
-<input style={styles.input} name="usuarioEmpresaTelefono" placeholder="Teléfono usuario empresa" onChange={update}/>
+    fontSize:20,
 
-<input style={styles.input} name="usuarioEmpresaEmail" placeholder="Email usuario empresa" onChange={update}/>
+    fontWeight:600
 
-</div>
+  },
 
-<button style={styles.button} onClick={create}>
-Crear empresa
-</button>
+  formGrid:{
 
-<hr style={{margin:"40px 0"}}/>
+    display:"grid",
 
-<h2>Listado</h2>
+    gridTemplateColumns:
+      "repeat(auto-fit,minmax(350px,1fr))",
 
-<div style={styles.list}>
+    gap:20,
 
-{companies.map(c=>(
+    width:"100%"
 
-<div key={c.id} style={styles.companyItem}>
+  },
 
-<strong>{c.name}</strong>
+  input:{
 
-<div>{c.rut}</div>
+    width:"100%",
 
-</div>
+    padding:"12px 14px",
 
-))}
+    background:"#081226",
 
-</div>
+    border:"1px solid #223548",
 
-</div>
+    borderRadius:12,
 
-)
+    fontSize:14,
 
-}
+    color:"#ffffff",
 
-const styles:any={
+    outline:"none"
 
-page:{
-width:"100%",
-maxWidth:"1600px",
-margin:"0 auto"
-},
+  },
 
-title:{
-marginBottom:30,
-fontSize:24,
-fontWeight:600
-},
+  button:{
 
-sectionTitle:{
-marginTop:30,
-marginBottom:10
-},
+    marginTop:24,
 
-formGrid:{
-display:"grid",
-gridTemplateColumns:"repeat(auto-fit,minmax(350px,1fr))",
-gap:20,
-width:"100%"
-},
+    padding:"12px 18px",
 
-input:{
-width:"100%",
-padding:"10px",
-border:"1px solid #d1d5db",
-borderRadius:6,
-fontSize:14
-},
+    background:
+      "linear-gradient(135deg,#2563eb,#1d4ed8)",
 
-button:{
-marginTop:20,
-padding:"10px 18px",
-background:"#2563eb",
-color:"#fff",
-border:"none",
-borderRadius:6,
-cursor:"pointer"
-},
+    color:"#fff",
 
-list:{
-display:"flex",
-flexDirection:"column",
-gap:12
-},
+    border:"none",
 
-companyItem:{
-background:"#fff",
-padding:16,
-borderRadius:8,
-boxShadow:"0 2px 6px rgba(0,0,0,0.05)"
-}
+    borderRadius:10,
+
+    cursor:"pointer",
+
+    fontWeight:600
+
+  },
+
+  listTitle:{
+
+    marginTop:40,
+
+    marginBottom:20,
+
+    color:"#ffffff",
+
+    fontSize:28,
+
+    fontWeight:700
+
+  },
+
+  list:{
+
+    display:"flex",
+
+    flexDirection:"column",
+
+    gap:14
+
+  },
+
+  companyItem:{
+
+    background:
+      "rgba(17,36,58,0.96)",
+
+    border:
+      "1px solid rgba(255,255,255,0.08)",
+
+    padding:18,
+
+    borderRadius:16,
+
+    boxShadow:
+      "0 8px 20px rgba(0,0,0,0.25)"
+
+  },
+
+  companyName:{
+
+    color:"#ffffff",
+
+    fontSize:18,
+
+    fontWeight:600,
+
+    marginBottom:6
+
+  },
+
+  companyRut:{
+
+    color:"#cbd5e1",
+
+    fontSize:14
+
+  }
 
 }
