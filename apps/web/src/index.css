@@ -294,6 +294,9 @@ BLUE BUTTON
   font-weight:600;
 
   cursor:pointer;
+
+}
+
 /* =========================================
 FINAL CLEAN DARK FIX
 ========================================= */
@@ -305,9 +308,9 @@ FINAL CLEAN DARK FIX
 [style*="background:#ffffff"],
 [style*="background: #ffffff"]{
 
-  background:#ffffff !important;
+  background:#11243a !important;
 
-  color:#111827 !important;
+  color:#ffffff !important;
 
 }
 
@@ -320,7 +323,7 @@ tr,
 td,
 th{
 
-  color:#111827 !important;
+  color:#ffffff !important;
 
 }
 
@@ -330,7 +333,12 @@ input,
 select,
 textarea{
 
-  color:#111827 !important;
+  background:#081226 !important;
+
+  color:#ffffff !important;
+
+  border:
+    1px solid #223548 !important;
 
 }
 
@@ -341,7 +349,7 @@ span,
 small,
 p{
 
-  color:#111827 !important;
+  color:#ffffff !important;
 
 }
 
@@ -353,7 +361,7 @@ h3,
 h4,
 h5{
 
-  color:#111827 !important;
+  color:#ffffff !important;
 
 }
 
@@ -366,7 +374,7 @@ nav *,
 aside,
 aside *{
 
-  color:white !important;
+  color:#ffffff !important;
 
 }
 
@@ -377,5 +385,4 @@ aside *{
 
   color:white !important;
 
-}
 }
