@@ -83,8 +83,10 @@ export default function Dashboard(){
 
       }
 
+      const raw = parse(r)
+
       const score =
-        Number(r.score || 0)
+        Number(raw?.score || 0)
 
       let color = "VERDE"
 
@@ -331,8 +333,6 @@ export default function Dashboard(){
 
       <div style={styles.grid}>
 
-        {/* PIE */}
-
         <div style={styles.card}>
 
           <h3 style={styles.cardTitle}>
@@ -350,8 +350,6 @@ export default function Dashboard(){
 
         </div>
 
-        {/* TOP */}
-
         <div style={styles.card}>
 
           <h3 style={styles.cardTitle}>
@@ -368,8 +366,6 @@ export default function Dashboard(){
           </div>
 
         </div>
-
-        {/* BOTTOM */}
 
         <div style={styles.card}>
 
@@ -396,9 +392,7 @@ export default function Dashboard(){
 
 }
 
-/* ===============================
-KPI
-=============================== */
+/* KPI */
 
 function KPI({
   title,
@@ -429,9 +423,7 @@ function KPI({
 
 }
 
-/* ===============================
-CHART OPTIONS
-=============================== */
+/* OPTIONS */
 
 const chartOptions:any = {
 
@@ -499,9 +491,7 @@ const pieOptions:any = {
 
 }
 
-/* ===============================
-STYLES
-=============================== */
+/* STYLES */
 
 const styles:any = {
 
