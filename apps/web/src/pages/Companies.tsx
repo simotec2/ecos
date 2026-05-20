@@ -298,7 +298,7 @@ const styles:any = {
 
     padding:"12px 14px",
 
-    background:"#081226",
+    background:"#f6f6f7",
 
     border:"1px solid #223548",
 
@@ -306,7 +306,7 @@ const styles:any = {
 
     fontSize:14,
 
-    color:"#ffffff",
+    color:"#1216e9",
 
     outline:"none"
 

@@ -11,11 +11,14 @@ export default function Evaluations(){
 
   const role = localStorage.getItem("role")
 
-  if(role !== "SUPERADMIN" && role !== "PSYCHOLOGIST"){
+  if(
+    role !== "SUPERADMIN" &&
+    role !== "PSYCHOLOGIST"
+  ){
 
     return (
 
-      <div style={{padding:40}}>
+      <div style={{padding:40,color:"#fff"}}>
         No tienes acceso a este módulo
       </div>
 
@@ -88,7 +91,10 @@ export default function Evaluations(){
   if(loading){
 
     return (
-      <div style={{padding:40}}>
+      <div style={{
+        padding:40,
+        color:"#fff"
+      }}>
         Cargando evaluaciones...
       </div>
     )
@@ -97,14 +103,13 @@ export default function Evaluations(){
 
   return(
 
-    <div style={{padding:40}}>
+    <div style={styles.page}>
 
       <h2 style={styles.title}>
         Evaluaciones
       </h2>
 
       <div style={{
-        marginTop:10,
         marginBottom:20
       }}>
 
@@ -118,8 +123,6 @@ export default function Evaluations(){
         </button>
 
       </div>
-
-      {/* CARD */}
 
       <div style={styles.card}>
 
@@ -168,8 +171,6 @@ export default function Evaluations(){
                   gap:10
                 }}>
 
-                  {/* VER */}
-
                   <button
                     onClick={()=>
                       viewEvaluation(ev.id)
@@ -179,8 +180,6 @@ export default function Evaluations(){
                     Ver
                   </button>
 
-                  {/* EDITAR */}
-
                   <button
                     onClick={()=>
                       editEvaluation(ev.id)
@@ -189,8 +188,6 @@ export default function Evaluations(){
                   >
                     Editar
                   </button>
-
-                  {/* PROBAR */}
 
                   <button
                     onClick={()=>
@@ -221,6 +218,17 @@ export default function Evaluations(){
 
 const styles:any = {
 
+  page:{
+
+    minHeight:"100vh",
+
+    padding:40,
+
+    background:
+      "linear-gradient(180deg,#0f172a 0%,#111827 100%)"
+
+  },
+
   title:{
 
     color:"#ffffff",
@@ -235,7 +243,7 @@ const styles:any = {
 
   newButton:{
 
-    padding:"10px 16px",
+    padding:"10px 18px",
 
     background:
       "linear-gradient(135deg,#16a34a,#22c55e)",
@@ -244,33 +252,33 @@ const styles:any = {
 
     border:"none",
 
-    borderRadius:10,
+    borderRadius:12,
 
     cursor:"pointer",
 
-    fontWeight:600
+    fontWeight:700,
+
+    boxShadow:
+      "0 4px 15px rgba(34,197,94,0.25)"
 
   },
 
   card:{
 
-    marginTop:10,
-
     background:
-      "rgba(17,36,58,0.96)",
+      "rgba(15,23,42,0.88)",
 
     border:
       "1px solid rgba(255,255,255,0.08)",
 
-    padding:20,
+    borderRadius:20,
 
-    borderRadius:18,
+    padding:24,
+
+    backdropFilter:"blur(12px)",
 
     boxShadow:
-      "0 8px 30px rgba(0,0,0,0.35)",
-
-    backdropFilter:
-      "blur(10px)"
+      "0 10px 40px rgba(0,0,0,0.45)"
 
   },
 
@@ -283,8 +291,6 @@ const styles:any = {
   },
 
   headerRow:{
-
-    textAlign:"left",
 
     borderBottom:
       "1px solid rgba(255,255,255,0.08)"
@@ -300,25 +306,31 @@ const styles:any = {
 
   th:{
 
-    padding:14,
+    textAlign:"left",
 
-    color:"#ffffff",
+    padding:16,
 
-    fontWeight:600
+    color:"#f8fafc",
+
+    fontSize:14,
+
+    fontWeight:700
 
   },
 
   td:{
 
-    padding:14,
+    padding:16,
 
-    color:"#e2e8f0"
+    color:"#cbd5e1",
+
+    fontSize:14
 
   },
 
   greenButton:{
 
-    padding:"6px 12px",
+    padding:"8px 14px",
 
     background:
       "linear-gradient(135deg,#16a34a,#22c55e)",
@@ -327,17 +339,17 @@ const styles:any = {
 
     border:"none",
 
-    borderRadius:8,
+    borderRadius:10,
 
     cursor:"pointer",
 
-    fontWeight:600
+    fontWeight:700
 
   },
 
   yellowButton:{
 
-    padding:"6px 12px",
+    padding:"8px 14px",
 
     background:
       "linear-gradient(135deg,#f59e0b,#fbbf24)",
@@ -346,17 +358,17 @@ const styles:any = {
 
     border:"none",
 
-    borderRadius:8,
+    borderRadius:10,
 
     cursor:"pointer",
 
-    fontWeight:600
+    fontWeight:700
 
   },
 
   blueButton:{
 
-    padding:"6px 12px",
+    padding:"8px 14px",
 
     background:
       "linear-gradient(135deg,#2563eb,#1d4ed8)",
@@ -365,11 +377,11 @@ const styles:any = {
 
     border:"none",
 
-    borderRadius:8,
+    borderRadius:10,
 
     cursor:"pointer",
 
-    fontWeight:600
+    fontWeight:700
 
   }
 
