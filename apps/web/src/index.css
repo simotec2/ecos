@@ -47,6 +47,16 @@ body{
 }
 
 /* =========================
+ROOT CONTAINER
+========================= */
+
+#root{
+
+  width:100%;
+
+}
+
+/* =========================
 LINKS
 ========================= */
 
@@ -297,24 +307,9 @@ BLUE BUTTON
 
 }
 
-/* =========================================
-FINAL CLEAN DARK FIX
-========================================= */
-
-/* WHITE INLINE BLOCKS */
-
-[style*="background:#fff"],
-[style*="background: #fff"],
-[style*="background:#ffffff"],
-[style*="background: #ffffff"]{
-
-  background:#11243a !important;
-
-  color:#ffffff !important;
-
-}
-
-/* TABLES */
+/* =========================
+SAFE GLOBAL FIXES
+========================= */
 
 table,
 thead,
@@ -323,37 +318,30 @@ tr,
 td,
 th{
 
-  color:#ffffff !important;
+  color:#ffffff;
 
 }
-
-/* INPUTS */
 
 input,
 select,
 textarea{
 
-  background:#081226 !important;
+  background:#081226;
 
-  color:#ffffff !important;
+  color:#ffffff;
 
   border:
-    1px solid #223548 !important;
+    1px solid #223548;
 
 }
-
-/* LABELS */
 
 label,
 span,
-small,
-p{
+small{
 
-  color:#ffffff !important;
+  color:#ffffff;
 
 }
-
-/* HEADINGS */
 
 h1,
 h2,
@@ -361,41 +349,6 @@ h3,
 h4,
 h5{
 
-  color:#ffffff !important;
+  color:#ffffff;
 
-}
-
-/* DARK AREAS KEEP WHITE */
-
-.dark-card,
-.dark-card *,
-nav,
-nav *,
-aside,
-aside *{
-
-  color:#ffffff !important;
-
-}
-
-/* TOPBAR */
-
-[style*="rgba(15,23,42"],
-[style*="rgba(15,23,42"] *{
-
-  color:white !important;
-/* WHITE CARDS FIX */
-
-[style*="backgroundColor:#fff"],
-[style*="backgroundColor: #fff"],
-[style*="backgroundColor:white"],
-[style*="backgroundColor: white"],
-[style*='backgroundColor:"#fff"'],
-[style*='backgroundColor:"white"']{
-
-  background:#11243a !important;
-
-  color:white !important;
-
-}
 }
