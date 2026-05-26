@@ -5,8 +5,10 @@ export default function ParticipantFinished(){
   const navigate = useNavigate()
 
   function goHome(){
+
     localStorage.removeItem("participantToken")
     navigate("/")
+
   }
 
   return(
@@ -16,62 +18,88 @@ export default function ParticipantFinished(){
       display:"flex",
       justifyContent:"center",
       alignItems:"center",
-      background:"#f4f6f8",
+      background:"#0f172a",
       padding:20
     }}>
 
       <div style={{
-        maxWidth:600,
+        maxWidth:650,
         width:"100%",
-        background:"#fff",
-        borderRadius:12,
-        padding:40,
+        background:"#1e293b",
+        borderRadius:20,
+        padding:50,
         textAlign:"center",
-        boxShadow:"0 4px 20px rgba(0,0,0,0.08)"
+        border:"1px solid #334155",
+        boxShadow:"0 10px 40px rgba(0,0,0,0.4)"
       }}>
 
         {/* LOGO */}
-        <div style={{marginBottom:30}}>
-          <img 
-            src="/ecos-logo.png" 
-            alt="ECOS" 
-            style={{height:60}}
+        <div style={{
+          marginBottom:35
+        }}>
+
+          <img
+            src="/ecos-logo.png"
+            alt="ECOS"
+            style={{
+              height:65
+            }}
           />
+
         </div>
 
-        {/* MENSAJE */}
-        <h2 style={{marginBottom:20}}>
+        {/* ICONO */}
+        <div style={{
+          fontSize:60,
+          marginBottom:20
+        }}>
+          ✅
+        </div>
+
+        {/* TITULO */}
+        <h2 style={{
+          marginBottom:20,
+          color:"#ffffff",
+          fontSize:32,
+          fontWeight:700
+        }}>
           Evaluaciones Finalizadas
         </h2>
 
+        {/* TEXTO PRINCIPAL */}
         <p style={{
-          fontSize:16,
-          color:"#555",
-          lineHeight:1.6,
-          marginBottom:30
+          fontSize:17,
+          color:"#cbd5e1",
+          lineHeight:1.8,
+          marginBottom:25
         }}>
           Muchas gracias por completar todas las evaluaciones asignadas.
         </p>
 
+        {/* TEXTO SECUNDARIO */}
         <p style={{
-          fontSize:14,
-          color:"#777",
-          marginBottom:40
+          fontSize:15,
+          color:"#94a3b8",
+          lineHeight:1.7,
+          marginBottom:45
         }}>
-          Su participación ha sido registrada correctamente y los resultados serán entregados a su empresa, muchas gracias.
+          Su participación ha sido registrada correctamente y los resultados serán entregados a su empresa para su correspondiente análisis.
         </p>
 
-        {/* BOTÓN */}
+        {/* BOTON */}
         <button
           onClick={goHome}
           style={{
-            padding:"12px 24px",
-            borderRadius:8,
+            padding:"14px 32px",
+            borderRadius:12,
             border:"none",
             background:"#0A7C66",
-            color:"#fff",
-            fontSize:14,
-            cursor:"pointer"
+            color:"#ffffff",
+            fontSize:15,
+            fontWeight:600,
+            cursor:"pointer",
+            transition:"0.2s ease",
+            boxShadow:"0 4px 14px rgba(10,124,102,0.35)"
           }}
         >
           Finalizar
@@ -80,5 +108,7 @@ export default function ParticipantFinished(){
       </div>
 
     </div>
+
   )
+
 }

@@ -26,10 +26,6 @@ export default function ParticipantAccess(){
         `/api/participant/access/${token}`
       )
 
-      /* ======================================
-      NORMALIZAR EVALUACIONES
-      ====================================== */
-
       const uniqueEvaluations = Object.values(
 
         (res.evaluations || []).reduce((acc:any, a:any)=>{
@@ -163,7 +159,7 @@ export default function ParticipantAccess(){
     if(status === "COMPLETED"){
 
       return {
-        background:"#999",
+        background:"#475569",
         cursor:"not-allowed"
       }
 
@@ -179,7 +175,14 @@ export default function ParticipantAccess(){
   if(loading){
 
     return (
-      <div style={{padding:40}}>
+      <div style={{
+        minHeight:"100vh",
+        background:"#0f172a",
+        color:"#fff",
+        display:"flex",
+        alignItems:"center",
+        justifyContent:"center"
+      }}>
         Cargando...
       </div>
     )
@@ -189,7 +192,14 @@ export default function ParticipantAccess(){
   if(!data || !data.participant){
 
     return (
-      <div style={{padding:40}}>
+      <div style={{
+        minHeight:"100vh",
+        background:"#0f172a",
+        color:"#fff",
+        display:"flex",
+        alignItems:"center",
+        justifyContent:"center"
+      }}>
         Sin datos
       </div>
     )
@@ -201,196 +211,230 @@ export default function ParticipantAccess(){
   return(
 
     <div style={{
+      minHeight:"100vh",
+      background:"#0f172a",
       padding:40,
-      maxWidth:900,
-      margin:"0 auto"
+      color:"#fff"
     }}>
 
-      {/* ======================================
-      LOGO
-      ====================================== */}
-
       <div style={{
-        display:"flex",
-        justifyContent:"center",
-        marginBottom:30
+        maxWidth:900,
+        margin:"0 auto"
       }}>
 
-        <img
-          src="/ecos-logo.png"
-          alt="ECOS"
-          style={{height:60}}
-        />
-
-      </div>
-
-      {/* ======================================
-      BIENVENIDA
-      ====================================== */}
-
-      <div style={{
-        background:"#fff",
-        borderRadius:12,
-        padding:20,
-        marginBottom:30,
-        boxShadow:"0 2px 10px rgba(0,0,0,0.08)"
-      }}>
-
-        <h2>
-          Bienvenido a ECOS
-        </h2>
-
-        <p>
-          Estimado{" "}
-          <b>
-            {participant.nombre} {participant.apellido}
-          </b>,
-        </p>
-
-        <p>
-          {participant.company?.name
-            ? `La empresa ${participant.company.name} lo ha invitado a realizar la evaluación ECOS.`
-            : "Su empresa lo ha invitado a realizar las siguientes evaluaciones."
-          }
-        </p>
-
-      </div>
-
-      {/* ======================================
-      INSTRUCCIONES
-      ====================================== */}
-
-      <div style={{
-        background:"#ffffff",
-        borderRadius:12,
-        padding:25,
-        marginBottom:30,
-        boxShadow:"0 2px 10px rgba(0,0,0,0.08)",
-        border:"1px solid #e5e7eb"
-      }}>
-
-        <h3 style={{
-          marginTop:0,
-          marginBottom:20,
-          color:"#0A7C66"
-        }}>
-          Instrucciones Generales
-        </h3>
+        {/* ======================================
+        LOGO
+        ====================================== */}
 
         <div style={{
-          lineHeight:1.8,
-          fontSize:15,
-          color:"#374151"
+          display:"flex",
+          justifyContent:"center",
+          marginBottom:30
         }}>
 
-          <p>
-            A continuación, daremos inicio a la Evaluación de Competencias en Seguridad ECOS.
-            Esta evaluación tiene por objetivo evaluar competencias asociadas al trabajo seguro y al desempeño en entornos laborales de alta exigencia.
-          </p>
+          <img
+            src="/ecos-logo.png"
+            alt="ECOS"
+            style={{height:60}}
+          />
 
-          <p>
-            La evaluación completa tiene una duración aproximada entre 60 y 90 minutos.
-            Recomendamos responder en un lugar tranquilo, sin interrupciones y utilizando un computador o dispositivo con conexión estable.
-          </p>
+        </div>
 
-          <p>
-            Durante la evaluación PETS se presentarán preguntas orientadas a conocer experiencias reales de trabajo.
-            En sus respuestas deberá describir:
-          </p>
+        {/* ======================================
+        BIENVENIDA
+        ====================================== */}
 
-          <ul>
-            <li>La situación enfrentada</li>
-            <li>Las acciones realizadas</li>
-            <li>El resultado obtenido</li>
-            <li>Los aprendizajes logrados</li>
-          </ul>
+        <div style={{
+          background:"#1e293b",
+          borderRadius:16,
+          padding:30,
+          marginBottom:30,
+          border:"1px solid #334155",
+          boxShadow:"0 10px 30px rgba(0,0,0,0.35)"
+        }}>
 
-          <p>
-            En la evaluación Psicolaboral (ICOM) encontrará afirmaciones relacionadas con su comportamiento habitual en el trabajo.
-            Deberá seleccionar la frecuencia con que cada situación representa su forma de actuar:
-            Nunca, Casi nunca, A veces, Casi siempre o Siempre.
-          </p>
+          <h2 style={{
+            marginTop:0,
+            marginBottom:20,
+            color:"#ffffff"
+          }}>
+            Bienvenido a ECOS
+          </h2>
 
-          <p>
-            No existen respuestas correctas o incorrectas.
-            Responda de manera natural, honesta y espontánea.
+          <p style={{
+            color:"#cbd5e1",
+            lineHeight:1.8
+          }}>
+            Estimado{" "}
+            <strong>
+              {participant.nombre} {participant.apellido}
+            </strong>,
           </p>
 
           <p style={{
-            marginTop:20,
-            fontWeight:"bold",
-            color:"#0A7C66"
+            color:"#cbd5e1",
+            lineHeight:1.8
           }}>
-            Le deseamos mucho éxito en su evaluación.
+            {participant.company?.name
+              ? `La empresa ${participant.company.name} lo ha invitado a realizar la evaluación ECOS.`
+              : "Su empresa lo ha invitado a realizar las siguientes evaluaciones."
+            }
           </p>
 
         </div>
 
-      </div>
+        {/* ======================================
+        INSTRUCCIONES
+        ====================================== */}
 
-      {/* ======================================
-      EVALUACIONES
-      ====================================== */}
+        <div style={{
+          background:"#1e293b",
+          borderRadius:16,
+          padding:30,
+          marginBottom:30,
+          border:"1px solid #334155",
+          boxShadow:"0 10px 30px rgba(0,0,0,0.35)"
+        }}>
 
-      <h3>
-        Evaluaciones Asignadas
-      </h3>
+          <h3 style={{
+            marginTop:0,
+            marginBottom:20,
+            color:"#22c55e"
+          }}>
+            Instrucciones Generales
+          </h3>
 
-      {(data.evaluations || []).map((a:any)=>(
+          <div style={{
+            lineHeight:1.9,
+            fontSize:15,
+            color:"#cbd5e1"
+          }}>
 
-        <div
-          key={a.id}
-          style={{
-            border:"1px solid #ddd",
-            borderRadius:10,
-            padding:20,
-            marginBottom:15,
-            display:"flex",
-            justifyContent:"space-between"
-          }}
-        >
+            <p>
+              A continuación, daremos inicio a la Evaluación de Competencias en Seguridad ECOS.
+              Esta evaluación tiene por objetivo evaluar competencias asociadas al trabajo seguro y al desempeño en entornos laborales de alta exigencia.
+            </p>
 
-          <div>
+            <p>
+              La evaluación completa tiene una duración aproximada entre 60 y 90 minutos.
+              Recomendamos responder en un lugar tranquilo, sin interrupciones y utilizando un computador o dispositivo con conexión estable.
+            </p>
 
-            <strong>
-              {evaluationLabels[a.type] || a.name}
-            </strong>
+            <p>
+              Durante la evaluación PETS se presentarán preguntas orientadas a conocer experiencias reales de trabajo.
+              En sus respuestas deberá describir:
+            </p>
 
-            <div style={{
-              fontSize:12,
-              opacity:0.6
+            <ul style={{
+              paddingLeft:25
             }}>
-              {a.type}
-            </div>
+              <li>La situación enfrentada</li>
+              <li>Las acciones realizadas</li>
+              <li>El resultado obtenido</li>
+              <li>Los aprendizajes logrados</li>
+            </ul>
+
+            <p>
+              En la evaluación Psicolaboral (ICOM) encontrará afirmaciones relacionadas con su comportamiento habitual en el trabajo.
+              Deberá seleccionar la frecuencia con que cada situación representa su forma de actuar:
+              Nunca, Casi nunca, A veces, Casi siempre o Siempre.
+            </p>
+
+            <p>
+              No existen respuestas correctas o incorrectas.
+              Responda de manera natural, honesta y espontánea.
+            </p>
+
+            <p style={{
+              marginTop:20,
+              fontWeight:"bold",
+              color:"#22c55e"
+            }}>
+              Le deseamos mucho éxito en su evaluación.
+            </p>
 
           </div>
 
-          <button
-            onClick={()=>goToEvaluation(
-              a.id,
-              a.status
-            )}
+        </div>
 
-            disabled={
-              a.status === "COMPLETED"
-            }
+        {/* ======================================
+        EVALUACIONES
+        ====================================== */}
 
+        <h3 style={{
+          marginBottom:20,
+          color:"#ffffff"
+        }}>
+          Evaluaciones Asignadas
+        </h3>
+
+        {(data.evaluations || []).map((a:any)=>(
+
+          <div
+            key={a.id}
             style={{
-              padding:"10px 20px",
-              borderRadius:8,
-              border:"none",
-              color:"#fff",
-              ...getButtonStyle(a.status)
+              background:"#1e293b",
+              border:"1px solid #334155",
+              borderRadius:14,
+              padding:22,
+              marginBottom:15,
+              display:"flex",
+              justifyContent:"space-between",
+              alignItems:"center",
+              boxShadow:"0 6px 20px rgba(0,0,0,0.25)"
             }}
           >
 
-            {getStatus(a.status)}
+            <div>
 
-          </button>
+              <strong style={{
+                color:"#ffffff",
+                fontSize:16
+              }}>
+                {evaluationLabels[a.type] || a.name}
+              </strong>
 
-        </div>
+              <div style={{
+                fontSize:12,
+                color:"#94a3b8",
+                marginTop:5
+              }}>
+                {a.type}
+              </div>
 
-      ))}
+            </div>
+
+            <button
+              onClick={()=>goToEvaluation(
+                a.id,
+                a.status
+              )}
+
+              disabled={
+                a.status === "COMPLETED"
+              }
+
+              style={{
+                padding:"12px 24px",
+                borderRadius:10,
+                border:"none",
+                color:"#fff",
+                fontWeight:600,
+                fontSize:14,
+                transition:"0.2s",
+                ...getButtonStyle(a.status)
+              }}
+            >
+
+              {getStatus(a.status)}
+
+            </button>
+
+          </div>
+
+        ))}
+
+      </div>
 
     </div>
 
