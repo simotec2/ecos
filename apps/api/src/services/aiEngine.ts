@@ -1,10 +1,10 @@
 function getLevel(score:number){
 
-  if(score >= 80) return "ALTO"
+  if(score >= 85) return "ALTO"
 
-  if(score >= 60) return "ADECUADO"
+  if(score >= 70) return "ADECUADO"
 
-  if(score >= 40) return "EN DESARROLLO"
+  if(score >= 55) return "ACEPTABLE"
 
   return "CRITICO"
 
@@ -37,12 +37,18 @@ function getTraffic(score:number){
 
 }
 
+/* ======================================
+DETECCIÓN SEMÁNTICA OPERACIONAL PETS
+====================================== */
 export async function evaluateCompetencyAI(
   question:string,
   answer:string,
   keywords:string[]
 ){
 
+  /* =========================
+  SIN RESPUESTA
+  ========================= */
   if(!answer || answer.trim().length === 0){
 
     return {
@@ -54,15 +60,20 @@ export async function evaluateCompetencyAI(
 
   const text = answer.toLowerCase()
 
+  /* =========================
+  KEYWORDS FLEXIBLES
+  ========================= */
   let matches = 0
 
   for(const k of (keywords || [])){
 
-    if(
-      text.includes(
-        String(k).toLowerCase()
-      )
-    ){
+    const keyword = String(k)
+      .toLowerCase()
+      .trim()
+
+    if(!keyword) continue
+
+    if(text.includes(keyword)){
 
       matches++
 
@@ -70,49 +81,146 @@ export async function evaluateCompetencyAI(
 
   }
 
-  let keywordScore = 50
+  /* =========================
+  SCORE BASE HUMANO
+  NO PARTIR DESDE 0
+  ========================= */
+  let keywordScore = 60
 
-  if(keywords?.length){
+  if(matches >= 1) keywordScore = 70
+  if(matches >= 2) keywordScore = 78
+  if(matches >= 3) keywordScore = 85
+  if(matches >= 5) keywordScore = 92
 
-    keywordScore = Math.max(
+  /* =========================
+  DETECCIÓN PREVENTIVA BÁSICA
+  ========================= */
+  const preventiveIndicators = [
 
-      Math.round(
-        (matches / keywords.length) * 100
-      ),
+    "aviso",
+    "informo",
+    "detengo",
+    "paro",
+    "supervisor",
+    "riesgo",
+    "peligro",
+    "seguridad",
+    "epp",
+    "bloqueo",
+    "procedimiento",
+    "prevenir",
+    "proteger",
+    "cuidado",
+    "verifico",
+    "reviso",
+    "alerto"
 
-      20
+  ]
 
-    )
+  let preventiveMatches = 0
+
+  for(const p of preventiveIndicators){
+
+    if(text.includes(p)){
+
+      preventiveMatches++
+
+    }
 
   }
 
-  const length = answer.length
+  let preventiveScore = 0
 
-  let depthScore = 40
+  if(preventiveMatches >= 1) preventiveScore = 5
+  if(preventiveMatches >= 3) preventiveScore = 10
+  if(preventiveMatches >= 5) preventiveScore = 15
 
-  if(length > 200) depthScore = 100
-  else if(length > 120) depthScore = 80
-  else if(length > 60) depthScore = 60
-  else if(length > 30) depthScore = 40
-  else depthScore = 20
+  /* =========================
+  DETECCIÓN DE CONDUCTAS CRÍTICAS
+  ========================= */
+  const dangerousIndicators = [
 
-  const finalScore = Math.round(
+    "ignoro",
+    "continúo igual",
+    "sigo trabajando",
+    "no aviso",
+    "da lo mismo",
+    "sin epp"
 
-    (keywordScore * 0.6) +
-    (depthScore * 0.4)
+  ]
+
+  let dangerous = false
+
+  for(const d of dangerousIndicators){
+
+    if(text.includes(d)){
+
+      dangerous = true
+
+    }
+
+  }
+
+  /* =========================
+  LONGITUD SOLO COMO APOYO
+  NO CASTIGAR RESPUESTAS CORTAS
+  ========================= */
+  let depthScore = 0
+
+  if(answer.length > 150){
+
+    depthScore = 5
+
+  }
+
+  /* =========================
+  SCORE FINAL
+  ========================= */
+  let finalScore = Math.round(
+
+    keywordScore +
+    preventiveScore +
+    depthScore
 
   )
+
+  /* =========================
+  AJUSTE POR CONDUCTA CRÍTICA
+  ========================= */
+  if(dangerous){
+
+    finalScore -= 25
+
+  }
+
+  /* =========================
+  LIMITES
+  ========================= */
+  if(finalScore > 100){
+
+    finalScore = 100
+
+  }
+
+  if(finalScore < 20){
+
+    finalScore = 20
+
+  }
 
   return {
 
     competent: finalScore >= 60,
 
-    score: finalScore || 30
+    score: finalScore
 
   }
 
 }
 
+/* ======================================
+ANÁLISIS IA
+====================================== */
 export async function generateAIReport(
   input:any
 ){
@@ -165,13 +273,13 @@ Fortalezas observadas:
 
 ${strengths}.
 
-Estas competencias evidencian capacidades asociadas a desempeño preventivo, cumplimiento operacional y adaptación a entornos de trabajo con exigencias de seguridad.
+Las respuestas entregadas evidencian criterios preventivos asociados a control operacional, identificación de riesgos y conductas de seguridad aplicables a entornos de trabajo de exigencia operacional.
 
 Brechas detectadas:
 
 ${gaps}.
 
-Las brechas identificadas podrían generar ${riskText}, especialmente en tareas que requieren control preventivo permanente y adherencia estricta a procedimientos.
+Las brechas identificadas podrían generar ${riskText}, especialmente en tareas que requieren control preventivo permanente y adherencia estricta a procedimientos operacionales.
 
 Análisis operacional:
 
@@ -222,12 +330,12 @@ export function generateRecommendations(
     name:c.name,
 
     text:
-      c.score >= 80
+      c.score >= 85
         ? "Mantener como fortaleza operacional."
-        : c.score >= 60
-        ? "Reforzar consistencia en terreno."
-        : c.score >= 40
-        ? "Desarrollar mediante capacitación y acompañamiento preventivo."
+        : c.score >= 70
+        ? "Reforzar consistencia preventiva en terreno."
+        : c.score >= 55
+        ? "Desarrollar mediante acompañamiento preventivo."
         : "Requiere intervención preventiva prioritaria."
 
   }))
