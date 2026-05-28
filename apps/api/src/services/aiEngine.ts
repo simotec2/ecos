@@ -1,18 +1,30 @@
+import OpenAI from "openai"
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+})
+
+/* ======================================
+NIVELES
+====================================== */
 function getLevel(score:number){
 
-  if(score >= 85) return "ALTO"
+  if(score >= 80) return "ALTO"
 
-  if(score >= 70) return "ADECUADO"
+  if(score >= 55) return "ADECUADO"
 
-  if(score >= 55) return "ACEPTABLE"
+  if(score >= 40) return "EN DESARROLLO"
 
   return "CRITICO"
 
 }
 
+/* ======================================
+SEMÁFORO
+====================================== */
 function getTraffic(score:number){
 
-  if(score >= 85){
+  if(score >= 80){
 
     return {
       color:"VERDE",
@@ -38,7 +50,7 @@ function getTraffic(score:number){
 }
 
 /* ======================================
-DETECCIÓN SEMÁNTICA OPERACIONAL PETS
+IA GUIADA PETS
 ====================================== */
 export async function evaluateCompetencyAI(
   question:string,
@@ -53,173 +65,183 @@ export async function evaluateCompetencyAI(
 
     return {
       competent:false,
-      score:20
+      score:20,
+      reason:"Sin respuesta"
     }
 
   }
 
-  const text = answer.toLowerCase()
+  try{
 
-  /* =========================
-  KEYWORDS FLEXIBLES
-  ========================= */
-  let matches = 0
+    const prompt = `
 
-  for(const k of (keywords || [])){
+Eres un psicólogo laboral senior experto en:
 
-    const keyword = String(k)
-      .toLowerCase()
-      .trim()
+- seguridad minera
+- conducta preventiva
+- comportamiento operacional
+- continuidad operacional
+- gestión del riesgo
+- cultura de seguridad
 
-    if(!keyword) continue
+Tu función es evaluar respuestas conductuales de trabajadores operacionales.
 
-    if(text.includes(keyword)){
+IMPORTANTE:
 
-      matches++
+- Evalúa criterio preventivo operacional
+- Evalúa intención preventiva
+- Evalúa conciencia de riesgo
+- Evalúa conducta segura
+- Evalúa toma de decisiones
+- Evalúa escalamiento y comunicación preventiva
+- Evalúa adherencia operacional
+
+MUY IMPORTANTE:
+
+- NO evalúes ortografía
+- NO evalúes redacción
+- NO penalices respuestas breves
+- Los trabajadores operacionales utilizan lenguaje simple
+- Una respuesta corta puede demostrar alta competencia preventiva
+- Debes interpretar el sentido operacional de la respuesta
+
+La mayoría de trabajadores:
+- no usa lenguaje corporativo
+- no redacta técnicamente
+- responde de forma simple y directa
+
+IMPORTANTE:
+NO regales puntajes altos.
+Debes mantener criterio profesional y exigencia operacional.
+
+ESCALA:
+
+80-100:
+Conducta preventiva sólida y criterio operacional consistente.
+
+55-79:
+Conducta preventiva adecuada pero con oportunidades de mejora.
+
+40-54:
+Conducta preventiva insuficiente o inconsistente.
+
+0-39:
+Conducta riesgosa o ausencia de criterio preventivo.
+
+Pregunta:
+"${question}"
+
+Respuesta trabajador:
+"${answer}"
+
+Keywords de apoyo:
+${(keywords || []).join(", ")}
+
+Responde SOLO JSON válido:
+
+{
+  "score": number,
+  "reason": "explicación breve"
+}
+
+`
+
+    const response =
+      await openai.chat.completions.create({
+
+        model:"gpt-4.1-mini",
+
+        temperature:0.2,
+
+        messages:[
+
+          {
+            role:"system",
+            content:"Responde SOLO JSON válido."
+          },
+
+          {
+            role:"user",
+            content:prompt
+          }
+
+        ]
+
+      })
+
+    const content =
+      response.choices?.[0]
+        ?.message
+        ?.content || ""
+
+    let parsed:any = null
+
+    try{
+
+      parsed = JSON.parse(content)
+
+    }catch{
+
+      parsed = null
 
     }
 
-  }
+    let finalScore =
+      Number(parsed?.score || 50)
 
-  /* =========================
-  SCORE BASE HUMANO
-  NO PARTIR DESDE 0
-  ========================= */
-  let keywordScore = 60
+    /* =========================
+    LIMITES
+    ========================= */
+    if(finalScore > 100){
 
-  if(matches >= 1) keywordScore = 70
-  if(matches >= 2) keywordScore = 78
-  if(matches >= 3) keywordScore = 85
-  if(matches >= 5) keywordScore = 92
-
-  /* =========================
-  DETECCIÓN PREVENTIVA BÁSICA
-  ========================= */
-  const preventiveIndicators = [
-
-    "aviso",
-    "informo",
-    "detengo",
-    "paro",
-    "supervisor",
-    "riesgo",
-    "peligro",
-    "seguridad",
-    "epp",
-    "bloqueo",
-    "procedimiento",
-    "prevenir",
-    "proteger",
-    "cuidado",
-    "verifico",
-    "reviso",
-    "alerto"
-
-  ]
-
-  let preventiveMatches = 0
-
-  for(const p of preventiveIndicators){
-
-    if(text.includes(p)){
-
-      preventiveMatches++
+      finalScore = 100
 
     }
 
-  }
+    if(finalScore < 20){
 
-  let preventiveScore = 0
-
-  if(preventiveMatches >= 1) preventiveScore = 5
-  if(preventiveMatches >= 3) preventiveScore = 10
-  if(preventiveMatches >= 5) preventiveScore = 15
-
-  /* =========================
-  DETECCIÓN DE CONDUCTAS CRÍTICAS
-  ========================= */
-  const dangerousIndicators = [
-
-    "ignoro",
-    "continúo igual",
-    "sigo trabajando",
-    "no aviso",
-    "da lo mismo",
-    "sin epp"
-
-  ]
-
-  let dangerous = false
-
-  for(const d of dangerousIndicators){
-
-    if(text.includes(d)){
-
-      dangerous = true
+      finalScore = 20
 
     }
 
-  }
+    return {
 
-  /* =========================
-  LONGITUD SOLO COMO APOYO
-  NO CASTIGAR RESPUESTAS CORTAS
-  ========================= */
-  let depthScore = 0
+      competent: finalScore >= 55,
 
-  if(answer.length > 150){
+      score: Math.round(finalScore),
 
-    depthScore = 5
+      reason:
+        parsed?.reason || ""
 
-  }
+    }
 
-  /* =========================
-  SCORE FINAL
-  ========================= */
-  let finalScore = Math.round(
+  }catch(error){
 
-    keywordScore +
-    preventiveScore +
-    depthScore
+    console.log(
+      "ERROR IA PETS"
+    )
 
-  )
+    console.log(error)
 
-  /* =========================
-  AJUSTE POR CONDUCTA CRÍTICA
-  ========================= */
-  if(dangerous){
+    /* =========================
+    FALLBACK
+    ========================= */
+    return {
 
-    finalScore -= 25
+      competent:true,
 
-  }
+      score:60,
 
-  /* =========================
-  LIMITES
-  ========================= */
-  if(finalScore > 100){
+      reason:"Fallback automático"
 
-    finalScore = 100
-
-  }
-
-  if(finalScore < 20){
-
-    finalScore = 20
-
-  }
-
-  return {
-
-    competent: finalScore >= 60,
-
-    score: finalScore
+    }
 
   }
 
 }
 
 /* ======================================
-ANÁLISIS IA
+ANÁLISIS GENERAL IA
 ====================================== */
 export async function generateAIReport(
   input:any
@@ -251,7 +273,7 @@ export async function generateAIReport(
     ).join(", ")
 
   const riskText =
-    input.score >= 85
+    input.score >= 80
       ? "bajo nivel de exposición operacional"
       : input.score >= 55
       ? "riesgos operacionales moderados que requieren seguimiento"
@@ -262,7 +284,7 @@ export async function generateAIReport(
 Análisis general:
 
 El participante presenta un desempeño ${
-  input.score >= 85
+  input.score >= 80
     ? "sólido y consistente"
     : input.score >= 55
     ? "adecuado con oportunidades de mejora"
@@ -284,7 +306,7 @@ Las brechas identificadas podrían generar ${riskText}, especialmente en tareas 
 Análisis operacional:
 
 El perfil evaluado evidencia ${
-  input.score >= 85
+  input.score >= 80
     ? "adecuada capacidad de respuesta frente a condiciones operacionales."
     : input.score >= 55
     ? "necesidad de reforzar criterios preventivos y seguimiento en terreno."
@@ -306,7 +328,7 @@ ${bottom.map((c:any)=>`
 Recomendación profesional:
 
 Se recomienda ${
-  input.score >= 85
+  input.score >= 80
     ? "mantener seguimiento preventivo estándar y potenciar fortalezas observadas."
     : input.score >= 55
     ? "implementar acompañamiento preventivo focalizado y reforzar competencias críticas."
@@ -321,6 +343,9 @@ Los resultados obtenidos permiten identificar tendencias conductuales y operacio
 
 }
 
+/* ======================================
+RECOMENDACIONES
+====================================== */
 export function generateRecommendations(
   competencies:any[]
 ){
@@ -330,23 +355,26 @@ export function generateRecommendations(
     name:c.name,
 
     text:
-      c.score >= 85
+      c.score >= 80
         ? "Mantener como fortaleza operacional."
-        : c.score >= 70
-        ? "Reforzar consistencia preventiva en terreno."
         : c.score >= 55
-        ? "Desarrollar mediante acompañamiento preventivo."
+        ? "Reforzar consistencia preventiva en terreno."
+        : c.score >= 40
+        ? "Desarrollar mediante capacitación y acompañamiento preventivo."
         : "Requiere intervención preventiva prioritaria."
 
   }))
 
 }
 
+/* ======================================
+RIESGO
+====================================== */
 export function calculateRisk(
   score:number
 ){
 
-  if(score >= 85){
+  if(score >= 80){
 
     return {
       level:"BAJO",
@@ -371,6 +399,9 @@ export function calculateRisk(
 
 }
 
+/* ======================================
+ENRIQUECER
+====================================== */
 export function enrichCompetencies(
   competencies:any[]
 ){
