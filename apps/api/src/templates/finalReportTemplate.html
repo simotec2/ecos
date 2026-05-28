@@ -28,17 +28,6 @@ body{
   margin-bottom:12px;
 }
 
-.identity{
-  margin-top:10px;
-  font-size:15px;
-}
-
-.identity small{
-  display:block;
-  font-size:12px;
-  color:#6b7280;
-}
-
 .line{
   height:5px;
   background: linear-gradient(to right, #1e3a8a, #60faad);
@@ -59,6 +48,10 @@ body{
 .section-blue{
   background:#eff6ff;
   border:1px solid #dbeafe;
+}
+
+h2{
+  margin:0;
 }
 
 h3{
@@ -105,6 +98,12 @@ h3{
   color:#6b7280;
 }
 
+.identity{
+  font-size:13px;
+  line-height:1.7;
+  margin-bottom:10px;
+}
+
 </style>
 
 </head>
@@ -119,24 +118,29 @@ h3{
 
     {{logo}}
 
-    <h2>INFORME FINAL EVALUACION ECOS</h2>
+    <h2>
+      INFORME FINAL EVALUACION ECOS
+    </h2>
 
   </div>
 
   <!-- IDENTIDAD -->
 
-  <b>Nombre:</b>
-      {{participant}}<br/>
+  <div class="identity">
 
-      <b>Perfil:</b>
-      {{profile}}<br/>
+    <b>Nombre:</b>
+    {{participant}}<br/>
 
-      <b>Empresa:</b>
-      {{company}}<br/>
+    <b>Perfil:</b>
+    {{profile}}<br/>
 
-      <b>Fecha evaluación:</b>
-      <b>{{date}}<b/>
+    <b>Empresa:</b>
+    {{company}}<br/>
 
+    <b>Fecha evaluación:</b>
+    {{date}}
+
+  </div>
 
   <div class="line"></div>
 
@@ -159,12 +163,11 @@ h3{
         Resultado<br/>
 
         <div
-          class="result"
-          style="background:{{color}}"
-        >
-          {{result}}
-        </div>
-
+  class="result"
+  style="background-color:{{resultColor}};"
+>
+  {{result}}
+</div>
       </div>
 
     </div>
@@ -187,7 +190,9 @@ h3{
 
   <div class="card">
 
-    <h3>Análisis Final</h3>
+    <h3>
+      Análisis Final
+    </h3>
 
     <div class="analysis">
 

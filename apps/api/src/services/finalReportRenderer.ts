@@ -48,7 +48,7 @@ export async function renderFinalReportHTML(data:any){
     )
 
   /* ======================================
-  FECHA REAL
+  FECHA
   ====================================== */
 
   const reportDate = safeText(
@@ -60,6 +60,14 @@ export async function renderFinalReportHTML(data:any){
     participantProfile,
     reportDate
   })
+
+  /* ======================================
+  COLOR RESULTADO
+  ====================================== */
+
+  const resultColor = getColor(
+    data.traffic?.color || ""
+  )
 
   /* ======================================
   LOGO
@@ -150,11 +158,6 @@ export async function renderFinalReportHTML(data:any){
     )
 
     .replace(
-      /{{color}}/gi,
-      getColor(data.traffic?.color)
-    )
-
-    .replace(
       /{{analysis}}/gi,
       analysis
     )
@@ -162,6 +165,11 @@ export async function renderFinalReportHTML(data:any){
     .replace(
       /{{radar}}/gi,
       radar
+    )
+
+    .replace(
+      /{{resultStyle}}/g,
+      `background-color:${resultColor};`
     )
 
   /* ======================================
