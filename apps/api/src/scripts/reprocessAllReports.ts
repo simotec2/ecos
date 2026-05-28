@@ -1,5 +1,10 @@
 import prisma from "../db"
-import { generateEvaluationReport } from "../services/reportEngine"
+
+import { generateEvaluationReport }
+  from "../services/reportEngine"
+
+import { evaluatePETSSession }
+  from "../services/evaluatePETSSession"
 
 async function main() {
 
@@ -12,7 +17,13 @@ async function main() {
   ====================================== */
 
   const sessions =
-    await prisma.evaluationSession.findMany()
+    await prisma.evaluationSession.findMany({
+
+      include:{
+        evaluation:true
+      }
+
+    })
 
   console.log(
     `Sesiones encontradas: ${sessions.length}`
@@ -32,6 +43,10 @@ async function main() {
         `Sesión: ${session.id}`
       )
 
+      console.log(
+        `Tipo: ${session.evaluation?.type}`
+      )
+
       /* ======================================
       BORRAR RESULTADOS ANTIGUOS
       ====================================== */
@@ -49,17 +64,38 @@ async function main() {
       )
 
       /* ======================================
-      REGENERAR
+      PETS → NUEVO MOTOR
       ====================================== */
 
-      const result =
-        await generateEvaluationReport(
-          session.id
+      if(session.evaluation?.type === "PETS"){
+
+        const result =
+          await evaluatePETSSession(
+            session.id
+          )
+
+        console.log(
+          `PETS reprocesado: ${result.score}%`
         )
 
-      console.log(
-        `Nuevo score: ${result.score}%`
-      )
+      }
+
+      /* ======================================
+      RESTO → MOTOR NORMAL
+      ====================================== */
+
+      else {
+
+        const result =
+          await generateEvaluationReport(
+            session.id
+          )
+
+        console.log(
+          `Nuevo score: ${result.score}%`
+        )
+
+      }
 
     } catch(error){
 
