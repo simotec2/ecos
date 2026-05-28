@@ -1,4 +1,5 @@
 import prisma from "../db"
+
 import {
   evaluateCompetencyAI,
   generateAIReport,
@@ -6,19 +7,55 @@ import {
 } from "./aiEngine"
 
 /* ======================================
+SEMÁFORO
+====================================== */
+function calculateTraffic(score:number){
+
+  if(score >= 85){
+
+    return {
+      color:"VERDE",
+      result:"RECOMENDABLE"
+    }
+
+  }
+
+  if(score >= 55){
+
+    return {
+      color:"AMARILLO",
+      result:"RECOMENDABLE CON OBSERVACIONES"
+    }
+
+  }
+
+  return {
+    color:"ROJO",
+    result:"NO RECOMENDABLE"
+  }
+
+}
+
+/* ======================================
 PETS ENGINE COMPLETO
 ====================================== */
-export async function evaluatePETSSession(sessionId: string){
+export async function evaluatePETSSession(
+  sessionId: string
+){
 
   /* =========================
   RESPUESTAS
   ========================= */
-  const answers = await prisma.evaluationAnswer.findMany({
-    where:{ sessionId },
-    include:{
-      question:true
-    }
-  })
+  const answers =
+    await prisma.evaluationAnswer.findMany({
+
+      where:{ sessionId },
+
+      include:{
+        question:true
+      }
+
+    })
 
   if(!answers.length){
 
@@ -29,9 +66,12 @@ export async function evaluatePETSSession(sessionId: string){
   /* =========================
   SESIÓN
   ========================= */
-  const session = await prisma.evaluationSession.findUnique({
-    where:{ id: sessionId }
-  })
+  const session =
+    await prisma.evaluationSession.findUnique({
+
+      where:{ id: sessionId }
+
+    })
 
   if(!session){
 
@@ -58,9 +98,13 @@ export async function evaluatePETSSession(sessionId: string){
 
     const result =
       await evaluateCompetencyAI(
+
         question?.text || "",
+
         ans.answer || "",
+
         keywords
+
       )
 
     if(!competencyMap[competency]){
@@ -69,7 +113,9 @@ export async function evaluatePETSSession(sessionId: string){
 
     }
 
-    competencyMap[competency].push(result.score)
+    competencyMap[competency].push(
+      result.score
+    )
 
   }
 
@@ -103,7 +149,9 @@ export async function evaluatePETSSession(sessionId: string){
   ENRIQUECER
   ========================= */
   competencies =
-    enrichCompetencies(competencies)
+    enrichCompetencies(
+      competencies
+    )
 
   /* =========================
   SCORE GLOBAL
@@ -111,42 +159,58 @@ export async function evaluatePETSSession(sessionId: string){
   const score = Math.round(
 
     competencies.reduce(
+
       (a:number,c:any)=>a+c.score,
+
       0
+
     ) / competencies.length
 
   )
 
   /* =========================
+  SEMÁFORO
+  ========================= */
+  const traffic =
+    calculateTraffic(score)
+
+  /* =========================
   IA
   ========================= */
-  const aiText = await generateAIReport({
+  const aiText =
+    await generateAIReport({
 
-    type:"PETS",
+      type:"PETS",
 
-    score,
+      score,
 
-    competencies,
+      traffic,
 
-    answers: answers.map(a=>({
+      competencies,
 
-      question: a.question?.text || "",
+      answers: answers.map(a=>({
 
-      answer: a.answer || ""
+        question:
+          a.question?.text || "",
 
-    }))
+        answer:
+          a.answer || ""
 
-  })
+      }))
+
+    })
 
   /* =========================
-  LIMPIAR
+  LIMPIAR RESULTADO PREVIO
   ========================= */
   await prisma.evaluationResult.deleteMany({
+
     where:{ sessionId }
+
   })
 
   /* =========================
-  GUARDAR
+  GUARDAR RESULTADO
   ========================= */
   return await prisma.evaluationResult.create({
 
@@ -154,9 +218,11 @@ export async function evaluatePETSSession(sessionId: string){
 
       sessionId,
 
-      evaluationId: session.evaluationId,
+      evaluationId:
+        session.evaluationId,
 
-      participantId: session.participantId!,
+      participantId:
+        session.participantId!,
 
       score,
 
@@ -164,11 +230,14 @@ export async function evaluatePETSSession(sessionId: string){
 
         score,
 
+        traffic,
+
         competencies,
 
         analysis: aiText,
 
-        answersCount: answers.length
+        answersCount:
+          answers.length
 
       })
 
