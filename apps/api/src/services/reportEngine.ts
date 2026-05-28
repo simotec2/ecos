@@ -15,7 +15,7 @@ function normalize(value: any) {
 
 function calculateTrafficLight(score: number) {
 
-  if (score >= 85) {
+  if (score >= 80) {
     return {
       color: "VERDE",
       result: "RECOMENDABLE"

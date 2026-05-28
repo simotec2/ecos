@@ -48,7 +48,7 @@ export function generateOperationalInsights({
     executiveSummary = `
 
 El participante presenta un desempeño ${
-  score >= 85
+  score >= 80
     ? "sólido"
     : score >= 55
     ? "adecuado con observaciones"

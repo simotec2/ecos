@@ -36,7 +36,7 @@ function getColor(color:string){
 
 function getDecision(score:number){
 
-  if(score >= 85){
+  if(score >= 80){
 
     return {
       text:"RECOMENDABLE",
