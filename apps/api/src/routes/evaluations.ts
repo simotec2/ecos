@@ -121,14 +121,16 @@ router.post("/", async (req,res)=>{
 })
 
 /* ======================================
-🔥 ELIMINAR EVALUACIÓN (PROTEGIDO)
+🔥 ELIMINAR EVALUACIÓN (SUPERADMIN / PSYCHOLOGIST)
 ====================================== */
 router.delete("/:id", async (req,res)=>{
 
   const user = getUser(req)
 
   if(!user){
-    return res.status(401).json({ error:"No autorizado" })
+    return res.status(401).json({
+      error:"No autorizado"
+    })
   }
 
   if(!isAdmin(user)){
@@ -137,16 +139,85 @@ router.delete("/:id", async (req,res)=>{
     })
   }
 
-  const id = String(req.params.id)
+  try{
 
-  await prisma.evaluation.delete({
-    where:{ id }
-  })
+    const id = String(req.params.id)
 
-  res.json({ ok:true })
+    const evaluation = await prisma.evaluation.findUnique({
+      where:{ id }
+    })
+
+    if(!evaluation){
+      return res.status(404).json({
+        error:"Evaluación no encontrada"
+      })
+    }
+
+    const sessionsCount =
+      await prisma.evaluationSession.count({
+        where:{
+          evaluationId:id
+        }
+      })
+
+    const resultsCount =
+      await prisma.evaluationResult.count({
+        where:{
+          evaluationId:id
+        }
+      })
+
+    const assignmentsCount =
+      await prisma.assignment.count({
+        where:{
+          evaluationId:id
+        }
+      })
+
+    if(
+      sessionsCount > 0 ||
+      resultsCount > 0 ||
+      assignmentsCount > 0
+    ){
+
+      return res.status(400).json({
+        error:
+          "No se puede eliminar esta evaluación porque ya tiene asignaciones, sesiones o resultados asociados."
+      })
+
+    }
+
+    await prisma.$transaction(async(tx)=>{
+
+      await tx.evaluationQuestion.deleteMany({
+        where:{
+          evaluationId:id
+        }
+      })
+
+      await tx.evaluation.delete({
+        where:{
+          id
+        }
+      })
+
+    })
+
+    return res.json({
+      ok:true
+    })
+
+  }catch(err){
+
+    console.error("DELETE EVALUATION ERROR:", err)
+
+    return res.status(500).json({
+      error:"Error eliminando evaluación"
+    })
+
+  }
 
 })
-
 /* ======================================
 🔥 TEST (SOLO ADMIN)
 ====================================== */

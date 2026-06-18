@@ -8,8 +8,13 @@ export default function Evaluations(){
 
   const [evaluations,setEvaluations]=useState<any[]>([])
   const [loading,setLoading]=useState(true)
+  const [deletingId,setDeletingId]=useState<string | null>(null)
 
   const role = localStorage.getItem("role")
+
+  const canDelete =
+    role === "SUPERADMIN" ||
+    role === "PSYCHOLOGIST"
 
   if(
     role !== "SUPERADMIN" &&
@@ -85,6 +90,56 @@ export default function Evaluations(){
   function viewEvaluation(id:string){
 
     navigate(`/app/evaluations/${id}/view`)
+
+  }
+
+  async function deleteEvaluation(ev:any){
+
+    if(!canDelete){
+      alert("No tienes permisos para eliminar evaluaciones")
+      return
+    }
+
+    const name =
+      ev?.name
+        ? formatName(ev.name)
+        : "esta evaluación"
+
+    const confirmDelete = window.confirm(
+      `¿Seguro que deseas eliminar la evaluación "${name}"?\n\nEsta acción no se puede deshacer.`
+    )
+
+    if(!confirmDelete){
+      return
+    }
+
+    try{
+
+      setDeletingId(ev.id)
+
+      await apiFetch(`/api/evaluations/${ev.id}`,{
+        method:"DELETE"
+      })
+
+      alert("Evaluación eliminada correctamente")
+
+      await load()
+
+    }catch(err:any){
+
+      console.error("Error eliminando evaluación", err)
+
+      alert(
+        err?.message ||
+        err?.error ||
+        "No se pudo eliminar la evaluación. Puede que ya tenga asignaciones, sesiones o resultados asociados."
+      )
+
+    }finally{
+
+      setDeletingId(null)
+
+    }
 
   }
 
@@ -168,7 +223,8 @@ export default function Evaluations(){
                 <td style={{
                   ...styles.td,
                   display:"flex",
-                  gap:10
+                  gap:10,
+                  flexWrap:"wrap"
                 }}>
 
                   <button
@@ -197,6 +253,28 @@ export default function Evaluations(){
                   >
                     Probar
                   </button>
+
+                  {canDelete && (
+
+                    <button
+                      onClick={()=>
+                        deleteEvaluation(ev)
+                      }
+                      disabled={deletingId === ev.id}
+                      style={{
+                        ...styles.redButton,
+                        opacity:
+                          deletingId === ev.id
+                            ? 0.6
+                            : 1
+                      }}
+                    >
+                      {deletingId === ev.id
+                        ? "Eliminando..."
+                        : "Eliminar"}
+                    </button>
+
+                  )}
 
                 </td>
 
@@ -278,7 +356,9 @@ const styles:any = {
     backdropFilter:"blur(12px)",
 
     boxShadow:
-      "0 10px 40px rgba(0,0,0,0.45)"
+      "0 10px 40px rgba(0,0,0,0.45)",
+
+    overflowX:"auto"
 
   },
 
@@ -372,6 +452,25 @@ const styles:any = {
 
     background:
       "linear-gradient(135deg,#2563eb,#1d4ed8)",
+
+    color:"#fff",
+
+    border:"none",
+
+    borderRadius:10,
+
+    cursor:"pointer",
+
+    fontWeight:700
+
+  },
+
+  redButton:{
+
+    padding:"8px 14px",
+
+    background:
+      "linear-gradient(135deg,#dc2626,#ef4444)",
 
     color:"#fff",
 
