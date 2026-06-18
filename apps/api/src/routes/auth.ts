@@ -76,12 +76,13 @@ router.post("/login", async (req, res) => {
       ok: true,
       token,
       forcePasswordChange: false,
-      user: {
-        id: user.id,
-        name: user.name,
-        rut: user.rut,
-        role: user.role
-      }
+     user: {
+  id: user.id,
+  name: user.name,
+  rut: user.rut,
+  role: user.role,
+  companyId: user.companyId
+}
     })
 
   } catch (error: any) {

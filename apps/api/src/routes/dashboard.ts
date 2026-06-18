@@ -29,21 +29,107 @@ function consolidateResults(results:any[]){
   }
 
   const sum = scores.reduce((a,b)=>a+b,0)
-
   const finalScore = sum / scores.length
 
   let estado:"VERDE" | "AMARILLO" | "ROJO" = "VERDE"
 
   if(finalScore < 55){
     estado = "ROJO"
-  }
-  else if(finalScore < 85){
+  }else if(finalScore < 85){
     estado = "AMARILLO"
   }
 
   return {
     score: Math.round(finalScore),
     estado
+  }
+
+}
+
+/* ================= PARSE RESULT JSON ================= */
+function parseResultJson(r:any){
+
+  try{
+
+    if(!r?.resultJson){
+      return {}
+    }
+
+    return typeof r.resultJson === "string"
+      ? JSON.parse(r.resultJson)
+      : r.resultJson
+
+  }catch{
+
+    return {}
+
+  }
+
+}
+
+/* ================= COMPETENCIAS ================= */
+function getCompetencias(results:any[]){
+
+  const map:any = {}
+
+  results.forEach(r=>{
+
+    const raw = parseResultJson(r)
+
+    const comps =
+      raw?.competencies ||
+      raw?.competencias ||
+      []
+
+    comps.forEach((c:any)=>{
+
+      const name =
+        c?.name ||
+        c?.nombre ||
+        c?.competency ||
+        c?.competencia
+
+      const score = Number(
+        c?.score ??
+        c?.puntaje ??
+        0
+      )
+
+      if(!name || isNaN(score)){
+        return
+      }
+
+      if(!map[name]){
+        map[name] = []
+      }
+
+      map[name].push(score)
+
+    })
+
+  })
+
+  const avg = Object.entries(map).map(([name,arr]:any)=>({
+
+    name,
+
+    score:
+      arr.reduce((a:number,b:number)=>a+b,0)
+      / arr.length
+
+  }))
+
+  const sorted =
+    avg.sort((a,b)=>b.score-a.score)
+
+  return {
+
+    top:
+      sorted.slice(0,5),
+
+    bottom:
+      sorted.slice(-5).reverse()
+
   }
 
 }
@@ -67,7 +153,7 @@ function getCompanyRecommendation(rojoPct:number){
 
 }
 
-/* ================= ROUTE ================= */
+/* ================= DASHBOARD ================= */
 router.get("/", authMiddleware, async (req:any,res)=>{
 
   try{
@@ -83,16 +169,22 @@ router.get("/", authMiddleware, async (req:any,res)=>{
     }
 
     /* ======================================
-    FILTRO COMPANY ADMIN
+    FILTRO POR EMPRESA
     ====================================== */
 
-    let companyFilter:any = {}
+    let participantWhere:any = {}
 
     if(user.role === "COMPANY_ADMIN"){
 
-      companyFilter = {
-        companyId: user.companyId
+      if(!user.companyId){
+
+        return res.status(403).json({
+          error:"Usuario empresa sin empresa asignada"
+        })
+
       }
+
+      participantWhere.companyId = user.companyId
 
     }
 
@@ -102,15 +194,26 @@ router.get("/", authMiddleware, async (req:any,res)=>{
 
     const participants = await prisma.participant.findMany({
 
-      where: companyFilter,
+      where: participantWhere,
 
       include:{
         company:true
+      },
+
+      orderBy:{
+        createdAt:"desc"
       }
 
     })
 
-    const participantIds = participants.map(p=>p.id)
+    const participantIds =
+      participants.map(p=>p.id)
+
+    const participantMap:any = {}
+
+    participants.forEach(p=>{
+      participantMap[p.id] = p
+    })
 
     /* ======================================
     RESULTADOS
@@ -135,7 +238,7 @@ router.get("/", authMiddleware, async (req:any,res)=>{
     })
 
     /* ======================================
-    AGRUPAR
+    AGRUPAR RESULTADOS POR PARTICIPANTE
     ====================================== */
 
     const grouped:any = {}
@@ -151,7 +254,7 @@ router.get("/", authMiddleware, async (req:any,res)=>{
     })
 
     /* ======================================
-    CONSOLIDADO
+    CONSOLIDADO POR PARTICIPANTE
     ====================================== */
 
     const consolidated:any[] = []
@@ -163,13 +266,14 @@ router.get("/", authMiddleware, async (req:any,res)=>{
 
       if(!final) return
 
-      const participant = participants.find(
-        p=>p.id === participantId
-      )
+      const participant = participantMap[participantId]
 
       consolidated.push({
 
         participantId,
+
+        participantName:
+          `${participant?.nombre || ""} ${participant?.apellido || ""}`.trim(),
 
         companyId: participant?.companyId,
 
@@ -182,7 +286,7 @@ router.get("/", authMiddleware, async (req:any,res)=>{
     })
 
     /* ======================================
-    DASHBOARD GLOBAL
+    SEMÁFORO
     ====================================== */
 
     let verde = 0
@@ -193,18 +297,20 @@ router.get("/", authMiddleware, async (req:any,res)=>{
 
       if(r.estado === "VERDE"){
         verde++
-      }
-      else if(r.estado === "AMARILLO"){
+      }else if(r.estado === "AMARILLO"){
         amarillo++
-      }
-      else{
+      }else{
         rojo++
       }
 
     })
 
+    const total = participants.length
+    const rendidos = consolidated.length
+    const pendientes = Math.max(0,total - rendidos)
+
     /* ======================================
-    DASHBOARD EMPRESA
+    DASHBOARD POR EMPRESA
     ====================================== */
 
     const companyMap:any = {}
@@ -219,7 +325,7 @@ router.get("/", authMiddleware, async (req:any,res)=>{
 
           id: r.companyId,
 
-          name: r.companyName,
+          name: r.companyName || "Sin empresa",
 
           total: 0,
 
@@ -237,11 +343,9 @@ router.get("/", authMiddleware, async (req:any,res)=>{
 
       if(r.estado === "VERDE"){
         companyMap[r.companyId].verde++
-      }
-      else if(r.estado === "AMARILLO"){
+      }else if(r.estado === "AMARILLO"){
         companyMap[r.companyId].amarillo++
-      }
-      else{
+      }else{
         companyMap[r.companyId].rojo++
       }
 
@@ -267,7 +371,23 @@ router.get("/", authMiddleware, async (req:any,res)=>{
     })
 
     /* ======================================
-    RESPONSE
+    EMPRESA ACTUAL
+    ====================================== */
+
+    let currentCompany:any = null
+
+    if(user.companyId){
+
+      currentCompany = await prisma.company.findUnique({
+        where:{
+          id:user.companyId
+        }
+      })
+
+    }
+
+    /* ======================================
+    RESPUESTA
     ====================================== */
 
     return res.json({
@@ -276,7 +396,26 @@ router.get("/", authMiddleware, async (req:any,res)=>{
 
       data:{
 
-        participantes: consolidated.length,
+        scope:
+          user.role === "COMPANY_ADMIN"
+            ? "COMPANY"
+            : "GLOBAL",
+
+        company: currentCompany
+          ? {
+              id: currentCompany.id,
+              name: currentCompany.name
+            }
+          : null,
+
+        kpis:{
+          total,
+          rendidos,
+          pendientes,
+          verde,
+          amarillo,
+          rojo
+        },
 
         semaforo:{
           verde,
@@ -284,7 +423,12 @@ router.get("/", authMiddleware, async (req:any,res)=>{
           rojo
         },
 
-        companies
+        competencias:
+          getCompetencias(allResults),
+
+        companies,
+
+        participantes: consolidated
 
       }
 

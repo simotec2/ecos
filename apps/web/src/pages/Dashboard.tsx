@@ -24,8 +24,8 @@ ChartJS.register(
 
 export default function Dashboard(){
 
-  const [participants,setParticipants] = useState<any[]>([])
-  const [results,setResults] = useState<any[]>([])
+  const [dashboard,setDashboard] = useState<any>(null)
+  const [loading,setLoading] = useState(true)
 
   useEffect(()=>{
     loadData()
@@ -35,183 +35,66 @@ export default function Dashboard(){
 
     try{
 
-      const p = await apiFetch("/api/participants")
-      const r = await apiFetch("/api/results")
+      const res = await apiFetch("/api/dashboard")
 
-      console.log("RESULTS DASHBOARD", r)
+      console.log("DASHBOARD DATA", res)
 
-      setParticipants(p || [])
-      setResults(r || [])
+      setDashboard(res?.data || null)
 
     }catch(err){
 
       console.error(err)
 
-    }
+    }finally{
 
-  }
-
-  function parse(r:any){
-
-    try{
-
-      return typeof r.resultJson === "string"
-        ? JSON.parse(r.resultJson)
-        : r.resultJson
-
-    }catch{
-
-      return {}
+      setLoading(false)
 
     }
 
   }
 
-  /* ===============================
-  KPI CONSOLIDADO
-  =============================== */
+  if(loading){
 
-  function getKPIs(){
+    return(
 
-    let verde = 0
-    let amarillo = 0
-    let rojo = 0
+      <div style={{padding:40,color:"#fff"}}>
+        Cargando dashboard...
+      </div>
 
-    const participantMap:any = {}
-
-    results.forEach((r:any)=>{
-
-      const pid = r.participantId
-
-      if(!participantMap[pid]){
-
-        participantMap[pid] = []
-
-      }
-
-      const raw = parse(r)
-
-      const score = Number(
-
-        r.score ??
-        raw?.score ??
-        raw?.finalScore ??
-        0
-
-      )
-
-      participantMap[pid].push(score)
-
-    })
-
-    Object.values(participantMap).forEach((scores:any)=>{
-
-      const avg =
-
-        scores.reduce(
-          (a:number,b:number)=>a+b,
-          0
-        ) / scores.length
-
-      if(avg >= 85){
-
-        verde++
-
-      }else if(avg >= 55){
-
-        amarillo++
-
-      }else{
-
-        rojo++
-
-      }
-
-    })
-
-    const total = participants.length
-
-    const rendidos =
-      Object.keys(participantMap).length
-
-    const pendientes =
-      total - rendidos
-
-    return {
-
-      total,
-      rendidos,
-      pendientes,
-      verde,
-      amarillo,
-      rojo
-
-    }
+    )
 
   }
 
-  /* ===============================
-  COMPETENCIAS
-  =============================== */
+  if(!dashboard){
 
-  function getCompetencias(){
+    return(
 
-    const map:any = {}
+      <div style={{padding:40,color:"#fff"}}>
+        No se pudo cargar el dashboard
+      </div>
 
-    results.forEach(r=>{
-
-      const raw = parse(r)
-
-      const comps =
-        raw?.competencies || []
-
-      comps.forEach((c:any)=>{
-
-        if(!c?.name) return
-
-        if(!map[c.name]){
-
-          map[c.name] = []
-
-        }
-
-        map[c.name].push(c.score)
-
-      })
-
-    })
-
-    const avg = Object.entries(map).map(([name,arr]:any)=>({
-
-      name,
-
-      score:
-        arr.reduce((a:number,b:number)=>a+b,0)
-        / arr.length
-
-    }))
-
-    const sorted =
-      avg.sort((a,b)=>b.score-a.score)
-
-    return {
-
-      top:
-        sorted.slice(0,5),
-
-      bottom:
-        sorted.slice(-5).reverse()
-
-    }
+    )
 
   }
 
-  const kpi = getKPIs()
-  const comp = getCompetencias()
+  const kpi = dashboard.kpis || {
+    total:0,
+    rendidos:0,
+    pendientes:0,
+    verde:0,
+    amarillo:0,
+    rojo:0
+  }
 
-  /* ===============================
-  PIE DATA
-  =============================== */
+  const comp = dashboard.competencias || {
+    top:[],
+    bottom:[]
+  }
+
+  const title =
+    dashboard.scope === "COMPANY" && dashboard.company?.name
+      ? `Dashboard ${dashboard.company.name}`
+      : "Dashboard ECOS"
 
   const pieData = {
 
@@ -241,19 +124,15 @@ export default function Dashboard(){
 
   }
 
-  /* ===============================
-  TOP BAR
-  =============================== */
-
   const topBar = {
 
     labels:
-      comp.top.map(c=>c.name),
+      comp.top.map((c:any)=>c.name),
 
     datasets:[{
 
       data:
-        comp.top.map(c=>c.score),
+        comp.top.map((c:any)=>c.score),
 
       backgroundColor:"#2563eb",
 
@@ -263,19 +142,15 @@ export default function Dashboard(){
 
   }
 
-  /* ===============================
-  BOTTOM BAR
-  =============================== */
-
   const bottomBar = {
 
     labels:
-      comp.bottom.map(c=>c.name),
+      comp.bottom.map((c:any)=>c.name),
 
     datasets:[{
 
       data:
-        comp.bottom.map(c=>c.score),
+        comp.bottom.map((c:any)=>c.score),
 
       backgroundColor:"#dc2626",
 
@@ -290,13 +165,21 @@ export default function Dashboard(){
     <div style={{padding:20}}>
 
       <h1 style={styles.title}>
-        Dashboard ECOS
+        {title}
       </h1>
+
+      {dashboard.scope === "COMPANY" && (
+
+        <div style={styles.scopeBox}>
+          Vista restringida a los evaluados y resultados de esta empresa.
+        </div>
+
+      )}
 
       <div style={styles.kpiGrid}>
 
         <KPI
-          title="Total"
+          title="Total evaluados"
           value={kpi.total}
         />
 
@@ -391,8 +274,6 @@ export default function Dashboard(){
 
 }
 
-/* KPI */
-
 function KPI({
   title,
   value,
@@ -421,8 +302,6 @@ function KPI({
   )
 
 }
-
-/* OPTIONS */
 
 const chartOptions:any = {
 
@@ -500,7 +379,25 @@ const styles:any = {
 
     fontWeight:700,
 
-    marginBottom:24
+    marginBottom:12
+
+  },
+
+  scopeBox:{
+
+    color:"#bfdbfe",
+
+    background:"rgba(37,99,235,0.12)",
+
+    border:"1px solid rgba(96,165,250,0.25)",
+
+    padding:"12px 16px",
+
+    borderRadius:12,
+
+    marginBottom:24,
+
+    fontSize:14
 
   },
 
