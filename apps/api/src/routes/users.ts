@@ -154,7 +154,10 @@ router.post("/loginAs/:id", async (req, res) => {
   try {
 
     const user = await prisma.user.findUnique({
-      where: { id: req.params.id }
+      where: { id: req.params.id },
+      include: {
+        company: true
+      }
     })
 
     if (!user) {
@@ -163,20 +166,24 @@ router.post("/loginAs/:id", async (req, res) => {
 
     }
 
-    const token = signAccessToken({
+    const token = signAccessToken(user)
 
-      sub: user.id,
-      rut: user.rut,
-      role: user.role,
-      companyId: user.companyId
-
+    res.json({
+      ok: true,
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        rut: user.rut,
+        role: user.role,
+        companyId: user.companyId,
+        company: user.company
+      }
     })
-
-    res.json({ token, user })
 
   } catch (error) {
 
-    console.error(error)
+    console.error("LOGIN AS ERROR:", error)
 
     res.status(500).json({ error: "LoginAs error" })
 
