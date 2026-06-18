@@ -17,6 +17,32 @@ router.post("/", async (req, res) => {
       })
     }
 
+    const session = await prisma.evaluationSession.findUnique({
+      where:{
+        id: sessionId
+      }
+    })
+
+    if(!session){
+      return res.status(404).json({
+        error:"Sesión no encontrada"
+      })
+    }
+
+    if(session.status === "COMPLETED" || session.completedAt){
+      return res.status(403).json({
+        error:"La evaluación ya fue finalizada",
+        completed:true
+      })
+    }
+
+    if(session.expiresAt && new Date() > session.expiresAt){
+      return res.status(403).json({
+        error:"El tiempo de la evaluación terminó",
+        expired:true
+      })
+    }
+
     const existing = await prisma.evaluationAnswer.findFirst({
       where: {
         sessionId,
@@ -27,8 +53,12 @@ router.post("/", async (req, res) => {
     if (existing) {
 
       const updated = await prisma.evaluationAnswer.update({
-        where: { id: existing.id },
-        data: { answer }
+        where: {
+          id: existing.id
+        },
+        data: {
+          answer
+        }
       })
 
       return res.json(updated)

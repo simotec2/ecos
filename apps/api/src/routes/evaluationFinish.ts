@@ -4,6 +4,53 @@ import { generateEvaluationReport } from "../services/reportEngine"
 
 const router = Router()
 
+async function saveAnswerSnapshot(sessionId:string, answers:any){
+
+  if(!answers || typeof answers !== "object"){
+    return
+  }
+
+  const entries = Object.entries(answers)
+
+  for(const [questionId, value] of entries){
+
+    const answer = String(value ?? "")
+
+    const existing =
+      await prisma.evaluationAnswer.findFirst({
+        where:{
+          sessionId,
+          questionId
+        }
+      })
+
+    if(existing){
+
+      await prisma.evaluationAnswer.update({
+        where:{
+          id: existing.id
+        },
+        data:{
+          answer
+        }
+      })
+
+    }else{
+
+      await prisma.evaluationAnswer.create({
+        data:{
+          sessionId,
+          questionId,
+          answer
+        }
+      })
+
+    }
+
+  }
+
+}
+
 router.post("/:sessionId", async (req,res)=>{
 
   try{
@@ -13,25 +60,79 @@ router.post("/:sessionId", async (req,res)=>{
     console.log("🔵 FINALIZANDO:", sessionId)
 
     const session = await prisma.evaluationSession.findUnique({
-      where:{ id: sessionId }
+      where:{
+        id: sessionId
+      },
+      include:{
+        evaluation:true
+      }
     })
 
     if(!session){
-      return res.status(404).json({ error:"Sesión no encontrada" })
+      return res.status(404).json({
+        error:"Sesión no encontrada"
+      })
     }
+
+    if(session.status === "COMPLETED" || session.completedAt){
+
+      const pending = await prisma.assignment.count({
+        where:{
+          participantId: session.participantId,
+          status:{
+            not:"COMPLETED"
+          }
+        }
+      })
+
+      return res.json({
+        ok:true,
+        alreadyCompleted:true,
+        pending
+      })
+
+    }
+
+    const now = new Date()
+
+    const isTimedOut =
+      Boolean(
+        session.expiresAt &&
+        now > session.expiresAt
+      )
+
+    /* =========================
+    GUARDAR RESPUESTAS PARCIALES
+    ========================= */
+    await saveAnswerSnapshot(
+      sessionId,
+      req.body?.answers
+    )
 
     /* =========================
     GENERAR REPORTE
     ========================= */
-    await generateEvaluationReport(sessionId)
+    const existingResult =
+      await prisma.evaluationResult.findUnique({
+        where:{
+          sessionId
+        }
+      })
+
+    if(!existingResult){
+      await generateEvaluationReport(sessionId)
+    }
 
     /* =========================
     MARCAR SESIÓN COMPLETA
     ========================= */
     await prisma.evaluationSession.update({
-      where:{ id: sessionId },
+      where:{
+        id: sessionId
+      },
       data:{
-        completedAt: new Date(),
+        completedAt: now,
+        timedOutAt: isTimedOut ? now : null,
         status:"COMPLETED"
       }
     })
@@ -57,7 +158,9 @@ router.post("/:sessionId", async (req,res)=>{
     const pending = await prisma.assignment.count({
       where:{
         participantId: session.participantId,
-        status:{ not:"COMPLETED" }
+        status:{
+          not:"COMPLETED"
+        }
       }
     })
 
@@ -65,6 +168,7 @@ router.post("/:sessionId", async (req,res)=>{
 
     return res.json({
       ok:true,
+      timedOut: isTimedOut,
       pending
     })
 

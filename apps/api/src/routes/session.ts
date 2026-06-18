@@ -1,5 +1,6 @@
 import { Router } from "express"
 import prisma from "../db"
+import { generateEvaluationReport } from "../services/reportEngine"
 
 const router = Router()
 
@@ -7,8 +8,81 @@ function shuffle(array:any[]){
   return [...array].sort(() => Math.random() - 0.5)
 }
 
+function getDefaultDurationMinutes(type:string){
+  if(type === "PETS") return 75
+  if(type === "ICOM") return 45
+  if(type === "SECURITY") return 30
+  return 30
+}
+
+async function completeTimedOutSession(sessionId:string){
+
+  const session = await prisma.evaluationSession.findUnique({
+    where:{ id: sessionId }
+  })
+
+  if(!session){
+    return null
+  }
+
+  if(session.status === "COMPLETED" || session.completedAt){
+    return session
+  }
+
+  const existingResult =
+    await prisma.evaluationResult.findUnique({
+      where:{
+        sessionId
+      }
+    })
+
+  if(!existingResult){
+    await generateEvaluationReport(sessionId)
+  }
+
+  const now = new Date()
+
+  const updatedSession =
+    await prisma.evaluationSession.update({
+      where:{
+        id: sessionId
+      },
+      data:{
+        status:"COMPLETED",
+        completedAt: now,
+        timedOutAt: now
+      }
+    })
+
+  try{
+
+    await prisma.assignment.update({
+      where:{
+        participantId_evaluationId:{
+          participantId: session.participantId,
+          evaluationId: session.evaluationId
+        }
+      },
+      data:{
+        status:"COMPLETED"
+      }
+    })
+
+  }catch(e){
+
+    console.warn(
+      "No se pudo actualizar assignment al completar por tiempo:",
+      e
+    )
+
+  }
+
+  return updatedSession
+
+}
+
 /* ======================================
-CREAR SESIÓN (FINAL CORRECTO)
+CREAR / RETOMAR SESIÓN
 ====================================== */
 router.post("/", async (req,res)=>{
 
@@ -17,11 +91,13 @@ router.post("/", async (req,res)=>{
     const { participantId, evaluationId } = req.body
 
     if(!participantId || !evaluationId){
-      return res.status(400).json({ error:"Datos incompletos" })
+      return res.status(400).json({
+        error:"Datos incompletos"
+      })
     }
 
     /* =========================
-    🔥 BUSCAR ÚLTIMA ASIGNACIÓN ACTIVA
+    BUSCAR ASIGNACIÓN ACTIVA
     ========================= */
     const assignment = await prisma.assignment.findFirst({
       where:{
@@ -32,7 +108,7 @@ router.post("/", async (req,res)=>{
         }
       },
       orderBy:{
-        createdAt:"desc"   // 🔥 CLAVE
+        createdAt:"desc"
       }
     })
 
@@ -42,21 +118,78 @@ router.post("/", async (req,res)=>{
       })
     }
 
-   
     /* =========================
     TRAER EVALUACIÓN
     ========================= */
     const evaluation = await prisma.evaluation.findUnique({
-      where:{ id:evaluationId },
-      include:{ questions:true }
+      where:{
+        id:evaluationId
+      },
+      include:{
+        questions:true
+      }
     })
 
     if(!evaluation){
-      return res.status(404).json({ error:"Evaluación no encontrada" })
+      return res.status(404).json({
+        error:"Evaluación no encontrada"
+      })
     }
 
     if(!evaluation.questions.length){
-      return res.status(400).json({ error:"Evaluación sin preguntas" })
+      return res.status(400).json({
+        error:"Evaluación sin preguntas"
+      })
+    }
+
+    const durationMinutes =
+      evaluation.durationMinutes ||
+      getDefaultDurationMinutes(evaluation.type)
+
+    const now = new Date()
+
+    /* =========================
+    SI YA ESTABA INICIADA, RETOMAR SIN REINICIAR TIEMPO
+    ========================= */
+    if(assignment.status === "STARTED"){
+
+      const existingSession =
+        await prisma.evaluationSession.findFirst({
+          where:{
+            participantId,
+            evaluationId,
+            status:{
+              not:"COMPLETED"
+            },
+            completedAt:null
+          },
+          orderBy:{
+            createdAt:"desc"
+          }
+        })
+
+      if(existingSession){
+
+        if(
+          existingSession.expiresAt &&
+          now > existingSession.expiresAt
+        ){
+
+          const completed =
+            await completeTimedOutSession(existingSession.id)
+
+          return res.json({
+            ...completed,
+            expired:true,
+            message:"El tiempo de la evaluación terminó"
+          })
+
+        }
+
+        return res.json(existingSession)
+
+      }
+
     }
 
     /* =========================
@@ -72,21 +205,32 @@ router.post("/", async (req,res)=>{
       selected = shuffle(evaluation.questions)
     }
 
+    const startedAt = now
+
+    const expiresAt =
+      new Date(
+        startedAt.getTime() +
+        durationMinutes * 60 * 1000
+      )
+
     /* =========================
     CREAR SESIÓN NUEVA
     ========================= */
-    const session = await prisma.evaluationSession.create({
-      data:{
-        participantId,
-        evaluationId,
-        status:"IN_PROGRESS"
-      }
-    })
+    const session =
+      await prisma.evaluationSession.create({
+        data:{
+          participantId,
+          evaluationId,
+          startedAt,
+          expiresAt,
+          status:"IN_PROGRESS"
+        }
+      })
 
     console.log("✅ SESSION CREATED:", session.id)
 
     /* =========================
-    CREAR RESPUESTAS
+    CREAR RESPUESTAS VACÍAS
     ========================= */
     await prisma.evaluationAnswer.createMany({
       data: selected.map(q => ({
@@ -99,20 +243,31 @@ router.post("/", async (req,res)=>{
     console.log("✅ ANSWERS CREATED:", selected.length)
 
     /* =========================
-    MARCAR COMO STARTED
+    MARCAR ASSIGNMENT COMO STARTED
     ========================= */
     if(assignment.status === "PENDING"){
+
       await prisma.assignment.update({
-        where:{ id: assignment.id },
-        data:{ status:"STARTED" }
+        where:{
+          id: assignment.id
+        },
+        data:{
+          status:"STARTED"
+        }
       })
+
     }
 
     return res.json(session)
 
   }catch(e){
+
     console.error("❌ ERROR CREANDO SESIÓN:", e)
-    res.status(500).json({ error:"Error creando sesión" })
+
+    return res.status(500).json({
+      error:"Error creando sesión"
+    })
+
   }
 
 })
@@ -125,28 +280,93 @@ router.get("/:id", async (req,res)=>{
   try{
 
     const session = await prisma.evaluationSession.findUnique({
-      where:{ id:req.params.id },
+      where:{
+        id:req.params.id
+      },
       include:{
+        evaluation:true,
         answers:{
-          include:{ question:true }
+          include:{
+            question:true
+          },
+          orderBy:{
+            createdAt:"asc"
+          }
         }
       }
     })
 
     if(!session){
-      return res.status(404).json({ error:"Sesión no encontrada" })
+      return res.status(404).json({
+        error:"Sesión no encontrada"
+      })
     }
 
-    const questions = session.answers.map(a => a.question)
+    const now = new Date()
+
+    if(
+      session.status !== "COMPLETED" &&
+      !session.completedAt &&
+      session.expiresAt &&
+      now > session.expiresAt
+    ){
+
+      const completed =
+        await completeTimedOutSession(session.id)
+
+      return res.json({
+        id: session.id,
+        status:"COMPLETED",
+        completedAt: completed?.completedAt,
+        expiresAt: session.expiresAt,
+        expired:true,
+        evaluation:{
+          id: session.evaluation.id,
+          name: session.evaluation.name,
+          type: session.evaluation.type,
+          durationMinutes:
+            session.evaluation.durationMinutes ||
+            getDefaultDurationMinutes(session.evaluation.type)
+        },
+        questions: session.answers.map(a => a.question),
+        answers: session.answers.map(a => ({
+          questionId: a.questionId,
+          answer: a.answer
+        }))
+      })
+
+    }
 
     return res.json({
       id: session.id,
-      questions
+      status: session.status,
+      startedAt: session.startedAt,
+      expiresAt: session.expiresAt,
+      completedAt: session.completedAt,
+      timedOutAt: session.timedOutAt,
+      evaluation:{
+        id: session.evaluation.id,
+        name: session.evaluation.name,
+        type: session.evaluation.type,
+        durationMinutes:
+          session.evaluation.durationMinutes ||
+          getDefaultDurationMinutes(session.evaluation.type)
+      },
+      questions: session.answers.map(a => a.question),
+      answers: session.answers.map(a => ({
+        questionId: a.questionId,
+        answer: a.answer
+      }))
     })
 
   }catch(e){
+
     console.error("❌ ERROR GET SESSION:", e)
-    res.status(500).json({ error:"Error obteniendo sesión" })
+
+    return res.status(500).json({
+      error:"Error obteniendo sesión"
+    })
+
   }
 
 })

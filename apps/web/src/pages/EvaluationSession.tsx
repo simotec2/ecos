@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { apiFetch } from "../api"
 
@@ -14,9 +14,24 @@ export default function EvaluationSession(){
   const [answers,setAnswers] = useState<any>({})
   const [index,setIndex] = useState(0)
 
+  const [remainingSeconds,setRemainingSeconds] = useState<number | null>(null)
+  const [expired,setExpired] = useState(false)
+
+  const answersRef = useRef<any>({})
+  const finishingRef = useRef(false)
+
   const token = localStorage.getItem("participantToken")
 
   const isMobile = window.innerWidth < 768
+
+  /* ======================================
+  MANTENER RESPUESTAS ACTUALIZADAS EN REF
+  ====================================== */
+  useEffect(()=>{
+
+    answersRef.current = answers
+
+  },[answers])
 
   /* ======================================
   LOAD
@@ -35,7 +50,67 @@ export default function EvaluationSession(){
 
       const res = await apiFetch(`/api/session/${sessionId}`)
 
+      if(
+        res.expired ||
+        res.status === "COMPLETED" ||
+        res.completedAt
+      ){
+
+        alert("Esta evaluación ya fue finalizada y no puede retomarse.")
+
+        navigate(`/participant/${token}`)
+
+        return
+
+      }
+
       setQuestions(res.questions || [])
+
+      /* ======================================
+      CARGAR RESPUESTAS EXISTENTES NO VACÍAS
+      ====================================== */
+      if(res.answers){
+
+        const loadedAnswers:any = {}
+
+        res.answers.forEach((a:any)=>{
+
+          if(
+            a.answer !== null &&
+            a.answer !== undefined &&
+            String(a.answer).trim() !== ""
+          ){
+
+            loadedAnswers[a.questionId] = a.answer
+
+          }
+
+        })
+
+        setAnswers(loadedAnswers)
+
+      }
+
+      /* ======================================
+      CALCULAR TIEMPO RESTANTE
+      ====================================== */
+      if(res.expiresAt){
+
+        const expires =
+          new Date(res.expiresAt).getTime()
+
+        const now =
+          new Date().getTime()
+
+        const seconds =
+          Math.max(
+            0,
+            Math.floor((expires - now) / 1000)
+          )
+
+        setRemainingSeconds(seconds)
+
+      }
 
     }catch(err){
 
@@ -52,11 +127,98 @@ export default function EvaluationSession(){
   }
 
   /* ======================================
+  TIMER
+  ====================================== */
+  useEffect(()=>{
+
+    if(remainingSeconds === null){
+      return
+    }
+
+    if(remainingSeconds <= 0){
+
+      if(!finishingRef.current){
+        finishByTimeout()
+      }
+
+      return
+    }
+
+    const timer = window.setTimeout(()=>{
+
+      setRemainingSeconds(prev => {
+
+        if(prev === null){
+          return null
+        }
+
+        return prev - 1
+
+      })
+
+    },1000)
+
+    return ()=>{
+      window.clearTimeout(timer)
+    }
+
+  },[remainingSeconds])
+
+  function formatTime(totalSeconds:number | null){
+
+    if(totalSeconds === null){
+      return "--:--"
+    }
+
+    const minutes =
+      Math.floor(totalSeconds / 60)
+
+    const seconds =
+      totalSeconds % 60
+
+    return `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`
+
+  }
+
+  function answeredCount(){
+
+    return questions.filter(q => {
+
+      const value =
+        answersRef.current[q.id]
+
+      return (
+        value !== null &&
+        value !== undefined &&
+        String(value).trim() !== ""
+      )
+
+    }).length
+
+  }
+
+  /* ======================================
   RESPONDER
   ====================================== */
   function handleAnswer(value:string){
 
+    if(expired || saving){
+      return
+    }
+
     const current = questions[index]
+
+    if(!current){
+      return
+    }
+
+    if(String(value || "").trim() === ""){
+
+      alert("Debe responder esta pregunta para continuar")
+
+      return
+
+    }
 
     setAnswers((prev:any)=>({
       ...prev,
@@ -77,36 +239,64 @@ export default function EvaluationSession(){
   }
 
   /* ======================================
-  SAVE
+  CIERRE AUTOMÁTICO POR TIEMPO
   ====================================== */
-  async function saveAnswers(){
+  async function finishByTimeout(){
 
-    const entries = Object.entries(answers)
+    try{
 
-    for(const [questionId,answer] of entries){
+      finishingRef.current = true
+      setExpired(true)
+      setSaving(true)
 
-      await apiFetch("/api/evaluationAnswer",{
+      const res = await apiFetch(`/api/evaluationFinish/${sessionId}`,{
         method:"POST",
         headers:{
           "Content-Type":"application/json"
         },
         body: JSON.stringify({
-          sessionId,
-          questionId,
-          answer
+          answers: answersRef.current
         })
       })
+
+      alert("El tiempo terminó. La evaluación fue cerrada automáticamente.")
+
+      if(res.pending > 0){
+
+        navigate(`/participant/${token}`)
+
+      }else{
+
+        navigate(`/participant/${token}/final`)
+
+      }
+
+    }catch(err){
+
+      console.error(err)
+
+      alert("El tiempo terminó, pero ocurrió un error al cerrar la evaluación.")
+
+      navigate(`/participant/${token}`)
+
+    }finally{
+
+      setSaving(false)
 
     }
 
   }
 
   /* ======================================
-  FINISH
+  FINISH MANUAL
   ====================================== */
   async function finishEvaluation(){
 
-    if(Object.keys(answers).length !== questions.length){
+    if(expired || saving){
+      return
+    }
+
+    if(answeredCount() !== questions.length){
 
       alert("Debe responder todas las preguntas")
 
@@ -116,12 +306,17 @@ export default function EvaluationSession(){
 
     try{
 
+      finishingRef.current = true
       setSaving(true)
 
-      await saveAnswers()
-
       const res = await apiFetch(`/api/evaluationFinish/${sessionId}`,{
-        method:"POST"
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+          answers: answersRef.current
+        })
       })
 
       if(res.pending > 0){
@@ -135,6 +330,8 @@ export default function EvaluationSession(){
       }
 
     }catch(err){
+
+      finishingRef.current = false
 
       console.error(err)
 
@@ -184,12 +381,37 @@ export default function EvaluationSession(){
 
       <div style={styles.container}>
 
-        <h2 style={styles.title}>
-          Evaluación
-        </h2>
+        <div style={styles.topBar}>
 
-        <div style={styles.progress}>
-          Pregunta {index + 1} de {questions.length}
+          <div>
+
+            <h2 style={styles.title}>
+              Evaluación
+            </h2>
+
+            <div style={styles.progress}>
+              Pregunta {index + 1} de {questions.length}
+            </div>
+
+          </div>
+
+          <div style={{
+            ...styles.timer,
+            ...(remainingSeconds !== null && remainingSeconds <= 300
+              ? styles.timerDanger
+              : {})
+          }}>
+
+            <div style={styles.timerLabel}>
+              Tiempo restante
+            </div>
+
+            <div style={styles.timerValue}>
+              {formatTime(remainingSeconds)}
+            </div>
+
+          </div>
+
         </div>
 
         <div style={styles.card}>
@@ -206,6 +428,7 @@ export default function EvaluationSession(){
 
               <textarea
                 value={answers[q.id] || ""}
+                disabled={expired || saving}
                 onChange={(e)=>{
 
                   const value = e.target.value
@@ -223,6 +446,7 @@ export default function EvaluationSession(){
                 onClick={()=>
                   handleAnswer(answers[q.id] || "")
                 }
+                disabled={expired || saving}
                 style={styles.primaryButton}
               >
                 Siguiente
@@ -255,6 +479,7 @@ export default function EvaluationSession(){
 
                 <button
                   key={label}
+                  disabled={expired || saving}
                   onClick={()=>
                     handleAnswer(label)
                   }
@@ -290,6 +515,7 @@ export default function EvaluationSession(){
 
                   <button
                     key={i}
+                    disabled={expired || saving}
                     onClick={()=>
                       handleAnswer(letter)
                     }
@@ -312,7 +538,7 @@ export default function EvaluationSession(){
 
           <button
             onClick={finishEvaluation}
-            disabled={saving}
+            disabled={saving || expired}
             style={styles.finishButton}
           >
             {saving
@@ -365,6 +591,22 @@ const styles:any = {
 
   },
 
+  topBar:{
+
+    display:"flex",
+
+    justifyContent:"space-between",
+
+    alignItems:"center",
+
+    gap:16,
+
+    marginBottom:20,
+
+    flexWrap:"wrap"
+
+  },
+
   title:{
 
     color:"#fff",
@@ -379,9 +621,55 @@ const styles:any = {
 
     color:"#94a3b8",
 
-    marginBottom:20,
-
     fontSize:14
+
+  },
+
+  timer:{
+
+    minWidth:150,
+
+    padding:"12px 16px",
+
+    borderRadius:16,
+
+    background:"rgba(15,23,42,0.95)",
+
+    border:"1px solid rgba(255,255,255,0.12)",
+
+    color:"#fff",
+
+    textAlign:"center",
+
+    boxShadow:"0 8px 24px rgba(0,0,0,0.35)"
+
+  },
+
+  timerDanger:{
+
+    border:"1px solid rgba(239,68,68,0.7)",
+
+    boxShadow:"0 8px 24px rgba(239,68,68,0.25)"
+
+  },
+
+  timerLabel:{
+
+    fontSize:12,
+
+    color:"#94a3b8",
+
+    marginBottom:4
+
+  },
+
+  timerValue:{
+
+    fontSize:26,
+
+    fontWeight:800,
+
+    letterSpacing:1
 
   },
 

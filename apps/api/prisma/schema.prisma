@@ -125,9 +125,11 @@ model Evaluation {
   id String @id @default(cuid())
 
   name String
-  code String? // 🔥 importante para SECURITY (SEC_SUP_MIN, etc)
+  code String?
 
   type EvaluationType
+
+  durationMinutes Int?
 
   questions         EvaluationQuestion[]
   sessions          EvaluationSession[]
@@ -198,19 +200,19 @@ model EvaluationSession {
   evaluationId  String
 
   participant Participant @relation(fields: [participantId], references: [id])
-  evaluation  Evaluation  @relation(fields: [evaluationId], references: [id])
+  evaluation  Evaluation @relation(fields: [evaluationId], references: [id])
 
   answers EvaluationAnswer[]
 
   createdAt   DateTime  @default(now())
   startedAt   DateTime?
+  expiresAt   DateTime?
   completedAt DateTime?
+  timedOutAt  DateTime?
 
   status String?
 
-  // 🔥 SOLO REFERENCIA INVERSA
   result EvaluationResult?
-
 }
 
 /**
