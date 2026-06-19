@@ -157,23 +157,60 @@ export default function AppLayout(){
           hasPermission(item.permission)
         )
 
+  function isCurrentRoute(path:string){
+
+    const currentPath =
+      location.pathname
+
+    if(path === "/app"){
+
+      return (
+        currentPath === "/app" ||
+        currentPath === "/app/dashboard"
+      )
+
+    }
+
+    return (
+      currentPath === path ||
+      currentPath.startsWith(path + "/")
+    )
+
+  }
+
+  function findCurrentMenuItem(){
+
+    const currentPath =
+      location.pathname
+
+    if(
+      currentPath === "/app" ||
+      currentPath === "/app/dashboard"
+    ){
+
+      return allMenu.find((item:any)=>
+        item.path === "/app"
+      )
+
+    }
+
+    return allMenu
+      .filter((item:any)=> item.path !== "/app")
+      .find((item:any)=>
+        currentPath === item.path ||
+        currentPath.startsWith(item.path + "/")
+      )
+
+  }
+
   useEffect(()=>{
 
     if(role === "PARTICIPANT"){
       return
     }
 
-    const currentPath =
-      location.pathname
-
-    const currentMenuItem = allMenu.find((item:any)=>
-      currentPath === item.path ||
-      currentPath.startsWith(item.path + "/") ||
-      (
-        item.path === "/app" &&
-        currentPath === "/app/dashboard"
-      )
-    )
+    const currentMenuItem =
+      findCurrentMenuItem()
 
     if(currentMenuItem){
 
@@ -307,12 +344,7 @@ export default function AppLayout(){
   function menuStyle(path:string){
 
     const isActive =
-      location.pathname === path ||
-      location.pathname.startsWith(path + "/") ||
-      (
-        path === "/app" &&
-        location.pathname === "/app/dashboard"
-      )
+      isCurrentRoute(path)
 
     if(isActive){
 
