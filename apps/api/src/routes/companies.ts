@@ -1,6 +1,10 @@
 import { Router } from "express"
 import prisma from "../db"
 import { authMiddleware } from "../auth"
+import {
+  requireAnyPermission,
+  requirePermission
+} from "../permissions"
 
 const router = Router()
 
@@ -8,15 +12,23 @@ const router = Router()
 GET COMPANIES
 ====================================================== */
 
-router.get("/", authMiddleware, async (req:any, res) => {
+router.get(
+  "/",
+  authMiddleware,
+  requireAnyPermission([
+    "COMPANIES_VIEW",
+    "USERS_VIEW",
+    "PARTICIPANTS_VIEW",
+    "ASSIGNMENTS_VIEW",
+    "RESULTS_VIEW",
+    "REPORTS_VIEW",
+    "DASHBOARD_VIEW"
+  ]),
+  async (req:any, res) => {
 
   try {
 
     const user = req.user
-
-    /* ======================================
-    SUPERADMIN Y PSYCHOLOGIST
-    ====================================== */
 
     if(
       user.role === "SUPERADMIN" ||
@@ -35,11 +47,11 @@ router.get("/", authMiddleware, async (req:any, res) => {
 
     }
 
-    /* ======================================
-    COMPANY ADMIN
-    ====================================== */
-
     if(user.role === "COMPANY_ADMIN"){
+
+      if(!user.companyId){
+        return res.json([])
+      }
 
       const companies = await prisma.company.findMany({
 
@@ -56,10 +68,6 @@ router.get("/", authMiddleware, async (req:any, res) => {
       return res.json(companies)
 
     }
-
-    /* ======================================
-    OTROS ROLES
-    ====================================== */
 
     return res.json([])
 
@@ -82,21 +90,13 @@ router.get("/", authMiddleware, async (req:any, res) => {
 CREATE COMPANY
 ====================================================== */
 
-router.post("/", authMiddleware, async (req:any, res) => {
+router.post(
+  "/",
+  authMiddleware,
+  requirePermission("COMPANIES_CREATE"),
+  async (req:any, res) => {
 
   try {
-
-    /* ======================================
-    SOLO SUPERADMIN
-    ====================================== */
-
-    if(req.user.role !== "SUPERADMIN"){
-
-      return res.status(403).json({
-        error:"Sin permisos"
-      })
-
-    }
 
     const {
 
@@ -157,21 +157,13 @@ router.post("/", authMiddleware, async (req:any, res) => {
 DELETE COMPANY
 ====================================================== */
 
-router.delete("/:id", authMiddleware, async (req:any, res) => {
+router.delete(
+  "/:id",
+  authMiddleware,
+  requirePermission("COMPANIES_DELETE"),
+  async (req:any, res) => {
 
   try {
-
-    /* ======================================
-    SOLO SUPERADMIN
-    ====================================== */
-
-    if(req.user.role !== "SUPERADMIN"){
-
-      return res.status(403).json({
-        error:"Sin permisos"
-      })
-
-    }
 
     const { id } = req.params
 

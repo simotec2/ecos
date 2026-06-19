@@ -1,6 +1,10 @@
 import { Router } from "express"
 import prisma from "../db"
 import { authMiddleware } from "../auth"
+import {
+  requireAnyPermission,
+  requirePermission
+} from "../permissions"
 
 const router = Router()
 
@@ -54,17 +58,20 @@ router.get("/public/:id", async (req, res) => {
 LISTAR RESULTADOS
 ====================================== */
 
-router.get("/", authMiddleware, async (req:any, res) => {
+router.get(
+  "/",
+  authMiddleware,
+  requireAnyPermission([
+    "RESULTS_VIEW",
+    "REPORTS_VIEW"
+  ]),
+  async (req:any, res) => {
 
   try {
 
     const user = req.user
 
     let where:any = {}
-
-    /* ======================================
-    COMPANY ADMIN
-    ====================================== */
 
     if(user.role === "COMPANY_ADMIN"){
 
@@ -133,6 +140,10 @@ GROUPED
 router.get(
   "/grouped",
   authMiddleware,
+  requireAnyPermission([
+    "RESULTS_VIEW",
+    "REPORTS_VIEW"
+  ]),
   async (req:any,res)=>{
 
   try{
@@ -153,10 +164,6 @@ router.get(
       ((req.query.company as string) || "")
       .toLowerCase()
 
-    /* ======================================
-    FILTRO COMPANY
-    ====================================== */
-
     let where:any = {}
 
     if(user.role === "COMPANY_ADMIN"){
@@ -168,10 +175,6 @@ router.get(
       }
 
     }
-
-    /* ======================================
-    RESULTADOS
-    ====================================== */
 
     const results =
       await prisma.evaluationResult.findMany({
@@ -191,10 +194,6 @@ router.get(
 
     })
 
-    /* ======================================
-    SOLO ÚLTIMO
-    ====================================== */
-
     const map = new Map()
 
     for(const r of results){
@@ -210,10 +209,6 @@ router.get(
 
     const filtered =
       Array.from(map.values())
-
-    /* ======================================
-    AGRUPAR
-    ====================================== */
 
     const grouped:any = {}
 
@@ -262,10 +257,6 @@ router.get(
 
     let list = Object.values(grouped)
 
-    /* ======================================
-    FILTROS
-    ====================================== */
-
     list = list.filter((g:any)=>{
 
       const name =
@@ -281,10 +272,6 @@ router.get(
         return false
       }
 
-      /* ======================================
-      COMPANY ADMIN NO FILTRA EMPRESA
-      ====================================== */
-
       if(
         user.role !== "COMPANY_ADMIN" &&
         company &&
@@ -296,10 +283,6 @@ router.get(
       return true
 
     })
-
-    /* ======================================
-    FINAL SCORE
-    ====================================== */
 
     list = list.map((g:any)=>{
 
@@ -331,18 +314,10 @@ router.get(
 
     })
 
-    /* ======================================
-    ORDEN
-    ====================================== */
-
     list.sort(
       (a:any,b:any)=>
         a.finalScore - b.finalScore
     )
-
-    /* ======================================
-    PAGINACIÓN
-    ====================================== */
 
     const start =
       (page-1)*limit
@@ -376,21 +351,10 @@ DELETE
 router.delete(
   "/:id",
   authMiddleware,
+  requirePermission("RESULTS_DELETE"),
   async (req:any,res)=>{
 
   try{
-
-    /* ======================================
-    SOLO SUPERADMIN
-    ====================================== */
-
-    if(req.user.role !== "SUPERADMIN"){
-
-      return res.status(403).json({
-        error:"Sin permisos"
-      })
-
-    }
 
     await prisma.evaluationResult.delete({
 

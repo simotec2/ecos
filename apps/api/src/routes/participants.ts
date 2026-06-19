@@ -3,6 +3,7 @@ import prisma from "../db"
 import { randomUUID } from "crypto"
 import { sendEvaluationEmail } from "../utils/email"
 import { authMiddleware } from "../auth"
+import { requirePermission } from "../permissions"
 
 const router = Router()
 
@@ -34,17 +35,42 @@ function normalizeRut(rut: string){
 }
 
 /* ======================================
+VALIDAR PROPIEDAD EMPRESA
+====================================== */
+async function ensureParticipantAccess(req:any, participantId:string){
+
+  if(req.user?.role !== "COMPANY_ADMIN"){
+    return true
+  }
+
+  const participant =
+    await prisma.participant.findUnique({
+      where:{ id:participantId }
+    })
+
+  if(
+    !participant ||
+    participant.companyId !== req.user.companyId
+  ){
+    return false
+  }
+
+  return true
+
+}
+
+/* ======================================
 OBTENER PARTICIPANTES
 ====================================== */
-router.get("/", authMiddleware, async (req:any, res) => {
+router.get(
+  "/",
+  authMiddleware,
+  requirePermission("PARTICIPANTS_VIEW"),
+  async (req:any, res) => {
 
   try {
 
     let where:any = {}
-
-    /* ======================================
-    COMPANY ADMIN SOLO SU EMPRESA
-    ====================================== */
 
     if(req.user?.role === "COMPANY_ADMIN"){
 
@@ -88,7 +114,11 @@ router.get("/", authMiddleware, async (req:any, res) => {
 /* ======================================
 CREAR PARTICIPANTE
 ====================================== */
-router.post("/", authMiddleware, async (req:any, res) => {
+router.post(
+  "/",
+  authMiddleware,
+  requirePermission("PARTICIPANTS_CREATE"),
+  async (req:any, res) => {
 
   try {
 
@@ -110,10 +140,6 @@ router.post("/", authMiddleware, async (req:any, res) => {
       })
 
     }
-
-    /* ======================================
-    COMPANY ADMIN SOLO SU EMPRESA
-    ====================================== */
 
     let finalCompanyId = companyId || null
 
@@ -169,10 +195,6 @@ router.post("/", authMiddleware, async (req:any, res) => {
 
     res.json(participant)
 
-    /* ======================================
-    ENVIAR EMAIL
-    ====================================== */
-
     if(email){
 
       sendEvaluationEmail(
@@ -206,7 +228,11 @@ router.post("/", authMiddleware, async (req:any, res) => {
 /* ======================================
 ACTUALIZAR PARTICIPANTE
 ====================================== */
-router.put("/:id", authMiddleware, async (req:any, res) => {
+router.put(
+  "/:id",
+  authMiddleware,
+  requirePermission("PARTICIPANTS_EDIT"),
+  async (req:any, res) => {
 
   try {
 
@@ -231,27 +257,10 @@ router.put("/:id", authMiddleware, async (req:any, res) => {
 
     }
 
-    const current =
-      await prisma.participant.findUnique({
-        where:{ id }
-      })
+    const allowed =
+      await ensureParticipantAccess(req,id)
 
-    if(!current){
-
-      return res.status(404).json({
-        error:"Participante no encontrado"
-      })
-
-    }
-
-    /* ======================================
-    COMPANY ADMIN SOLO SU EMPRESA
-    ====================================== */
-
-    if(
-      req.user?.role === "COMPANY_ADMIN" &&
-      current.companyId !== req.user.companyId
-    ){
+    if(!allowed){
 
       return res.status(403).json({
         error:"No autorizado"
@@ -335,7 +344,11 @@ router.put("/:id", authMiddleware, async (req:any, res) => {
 /* ======================================
 REENVIAR INVITACIÓN
 ====================================== */
-router.post("/:id/resend", authMiddleware, async (req:any, res) => {
+router.post(
+  "/:id/resend",
+  authMiddleware,
+  requirePermission("PARTICIPANTS_INVITE"),
+  async (req:any, res) => {
 
   try {
 
@@ -355,10 +368,6 @@ router.post("/:id/resend", authMiddleware, async (req:any, res) => {
       })
 
     }
-
-    /* ======================================
-    COMPANY ADMIN SOLO SU EMPRESA
-    ====================================== */
 
     if(
       req.user?.role === "COMPANY_ADMIN" &&
@@ -430,11 +439,20 @@ router.post("/:id/resend", authMiddleware, async (req:any, res) => {
 /* ======================================
 ELIMINAR PARTICIPANTE
 ====================================== */
-router.delete("/:id", authMiddleware, async (req:any, res) => {
+router.delete(
+  "/:id",
+  authMiddleware,
+  requirePermission("PARTICIPANTS_DELETE"),
+  async (req:any, res) => {
 
   try {
 
-    if(req.user?.role !== "SUPERADMIN"){
+    const id = req.params.id
+
+    const allowed =
+      await ensureParticipantAccess(req,id)
+
+    if(!allowed){
 
       return res.status(403).json({
         error:"No autorizado"
@@ -442,30 +460,64 @@ router.delete("/:id", authMiddleware, async (req:any, res) => {
 
     }
 
-    const id = req.params.id
+    const participant =
+      await prisma.participant.findUnique({
+        where:{ id }
+      })
 
-    /* ======================================
-    ELIMINAR RESULTADOS
-    ====================================== */
+    if(!participant){
 
-    await prisma.evaluationResult.deleteMany({
-      where:{ participantId:id }
-    })
+      return res.status(404).json({
+        error:"Participante no encontrado"
+      })
 
-    /* ======================================
-    ELIMINAR ASIGNACIONES
-    ====================================== */
+    }
 
-    await prisma.assignment.deleteMany({
-      where:{ participantId:id }
-    })
+    const sessions =
+      await prisma.evaluationSession.findMany({
+        where:{
+          participantId:id
+        },
+        select:{
+          id:true
+        }
+      })
 
-    /* ======================================
-    ELIMINAR PARTICIPANTE
-    ====================================== */
+    const sessionIds =
+      sessions.map(s=>s.id)
 
-    await prisma.participant.delete({
-      where:{ id }
+    await prisma.$transaction(async(tx)=>{
+
+      await tx.evaluationAnswer.deleteMany({
+        where:{
+          sessionId:{
+            in: sessionIds
+          }
+        }
+      })
+
+      await tx.evaluationResult.deleteMany({
+        where:{
+          participantId:id
+        }
+      })
+
+      await tx.assignment.deleteMany({
+        where:{
+          participantId:id
+        }
+      })
+
+      await tx.evaluationSession.deleteMany({
+        where:{
+          participantId:id
+        }
+      })
+
+      await tx.participant.delete({
+        where:{ id }
+      })
+
     })
 
     return res.json({

@@ -43,7 +43,8 @@ export function normalizePermissions(input:any){
     return []
   }
 
-  return input.filter((p:string)=>
+  return input.filter((p:any)=>
+    typeof p === "string" &&
     ALL_PERMISSIONS.includes(p)
   )
 
@@ -53,7 +54,7 @@ export function parsePermissionsJson(json:any){
 
   try{
 
-    if(!json){
+    if(json === undefined || json === null || json === ""){
       return null
     }
 
@@ -147,7 +148,7 @@ export function getUserPermissions(user:any){
   const custom =
     parsePermissionsJson(user.permissionsJson)
 
-  if(custom){
+  if(custom !== null){
     return custom
   }
 
@@ -166,8 +167,66 @@ export function hasPermission(user:any, permission:string){
   }
 
   const permissions =
-    getUserPermissions(user)
+    Array.isArray(user.permissions)
+      ? user.permissions
+      : getUserPermissions(user)
 
   return permissions.includes(permission)
+
+}
+
+export function hasAnyPermission(user:any, permissions:string[]){
+
+  if(!user){
+    return false
+  }
+
+  if(user.role === "SUPERADMIN"){
+    return true
+  }
+
+  return permissions.some(permission =>
+    hasPermission(user, permission)
+  )
+
+}
+
+export function requirePermission(permission:string){
+
+  return function(req:any, res:any, next:any){
+
+    const user = req.user
+
+    if(!hasPermission(user, permission)){
+
+      return res.status(403).json({
+        error:`Sin permiso: ${permission}`
+      })
+
+    }
+
+    next()
+
+  }
+
+}
+
+export function requireAnyPermission(permissions:string[]){
+
+  return function(req:any, res:any, next:any){
+
+    const user = req.user
+
+    if(!hasAnyPermission(user, permissions)){
+
+      return res.status(403).json({
+        error:`Sin permisos requeridos: ${permissions.join(", ")}`
+      })
+
+    }
+
+    next()
+
+  }
 
 }

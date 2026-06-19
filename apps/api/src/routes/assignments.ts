@@ -1,6 +1,7 @@
 import { Router } from "express"
 import prisma from "../db"
 import { authMiddleware } from "../auth"
+import { requirePermission } from "../permissions"
 
 const router = Router()
 
@@ -8,15 +9,15 @@ const router = Router()
 LISTAR ASIGNACIONES
 ====================================== */
 
-router.get("/", authMiddleware, async (req:any,res)=>{
+router.get(
+  "/",
+  authMiddleware,
+  requirePermission("ASSIGNMENTS_VIEW"),
+  async (req:any,res)=>{
 
   try{
 
     const user = req.user
-
-    /* ======================================
-    SUPERADMIN Y PSYCHOLOGIST
-    ====================================== */
 
     if(
       user.role === "SUPERADMIN" ||
@@ -44,10 +45,6 @@ router.get("/", authMiddleware, async (req:any,res)=>{
       return res.json(data)
 
     }
-
-    /* ======================================
-    COMPANY ADMIN
-    ====================================== */
 
     if(user.role === "COMPANY_ADMIN"){
 
@@ -79,10 +76,6 @@ router.get("/", authMiddleware, async (req:any,res)=>{
 
     }
 
-    /* ======================================
-    OTROS ROLES
-    ====================================== */
-
     return res.json([])
 
   }catch(err){
@@ -104,7 +97,11 @@ router.get("/", authMiddleware, async (req:any,res)=>{
 ASIGNAR / REASIGNAR
 ====================================== */
 
-router.post("/", authMiddleware, async (req:any,res)=>{
+router.post(
+  "/",
+  authMiddleware,
+  requirePermission("ASSIGNMENTS_CREATE"),
+  async (req:any,res)=>{
 
   try{
 
@@ -125,10 +122,6 @@ router.post("/", authMiddleware, async (req:any,res)=>{
       })
 
     }
-
-    /* ======================================
-    VALIDAR EMPRESA
-    ====================================== */
 
     if(user.role === "COMPANY_ADMIN"){
 
@@ -154,10 +147,6 @@ router.post("/", authMiddleware, async (req:any,res)=>{
 
     }
 
-    /* ======================================
-    BUSCAR EXISTENTE
-    ====================================== */
-
     const existing =
       await prisma.assignment.findFirst({
 
@@ -167,10 +156,6 @@ router.post("/", authMiddleware, async (req:any,res)=>{
         }
 
       })
-
-    /* ======================================
-    REASIGNAR
-    ====================================== */
 
     if(existing){
 
@@ -201,10 +186,6 @@ router.post("/", authMiddleware, async (req:any,res)=>{
       })
 
     }
-
-    /* ======================================
-    CREAR
-    ====================================== */
 
     const created =
       await prisma.assignment.create({

@@ -1,6 +1,7 @@
 import { Router } from "express"
 import prisma from "../db"
 import { authMiddleware } from "../auth"
+import { requirePermission } from "../permissions"
 
 const router = Router()
 
@@ -154,7 +155,11 @@ function getCompanyRecommendation(rojoPct:number){
 }
 
 /* ================= DASHBOARD ================= */
-router.get("/", authMiddleware, async (req:any,res)=>{
+router.get(
+  "/",
+  authMiddleware,
+  requirePermission("DASHBOARD_VIEW"),
+  async (req:any,res)=>{
 
   try{
 
@@ -167,10 +172,6 @@ router.get("/", authMiddleware, async (req:any,res)=>{
       })
 
     }
-
-    /* ======================================
-    FILTRO POR EMPRESA
-    ====================================== */
 
     let participantWhere:any = {}
 
@@ -187,10 +188,6 @@ router.get("/", authMiddleware, async (req:any,res)=>{
       participantWhere.companyId = user.companyId
 
     }
-
-    /* ======================================
-    PARTICIPANTES
-    ====================================== */
 
     const participants = await prisma.participant.findMany({
 
@@ -215,10 +212,6 @@ router.get("/", authMiddleware, async (req:any,res)=>{
       participantMap[p.id] = p
     })
 
-    /* ======================================
-    RESULTADOS
-    ====================================== */
-
     const allResults = await prisma.evaluationResult.findMany({
 
       where:{
@@ -237,10 +230,6 @@ router.get("/", authMiddleware, async (req:any,res)=>{
 
     })
 
-    /* ======================================
-    AGRUPAR RESULTADOS POR PARTICIPANTE
-    ====================================== */
-
     const grouped:any = {}
 
     allResults.forEach(r=>{
@@ -252,10 +241,6 @@ router.get("/", authMiddleware, async (req:any,res)=>{
       grouped[r.participantId].push(r)
 
     })
-
-    /* ======================================
-    CONSOLIDADO POR PARTICIPANTE
-    ====================================== */
 
     const consolidated:any[] = []
 
@@ -285,10 +270,6 @@ router.get("/", authMiddleware, async (req:any,res)=>{
 
     })
 
-    /* ======================================
-    SEMÁFORO
-    ====================================== */
-
     let verde = 0
     let amarillo = 0
     let rojo = 0
@@ -308,10 +289,6 @@ router.get("/", authMiddleware, async (req:any,res)=>{
     const total = participants.length
     const rendidos = consolidated.length
     const pendientes = Math.max(0,total - rendidos)
-
-    /* ======================================
-    DASHBOARD POR EMPRESA
-    ====================================== */
 
     const companyMap:any = {}
 
@@ -370,10 +347,6 @@ router.get("/", authMiddleware, async (req:any,res)=>{
 
     })
 
-    /* ======================================
-    EMPRESA ACTUAL
-    ====================================== */
-
     let currentCompany:any = null
 
     if(user.companyId){
@@ -385,10 +358,6 @@ router.get("/", authMiddleware, async (req:any,res)=>{
       })
 
     }
-
-    /* ======================================
-    RESPUESTA
-    ====================================== */
 
     return res.json({
 

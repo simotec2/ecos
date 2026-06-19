@@ -1,156 +1,393 @@
 import { Router } from "express"
 import prisma from "../db"
-import { verifyAccessToken } from "../utils/jwt"
+import { authMiddleware } from "../auth"
+import {
+  requireAnyPermission,
+  requirePermission
+} from "../permissions"
 
 const router = Router()
 
-/* ===============================
-USER AUTH
-=============================== */
-function getUser(req:any){
-  const auth = req.headers.authorization || ""
-  if(!auth.startsWith("Bearer ")) return null
-  const token = auth.replace("Bearer ","")
-  return verifyAccessToken(token)
-}
-
-function isAdmin(user:any){
-  return user?.role === "SUPERADMIN" || user?.role === "PSYCHOLOGIST"
-}
-
-/* ===============================
-UTIL
-=============================== */
 function shuffle(arr:any[]){
+
   const a = [...arr]
+
   for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1))
-    const temp=a[i]
-    a[i]=a[j]
-    a[j]=temp
+
+    const j =
+      Math.floor(Math.random()*(i+1))
+
+    const temp = a[i]
+
+    a[i] = a[j]
+    a[j] = temp
+
   }
+
   return a
+
+}
+
+function getDefaultDurationMinutes(type:string){
+
+  if(type === "PETS"){
+    return 75
+  }
+
+  if(type === "ICOM"){
+    return 45
+  }
+
+  if(type === "SECURITY"){
+    return 30
+  }
+
+  return 30
+
 }
 
 /* ======================================
-LISTAR EVALUACIONES (TODOS PUEDEN)
+LISTAR EVALUACIONES
 ====================================== */
-router.get("/", async (req,res)=>{
 
-  const data = await prisma.evaluation.findMany()
-  res.json(data)
-
-})
-
-/* ======================================
-OBTENER EVALUACIÓN (VER / EDITOR)
-====================================== */
-router.get("/:id", async (req,res)=>{
-
-  const id = String(req.params.id)
-
-  const evaluation = await prisma.evaluation.findUnique({
-    where:{ id },
-    include:{ questions:true }
-  })
-
-  res.json(evaluation)
-
-})
-
-/* ======================================
-🔥 EDITAR EVALUACIÓN (PROTEGIDO)
-====================================== */
-router.put("/:id", async (req,res)=>{
-
-  const user = getUser(req)
-
-  if(!user){
-    return res.status(401).json({ error:"No autorizado" })
-  }
-
-  if(!isAdmin(user)){
-    return res.status(403).json({
-      error:"No tienes permisos para editar evaluaciones"
-    })
-  }
-
-  const id = String(req.params.id)
-  const { name, type } = req.body
-
-  const updated = await prisma.evaluation.update({
-    where:{ id },
-    data:{
-      name,
-      type
-    }
-  })
-
-  res.json(updated)
-
-})
-
-/* ======================================
-🔥 CREAR EVALUACIÓN (PROTEGIDO)
-====================================== */
-router.post("/", async (req,res)=>{
-
-  const user = getUser(req)
-
-  if(!user){
-    return res.status(401).json({ error:"No autorizado" })
-  }
-
-  if(!isAdmin(user)){
-    return res.status(403).json({
-      error:"No tienes permisos para crear evaluaciones"
-    })
-  }
-
-  const { name, type } = req.body
-
-  const created = await prisma.evaluation.create({
-    data:{
-      name,
-      type
-    }
-  })
-
-  res.json(created)
-
-})
-
-/* ======================================
-🔥 ELIMINAR EVALUACIÓN (SUPERADMIN / PSYCHOLOGIST)
-====================================== */
-router.delete("/:id", async (req,res)=>{
-
-  const user = getUser(req)
-
-  if(!user){
-    return res.status(401).json({
-      error:"No autorizado"
-    })
-  }
-
-  if(!isAdmin(user)){
-    return res.status(403).json({
-      error:"No tienes permisos para eliminar evaluaciones"
-    })
-  }
+router.get(
+  "/",
+  authMiddleware,
+  requireAnyPermission([
+    "EVALUATIONS_VIEW",
+    "ASSIGNMENTS_VIEW",
+    "ASSIGNMENTS_CREATE"
+  ]),
+  async (req:any,res)=>{
 
   try{
 
-    const id = String(req.params.id)
+    const data =
+      await prisma.evaluation.findMany({
 
-    const evaluation = await prisma.evaluation.findUnique({
-      where:{ id }
+      orderBy:{
+        createdAt:"desc"
+      }
+
+    })
+
+    res.json(data)
+
+  }catch(err){
+
+    console.error(
+      "LIST EVALUATIONS ERROR:",
+      err
+    )
+
+    res.status(500).json({
+      error:"Error obteniendo evaluaciones"
+    })
+
+  }
+
+})
+
+/* ======================================
+TEST EVALUACIÓN
+IMPORTANTE: ANTES DE /:id
+====================================== */
+
+router.get(
+  "/:id/test",
+  authMiddleware,
+  requirePermission("EVALUATIONS_TEST"),
+  async (req:any,res)=>{
+
+  try{
+
+    const id =
+      String(req.params.id)
+
+    const evaluation =
+      await prisma.evaluation.findUnique({
+
+      where:{ id },
+
+      include:{
+        questions:true
+      }
+
     })
 
     if(!evaluation){
+
+      return res.status(404).json({
+        error:"Evaluación no existe"
+      })
+
+    }
+
+    let questions =
+      evaluation.questions
+
+    if(evaluation.type === "SECURITY"){
+      questions = shuffle(questions).slice(0,20)
+    }
+
+    res.json({
+
+      evaluation:{
+        id: evaluation.id,
+        name: evaluation.name,
+        type: evaluation.type,
+        durationMinutes: evaluation.durationMinutes
+      },
+
+      questions: questions.map(q=>({
+
+        id: q.id,
+        text: q.text,
+        type: q.type,
+        competency: q.competency,
+        weight: q.weight,
+        correctAnswer: q.correctAnswer,
+
+        options:
+          q.optionsJson
+            ? JSON.parse(q.optionsJson)
+            : null
+
+      }))
+
+    })
+
+  }catch(err){
+
+    console.error(
+      "ERROR TEST:",
+      err
+    )
+
+    res.status(500).json({
+      error:"Error cargando test"
+    })
+
+  }
+
+})
+
+/* ======================================
+OBTENER EVALUACIÓN
+====================================== */
+
+router.get(
+  "/:id",
+  authMiddleware,
+  requireAnyPermission([
+    "EVALUATIONS_VIEW",
+    "EVALUATIONS_EDIT",
+    "EVALUATIONS_TEST"
+  ]),
+  async (req:any,res)=>{
+
+  try{
+
+    const id =
+      String(req.params.id)
+
+    const evaluation =
+      await prisma.evaluation.findUnique({
+
+      where:{ id },
+
+      include:{
+        questions:true
+      }
+
+    })
+
+    if(!evaluation){
+
       return res.status(404).json({
         error:"Evaluación no encontrada"
       })
+
+    }
+
+    res.json(evaluation)
+
+  }catch(err){
+
+    console.error(
+      "GET EVALUATION ERROR:",
+      err
+    )
+
+    res.status(500).json({
+      error:"Error obteniendo evaluación"
+    })
+
+  }
+
+})
+
+/* ======================================
+CREAR EVALUACIÓN
+====================================== */
+
+router.post(
+  "/",
+  authMiddleware,
+  requirePermission("EVALUATIONS_CREATE"),
+  async (req:any,res)=>{
+
+  try{
+
+    const {
+      name,
+      code,
+      type,
+      durationMinutes
+    } = req.body
+
+    if(!name || !type){
+
+      return res.status(400).json({
+        error:"Nombre y tipo requeridos"
+      })
+
+    }
+
+    const duration =
+      durationMinutes !== undefined &&
+      durationMinutes !== null &&
+      durationMinutes !== ""
+        ? Number(durationMinutes)
+        : getDefaultDurationMinutes(String(type))
+
+    const created =
+      await prisma.evaluation.create({
+
+      data:{
+        name,
+        code,
+        type,
+        durationMinutes: duration
+      }
+
+    })
+
+    res.json(created)
+
+  }catch(err){
+
+    console.error(
+      "CREATE EVALUATION ERROR:",
+      err
+    )
+
+    res.status(500).json({
+      error:"Error creando evaluación"
+    })
+
+  }
+
+})
+
+/* ======================================
+EDITAR EVALUACIÓN
+====================================== */
+
+router.put(
+  "/:id",
+  authMiddleware,
+  requirePermission("EVALUATIONS_EDIT"),
+  async (req:any,res)=>{
+
+  try{
+
+    const id =
+      String(req.params.id)
+
+    const {
+      name,
+      code,
+      type,
+      durationMinutes
+    } = req.body
+
+    const data:any = {}
+
+    if(name !== undefined){
+      data.name = name
+    }
+
+    if(code !== undefined){
+      data.code = code
+    }
+
+    if(type !== undefined){
+      data.type = type
+    }
+
+    if(durationMinutes !== undefined){
+
+      data.durationMinutes =
+        durationMinutes !== null &&
+        durationMinutes !== ""
+          ? Number(durationMinutes)
+          : getDefaultDurationMinutes(String(type))
+
+    }
+
+    const updated =
+      await prisma.evaluation.update({
+
+      where:{ id },
+
+      data
+
+    })
+
+    res.json(updated)
+
+  }catch(err){
+
+    console.error(
+      "UPDATE EVALUATION ERROR:",
+      err
+    )
+
+    res.status(500).json({
+      error:"Error editando evaluación"
+    })
+
+  }
+
+})
+
+/* ======================================
+ELIMINAR EVALUACIÓN
+====================================== */
+
+router.delete(
+  "/:id",
+  authMiddleware,
+  requirePermission("EVALUATIONS_DELETE"),
+  async (req:any,res)=>{
+
+  try{
+
+    const id =
+      String(req.params.id)
+
+    const evaluation =
+      await prisma.evaluation.findUnique({
+        where:{ id }
+      })
+
+    if(!evaluation){
+
+      return res.status(404).json({
+        error:"Evaluación no encontrada"
+      })
+
     }
 
     const sessionsCount =
@@ -209,73 +446,13 @@ router.delete("/:id", async (req,res)=>{
 
   }catch(err){
 
-    console.error("DELETE EVALUATION ERROR:", err)
+    console.error(
+      "DELETE EVALUATION ERROR:",
+      err
+    )
 
     return res.status(500).json({
       error:"Error eliminando evaluación"
-    })
-
-  }
-
-})
-/* ======================================
-🔥 TEST (SOLO ADMIN)
-====================================== */
-router.get("/:id/test", async (req,res)=>{
-
-  const user = getUser(req)
-
-  if(!user){
-    return res.status(401).json({ error:"No autorizado" })
-  }
-
-  if(!isAdmin(user)){
-    return res.status(403).json({
-      error:"No tienes permisos para probar evaluaciones"
-    })
-  }
-
-  try{
-
-    const id = String(req.params.id)
-
-    const evaluation = await prisma.evaluation.findUnique({
-      where:{ id },
-      include:{ questions:true }
-    })
-
-    if(!evaluation){
-      return res.status(404).json({
-        error:"Evaluación no existe"
-      })
-    }
-
-    let questions = evaluation.questions
-
-    if(evaluation.type === "SECURITY"){
-      questions = shuffle(questions).slice(0,20)
-    }
-
-    res.json({
-      evaluation:{
-        id: evaluation.id,
-        name: evaluation.name,
-        type: evaluation.type
-      },
-      questions: questions.map(q=>({
-        id: q.id,
-        text: q.text,
-        type: q.type,
-        options: q.optionsJson ? JSON.parse(q.optionsJson) : null
-      }))
-    })
-
-  }catch(err){
-
-    console.error("ERROR TEST:", err)
-
-    res.status(500).json({
-      error:"Error cargando test"
     })
 
   }
