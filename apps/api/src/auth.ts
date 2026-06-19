@@ -3,24 +3,26 @@ import prisma from "./db"
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret"
 
-// ==========================
-// GENERAR TOKEN
-// ==========================
+/* =========================
+GENERAR TOKEN
+========================= */
 export function signToken(user:any){
 
   return jwt.sign(
     {
       id: user.id,
-      role: user.role
+      role: user.role,
+      companyId: user.companyId || null
     },
     JWT_SECRET,
     { expiresIn: "7d" }
   )
+
 }
 
-// ==========================
-// MIDDLEWARE AUTH
-// ==========================
+/* =========================
+MIDDLEWARE AUTH
+========================= */
 export async function authMiddleware(req:any, res:any, next:any){
 
   try{
@@ -43,12 +45,20 @@ export async function authMiddleware(req:any, res:any, next:any){
       return res.status(401).json({ error:"User not found" })
     }
 
-    req.user = user
+    req.user = {
+      ...user,
+      companyId:
+        decoded.companyId !== undefined && decoded.companyId !== null
+          ? decoded.companyId
+          : user.companyId
+    }
 
     next()
 
   }catch(e){
 
     return res.status(401).json({ error:"Invalid token" })
+
   }
+
 }

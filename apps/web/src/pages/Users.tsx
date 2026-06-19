@@ -148,43 +148,102 @@ export default function Users(){
   LOGIN AS
   ====================================== */
 
-  async function loginAs(userId:string){
+  async function loginAs(u:any){
 
-    const data = await apiFetch(
-      `/api/users/loginAs/${userId}`,
-      {
-        method:"POST"
-      }
-    )
+  let selectedCompanyId = ""
 
-    localStorage.setItem(
-      "token",
-      data.token
-    )
+  if(u.role === "COMPANY_ADMIN"){
 
-    localStorage.setItem(
-      "userName",
-      data.user.name
-    )
+    if(companies.length === 0){
 
-    localStorage.setItem(
-      "role",
-      data.user.role
-    )
+      alert("No hay empresas registradas para seleccionar")
 
-    if(data.user.role === "PARTICIPANT"){
-
-      window.location.href =
-        "/app/my-evaluations"
-
-    }else{
-
-      window.location.href =
-        "/app"
+      return
 
     }
 
+    const list = companies
+      .map((c:any,index:number)=>
+        `${index + 1}. ${c.name}`
+      )
+      .join("\n")
+
+    const choice = prompt(
+      `Seleccione la empresa que quiere ver:\n\n${list}\n\nIngrese el número de la empresa:`
+    )
+
+    if(!choice){
+
+      return
+
+    }
+
+    const index = Number(choice) - 1
+
+    if(
+      isNaN(index) ||
+      index < 0 ||
+      index >= companies.length
+    ){
+
+      alert("Selección inválida")
+
+      return
+
+    }
+
+    selectedCompanyId = companies[index].id
+
   }
+
+  const data = await apiFetch(
+    `/api/users/loginAs/${u.id}`,
+    {
+      method:"POST",
+      body:{
+        companyId: selectedCompanyId || null
+      }
+    }
+  )
+
+  localStorage.setItem(
+    "token",
+    data.token
+  )
+
+  localStorage.setItem(
+    "userName",
+    data.user.name
+  )
+
+  localStorage.setItem(
+    "role",
+    data.user.role
+  )
+
+  localStorage.setItem(
+    "companyId",
+    data.user.companyId || ""
+  )
+
+  localStorage.setItem(
+    "companyName",
+    data.user.company?.name || ""
+  )
+
+  if(data.user.role === "PARTICIPANT"){
+
+    window.location.href =
+      "/app/my-evaluations"
+
+  }else{
+
+    window.location.href =
+      "/app"
+
+  }
+
+}
 
   return(
 
@@ -386,7 +445,7 @@ export default function Users(){
 
                     <button
                       onClick={()=>
-                        loginAs(u.id)
+                        loginAs(u)
                       }
                       style={styles.greenButton}
                     >

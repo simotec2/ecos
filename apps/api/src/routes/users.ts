@@ -1,6 +1,7 @@
 import { Router } from "express"
 import prisma from "../db"
 import { signAccessToken } from "../utils/jwt"
+import { authMiddleware } from "../auth"
 
 const router = Router()
 
@@ -149,9 +150,21 @@ router.delete("/:id", async (req, res) => {
 LOGIN AS
 ===================================== */
 
-router.post("/loginAs/:id", async (req, res) => {
+router.post("/loginAs/:id", authMiddleware, async (req:any, res) => {
 
   try {
+
+    const currentUser = req.user
+
+    if(!currentUser || currentUser.role !== "SUPERADMIN"){
+
+      return res.status(403).json({
+        error:"Solo el SUPERADMIN puede usar Ver como"
+      })
+
+    }
+
+    const { companyId } = req.body || {}
 
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
@@ -166,7 +179,43 @@ router.post("/loginAs/:id", async (req, res) => {
 
     }
 
-    const token = signAccessToken(user)
+    let effectiveCompanyId = user.companyId
+    let effectiveCompany = user.company
+
+    if(user.role === "COMPANY_ADMIN"){
+
+      if(!companyId){
+
+        return res.status(400).json({
+          error:"Debe seleccionar una empresa para ver como COMPANY_ADMIN"
+        })
+
+      }
+
+      const selectedCompany = await prisma.company.findUnique({
+        where:{
+          id: companyId
+        }
+      })
+
+      if(!selectedCompany){
+
+        return res.status(404).json({
+          error:"Empresa seleccionada no encontrada"
+        })
+
+      }
+
+      effectiveCompanyId = selectedCompany.id
+      effectiveCompany = selectedCompany
+
+    }
+
+    const token = signAccessToken({
+      id: user.id,
+      role: user.role,
+      companyId: effectiveCompanyId
+    })
 
     res.json({
       ok: true,
@@ -176,8 +225,8 @@ router.post("/loginAs/:id", async (req, res) => {
         name: user.name,
         rut: user.rut,
         role: user.role,
-        companyId: user.companyId,
-        company: user.company
+        companyId: effectiveCompanyId,
+        company: effectiveCompany
       }
     })
 
@@ -190,7 +239,6 @@ router.post("/loginAs/:id", async (req, res) => {
   }
 
 })
-
 /* =====================================
 RESET PASSWORD
 ===================================== */
