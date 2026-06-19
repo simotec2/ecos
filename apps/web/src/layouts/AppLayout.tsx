@@ -82,18 +82,69 @@ export default function AppLayout(){
 
   function backToAdmin(){
 
-    localStorage.setItem(
-      "role",
-      "SUPERADMIN"
-    )
+  const originalToken =
+    localStorage.getItem("originalToken")
 
-    localStorage.removeItem(
-      "originalRole"
-    )
+  const originalRole =
+    localStorage.getItem("originalRole")
 
-    navigate("/app",{replace:true})
+  const originalUserName =
+    localStorage.getItem("originalUserName")
 
+  const originalPermissions =
+    localStorage.getItem("originalPermissions")
+
+  const originalCompanyId =
+    localStorage.getItem("originalCompanyId")
+
+  const originalCompanyName =
+    localStorage.getItem("originalCompanyName")
+
+  if(originalToken){
+    localStorage.setItem("token", originalToken)
+    localStorage.setItem("jwt", originalToken)
+    localStorage.setItem("accessToken", originalToken)
+    localStorage.setItem("access_token", originalToken)
   }
+
+  if(originalRole){
+    localStorage.setItem("role", originalRole)
+  }else{
+    localStorage.setItem("role", "SUPERADMIN")
+  }
+
+  if(originalUserName){
+    localStorage.setItem("userName", originalUserName)
+  }
+
+  if(originalPermissions){
+    localStorage.setItem("permissions", originalPermissions)
+  }else{
+    localStorage.setItem("permissions", "[]")
+  }
+
+  localStorage.setItem(
+    "companyId",
+    originalCompanyId || ""
+  )
+
+  localStorage.setItem(
+    "companyName",
+    originalCompanyName || ""
+  )
+
+  localStorage.removeItem("originalToken")
+  localStorage.removeItem("originalRole")
+  localStorage.removeItem("originalUserName")
+  localStorage.removeItem("originalPermissions")
+  localStorage.removeItem("originalCompanyId")
+  localStorage.removeItem("originalCompanyName")
+
+  navigate("/app",{replace:true})
+
+  window.location.reload()
+
+}
 
   function closeMenu(){
 
