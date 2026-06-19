@@ -2,38 +2,81 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { apiFetch } from "../api"
 
+function getStoredPermissions(){
+
+  try{
+
+    const raw =
+      localStorage.getItem("permissions")
+
+    if(!raw){
+      return []
+    }
+
+    const parsed =
+      JSON.parse(raw)
+
+    return Array.isArray(parsed)
+      ? parsed
+      : []
+
+  }catch{
+
+    return []
+
+  }
+
+}
+
+function hasPermission(permission:string){
+
+  const role =
+    localStorage.getItem("role") || ""
+
+  if(role === "SUPERADMIN"){
+    return true
+  }
+
+  return getStoredPermissions()
+    .includes(permission)
+
+}
+
 export default function Evaluations(){
 
   const navigate = useNavigate()
 
-  const [evaluations,setEvaluations]=useState<any[]>([])
-  const [loading,setLoading]=useState(true)
-  const [deletingId,setDeletingId]=useState<string | null>(null)
+  const [evaluations,setEvaluations] =
+    useState<any[]>([])
 
-  const role = localStorage.getItem("role")
+  const [loading,setLoading] =
+    useState(true)
+
+  const [deletingId,setDeletingId] =
+    useState<string | null>(null)
+
+  const canView =
+    hasPermission("EVALUATIONS_VIEW")
+
+  const canCreate =
+    hasPermission("EVALUATIONS_CREATE")
+
+  const canEdit =
+    hasPermission("EVALUATIONS_EDIT")
 
   const canDelete =
-    role === "SUPERADMIN" ||
-    role === "PSYCHOLOGIST"
+    hasPermission("EVALUATIONS_DELETE")
 
-  if(
-    role !== "SUPERADMIN" &&
-    role !== "PSYCHOLOGIST"
-  ){
-
-    return (
-
-      <div style={{padding:40,color:"#fff"}}>
-        No tienes acceso a este módulo
-      </div>
-
-    )
-
-  }
+  const canTest =
+    hasPermission("EVALUATIONS_TEST")
 
   useEffect(()=>{
 
-    load()
+    if(canView){
+      load()
+    }else{
+      setLoading(false)
+    }
 
   },[])
 
@@ -41,7 +84,8 @@ export default function Evaluations(){
 
     try{
 
-      const data = await apiFetch("/api/evaluations")
+      const data =
+        await apiFetch("/api/evaluations")
 
       const clean = (data || []).filter((ev:any)=>
         ev &&
@@ -77,17 +121,36 @@ export default function Evaluations(){
 
   function testEvaluation(id:string){
 
+    if(!canTest){
+      alert("No tienes permisos para probar evaluaciones")
+      return
+    }
+
     navigate(`/app/evaluations/${id}/test`)
 
   }
 
   function editEvaluation(id:string){
 
+    if(!canEdit){
+      alert("No tienes permisos para editar evaluaciones")
+      return
+    }
+
     navigate(`/app/evaluations/${id}/edit`)
 
   }
 
   function viewEvaluation(id:string){
+
+    if(
+      !canView &&
+      !canEdit &&
+      !canTest
+    ){
+      alert("No tienes permisos para ver evaluaciones")
+      return
+    }
 
     navigate(`/app/evaluations/${id}/view`)
 
@@ -127,7 +190,10 @@ export default function Evaluations(){
 
     }catch(err:any){
 
-      console.error("Error eliminando evaluación", err)
+      console.error(
+        "Error eliminando evaluación",
+        err
+      )
 
       alert(
         err?.message ||
@@ -140,6 +206,21 @@ export default function Evaluations(){
       setDeletingId(null)
 
     }
+
+  }
+
+  if(!canView){
+
+    return (
+
+      <div style={{
+        padding:40,
+        color:"#fff"
+      }}>
+        No tienes acceso a este módulo
+      </div>
+
+    )
 
   }
 
@@ -164,20 +245,24 @@ export default function Evaluations(){
         Evaluaciones
       </h2>
 
-      <div style={{
-        marginBottom:20
-      }}>
+      {canCreate && (
 
-        <button
-          onClick={()=>
-            navigate("/app/evaluations/new")
-          }
-          style={styles.newButton}
-        >
-          Nueva evaluación
-        </button>
+        <div style={{
+          marginBottom:20
+        }}>
 
-      </div>
+          <button
+            onClick={()=>
+              navigate("/app/evaluations/new")
+            }
+            style={styles.newButton}
+          >
+            Nueva evaluación
+          </button>
+
+        </div>
+
+      )}
 
       <div style={styles.card}>
 
@@ -227,32 +312,44 @@ export default function Evaluations(){
                   flexWrap:"wrap"
                 }}>
 
-                  <button
-                    onClick={()=>
-                      viewEvaluation(ev.id)
-                    }
-                    style={styles.greenButton}
-                  >
-                    Ver
-                  </button>
+                  {(canView || canEdit || canTest) && (
 
-                  <button
-                    onClick={()=>
-                      editEvaluation(ev.id)
-                    }
-                    style={styles.yellowButton}
-                  >
-                    Editar
-                  </button>
+                    <button
+                      onClick={()=>
+                        viewEvaluation(ev.id)
+                      }
+                      style={styles.greenButton}
+                    >
+                      Ver
+                    </button>
 
-                  <button
-                    onClick={()=>
-                      testEvaluation(ev.id)
-                    }
-                    style={styles.blueButton}
-                  >
-                    Probar
-                  </button>
+                  )}
+
+                  {canEdit && (
+
+                    <button
+                      onClick={()=>
+                        editEvaluation(ev.id)
+                      }
+                      style={styles.yellowButton}
+                    >
+                      Editar
+                    </button>
+
+                  )}
+
+                  {canTest && (
+
+                    <button
+                      onClick={()=>
+                        testEvaluation(ev.id)
+                      }
+                      style={styles.blueButton}
+                    >
+                      Probar
+                    </button>
+
+                  )}
 
                   {canDelete && (
 

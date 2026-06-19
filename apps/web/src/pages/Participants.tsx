@@ -5,46 +5,117 @@ import Card from "../components/Card"
 import FormGrid from "../components/FormGrid"
 import SearchBox from "../components/SearchBox"
 
+function getStoredPermissions(){
+
+  try{
+
+    const raw =
+      localStorage.getItem("permissions")
+
+    if(!raw){
+      return []
+    }
+
+    const parsed =
+      JSON.parse(raw)
+
+    return Array.isArray(parsed)
+      ? parsed
+      : []
+
+  }catch{
+
+    return []
+
+  }
+
+}
+
+function hasPermission(permission:string){
+
+  const role =
+    localStorage.getItem("role") || ""
+
+  if(role === "SUPERADMIN"){
+    return true
+  }
+
+  return getStoredPermissions()
+    .includes(permission)
+
+}
+
 export default function Participants(){
 
-  const [participants,setParticipants] = useState<any[]>([])
-  const [companies,setCompanies] = useState<any[]>([])
-  const [evaluations,setEvaluations] = useState<any[]>([])
+  const [participants,setParticipants] =
+    useState<any[]>([])
 
-  const [search,setSearch] = useState("")
-  const [companyId,setCompanyId] = useState("")
-  const [selectedEvaluations,setSelectedEvaluations] = useState<string[]>([])
+  const [companies,setCompanies] =
+    useState<any[]>([])
 
-  const [nombre,setNombre] = useState("")
-  const [apellido,setApellido] = useState("")
-  const [rut,setRut] = useState("")
-  const [perfil,setPerfil] = useState("")
-  const [email,setEmail] = useState("")
+  const [search,setSearch] =
+    useState("")
 
-  const [editing,setEditing] = useState<any>(null)
+  const [companyId,setCompanyId] =
+    useState("")
 
-  const user = JSON.parse(
-    localStorage.getItem("user") || "{}"
-  )
+  const [nombre,setNombre] =
+    useState("")
 
-  const isSuperAdmin =
-    user?.role === "SUPERADMIN"
+  const [apellido,setApellido] =
+    useState("")
+
+  const [rut,setRut] =
+    useState("")
+
+  const [perfil,setPerfil] =
+    useState("")
+
+  const [email,setEmail] =
+    useState("")
+
+  const [editing,setEditing] =
+    useState<any>(null)
+
+  const canView =
+    hasPermission("PARTICIPANTS_VIEW")
+
+  const canCreate =
+    hasPermission("PARTICIPANTS_CREATE")
+
+  const canEdit =
+    hasPermission("PARTICIPANTS_EDIT")
+
+  const canDelete =
+    hasPermission("PARTICIPANTS_DELETE")
+
+  const canInvite =
+    hasPermission("PARTICIPANTS_INVITE")
 
   useEffect(()=>{
-    loadParticipants()
-    loadCompanies()
-    loadEvaluations()
+
+    if(canView){
+      loadParticipants()
+    }
+
+    if(canCreate || canEdit){
+      loadCompanies()
+    }
+
   },[])
 
   async function loadParticipants(){
 
     try{
 
-      const data = await apiFetch("/api/participants")
+      const data =
+        await apiFetch("/api/participants")
 
       setParticipants(data || [])
 
-    }catch{
+    }catch(err){
+
+      console.error(err)
 
       alert("Error cargando participantes")
 
@@ -56,7 +127,8 @@ export default function Participants(){
 
     try{
 
-      const data = await apiFetch("/api/companies")
+      const data =
+        await apiFetch("/api/companies")
 
       setCompanies(data || [])
 
@@ -64,7 +136,9 @@ export default function Participants(){
         setCompanyId(data[0].id)
       }
 
-    }catch{
+    }catch(err){
+
+      console.error(err)
 
       alert("Error cargando empresas")
 
@@ -72,42 +146,15 @@ export default function Participants(){
 
   }
 
-  async function loadEvaluations(){
-
-    try{
-
-      const data = await apiFetch("/api/evaluations")
-
-      setEvaluations(data || [])
-
-    }catch{
-
-      alert("Error cargando evaluaciones")
-
-    }
-
-  }
-
-  function toggleEvaluation(id:string){
-
-    if(selectedEvaluations.includes(id)){
-
-      setSelectedEvaluations(
-        selectedEvaluations.filter(e=>e!==id)
-      )
-
-    }else{
-
-      setSelectedEvaluations([
-        ...selectedEvaluations,
-        id
-      ])
-
-    }
-
-  }
-
   async function createParticipant(){
+
+    if(!canCreate){
+
+      alert("No tienes permisos para crear participantes")
+
+      return
+
+    }
 
     if(!nombre || !apellido || !rut){
 
@@ -127,7 +174,7 @@ export default function Participants(){
 
     try{
 
-      const participant = await apiFetch("/api/participants",{
+      await apiFetch("/api/participants",{
         method:"POST",
         body:{
           nombre,
@@ -139,30 +186,19 @@ export default function Participants(){
         }
       })
 
-      for(const evaluationId of selectedEvaluations){
-
-        await apiFetch("/api/assignments",{
-          method:"POST",
-          body:{
-            participantId:participant.id,
-            evaluationId
-          }
-        })
-
-      }
-
       setNombre("")
       setApellido("")
       setRut("")
       setPerfil("")
       setEmail("")
-      setSelectedEvaluations([])
 
       await loadParticipants()
 
       alert("Participante creado")
 
-    }catch{
+    }catch(err){
+
+      console.error(err)
 
       alert("Error creando participante")
 
@@ -171,6 +207,14 @@ export default function Participants(){
   }
 
   async function updateParticipant(){
+
+    if(!canEdit){
+
+      alert("No tienes permisos para editar participantes")
+
+      return
+
+    }
 
     try{
 
@@ -192,7 +236,9 @@ export default function Participants(){
 
       alert("Actualizado correctamente")
 
-    }catch{
+    }catch(err){
+
+      console.error(err)
 
       alert("Error actualizando")
 
@@ -201,6 +247,14 @@ export default function Participants(){
   }
 
   async function resendInvitation(id:string){
+
+    if(!canInvite){
+
+      alert("No tienes permisos para reenviar invitaciones")
+
+      return
+
+    }
 
     if(!confirm("¿Reenviar invitación?")){
       return
@@ -214,7 +268,9 @@ export default function Participants(){
 
       alert("Invitación reenviada")
 
-    }catch{
+    }catch(err){
+
+      console.error(err)
 
       alert("Error reenviando")
 
@@ -224,8 +280,12 @@ export default function Participants(){
 
   async function deleteParticipant(id:string){
 
-    if(!isSuperAdmin){
+    if(!canDelete){
+
+      alert("No tienes permisos para eliminar participantes")
+
       return
+
     }
 
     const confirmDelete = confirm(
@@ -246,7 +306,9 @@ export default function Participants(){
 
       alert("Participante eliminado")
 
-    }catch{
+    }catch(err){
+
+      console.error(err)
 
       alert("Error eliminando participante")
 
@@ -262,94 +324,117 @@ export default function Participants(){
 
   )
 
+  if(!canView){
+
+    return(
+
+      <div style={{
+        padding:40,
+        color:"#fff"
+      }}>
+        No tienes acceso a este módulo
+      </div>
+
+    )
+
+  }
+
   return(
 
     <PageContainer title="Participantes">
 
-      {/* ======================================
-      NUEVO PARTICIPANTE
-      ====================================== */}
+      {canCreate && (
 
-      <Card title="Nuevo participante">
+        <Card title="Nuevo participante">
 
-        <div style={styles.companySelector}>
+          <div style={styles.companySelector}>
 
-          <select
-            value={companyId}
-            onChange={(e)=>setCompanyId(e.target.value)}
-          >
+            <select
+              value={companyId}
+              onChange={(e)=>
+                setCompanyId(e.target.value)
+              }
+            >
 
-            {companies.map((c:any)=>(
+              {companies.map((c:any)=>(
 
-              <option key={c.id} value={c.id}>
-                {c.name}
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+
+              ))}
+
+            </select>
+
+          </div>
+
+          <FormGrid>
+
+            <input
+              placeholder="Nombre"
+              value={nombre}
+              onChange={e=>
+                setNombre(e.target.value)
+              }
+            />
+
+            <input
+              placeholder="Apellido"
+              value={apellido}
+              onChange={e=>
+                setApellido(e.target.value)
+              }
+            />
+
+            <input
+              placeholder="RUT"
+              value={rut}
+              onChange={e=>
+                setRut(e.target.value)
+              }
+            />
+
+            <select
+              value={perfil}
+              onChange={e=>
+                setPerfil(e.target.value)
+              }
+            >
+
+              <option value="">
+                Seleccionar perfil
               </option>
 
-            ))}
+              <option value="Operador">
+                Operador
+              </option>
 
-          </select>
+              <option value="Supervisor">
+                Supervisor
+              </option>
 
-        </div>
+            </select>
 
-        <FormGrid>
+            <input
+              placeholder="Email"
+              value={email}
+              onChange={e=>
+                setEmail(e.target.value)
+              }
+            />
 
-          <input
-            placeholder="Nombre"
-            value={nombre}
-            onChange={e=>setNombre(e.target.value)}
-          />
+          </FormGrid>
 
-          <input
-            placeholder="Apellido"
-            value={apellido}
-            onChange={e=>setApellido(e.target.value)}
-          />
-
-          <input
-            placeholder="RUT"
-            value={rut}
-            onChange={e=>setRut(e.target.value)}
-          />
-
-          <select
-            value={perfil}
-            onChange={e=>setPerfil(e.target.value)}
+          <button
+            style={styles.button}
+            onClick={createParticipant}
           >
+            Crear participante
+          </button>
 
-            <option value="">
-              Seleccionar perfil
-            </option>
+        </Card>
 
-            <option value="Operador">
-              Operador
-            </option>
-
-            <option value="Supervisor">
-              Supervisor
-            </option>
-
-          </select>
-
-          <input
-            placeholder="Email"
-            value={email}
-            onChange={e=>setEmail(e.target.value)}
-          />
-
-        </FormGrid>
-
-        <button
-          style={styles.button}
-          onClick={createParticipant}
-        >
-          Crear participante
-        </button>
-
-      </Card>
-
-      {/* ======================================
-      LISTADO
-      ====================================== */}
+      )}
 
       <Card title="Listado de participantes">
 
@@ -406,31 +491,49 @@ export default function Participants(){
 
                   <div style={styles.actions}>
 
-                    <button
-                      style={styles.iconBtnBlue}
-                      onClick={()=>setEditing(p)}
-                      title="Editar participante"
-                    >
-                      ✏️
-                    </button>
+                    {canEdit && (
 
-                    <button
-                      style={styles.resendBtn}
-                      onClick={()=>resendInvitation(p.id)}
-                    >
-                      Reenviar
-                    </button>
+                      <button
+                        style={styles.iconBtnBlue}
+                        onClick={()=>
+                          setEditing(p)
+                        }
+                        title="Editar participante"
+                      >
+                        ✏️
+                      </button>
 
-                    {isSuperAdmin && (
+                    )}
+
+                    {canInvite && (
+
+                      <button
+                        style={styles.resendBtn}
+                        onClick={()=>
+                          resendInvitation(p.id)
+                        }
+                      >
+                        Reenviar
+                      </button>
+
+                    )}
+
+                    {canDelete && (
 
                       <button
                         style={styles.deleteBtn}
-                        onClick={()=>deleteParticipant(p.id)}
+                        onClick={()=>
+                          deleteParticipant(p.id)
+                        }
                         title="Eliminar participante"
                       >
                         🗑️
                       </button>
 
+                    )}
+
+                    {!canEdit && !canInvite && !canDelete && (
+                      <span>-</span>
                     )}
 
                   </div>
@@ -447,11 +550,7 @@ export default function Participants(){
 
       </Card>
 
-      {/* ======================================
-      MODAL EDICIÓN
-      ====================================== */}
-
-      {editing && (
+      {editing && canEdit && (
 
         <div style={styles.modal}>
 
@@ -461,34 +560,42 @@ export default function Participants(){
 
             <input
               value={editing.nombre}
-              onChange={e=>setEditing({
-                ...editing,
-                nombre:e.target.value
-              })}
+              onChange={e=>
+                setEditing({
+                  ...editing,
+                  nombre:e.target.value
+                })
+              }
             />
 
             <input
               value={editing.apellido}
-              onChange={e=>setEditing({
-                ...editing,
-                apellido:e.target.value
-              })}
+              onChange={e=>
+                setEditing({
+                  ...editing,
+                  apellido:e.target.value
+                })
+              }
             />
 
             <input
               value={editing.rut}
-              onChange={e=>setEditing({
-                ...editing,
-                rut:e.target.value
-              })}
+              onChange={e=>
+                setEditing({
+                  ...editing,
+                  rut:e.target.value
+                })
+              }
             />
 
             <select
               value={editing.perfil || ""}
-              onChange={e=>setEditing({
-                ...editing,
-                perfil:e.target.value
-              })}
+              onChange={e=>
+                setEditing({
+                  ...editing,
+                  perfil:e.target.value
+                })
+              }
             >
 
               <option value="">
@@ -507,10 +614,12 @@ export default function Participants(){
 
             <input
               value={editing.email || ""}
-              onChange={e=>setEditing({
-                ...editing,
-                email:e.target.value
-              })}
+              onChange={e=>
+                setEditing({
+                  ...editing,
+                  email:e.target.value
+                })
+              }
             />
 
             <div style={{
@@ -523,7 +632,9 @@ export default function Participants(){
                 Guardar
               </button>
 
-              <button onClick={()=>setEditing(null)}>
+              <button onClick={()=>
+                setEditing(null)
+              }>
                 Cancelar
               </button>
 
