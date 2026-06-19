@@ -12,14 +12,34 @@ import {
 
 import CompanySelector from "../components/CompanySelector"
 
+function getStoredPermissions(){
+
+  try{
+
+    const raw = localStorage.getItem("permissions")
+
+    if(!raw){
+      return []
+    }
+
+    const parsed = JSON.parse(raw)
+
+    return Array.isArray(parsed)
+      ? parsed
+      : []
+
+  }catch{
+
+    return []
+
+  }
+
+}
+
 export default function AppLayout(){
 
   const navigate = useNavigate()
   const location = useLocation()
-
-  /* =========================
-  MOBILE DETECTION
-  ========================= */
 
   const [isMobile,setIsMobile] = useState(
     window.innerWidth < 768
@@ -55,10 +75,6 @@ export default function AppLayout(){
 
   },[])
 
-  /* =========================
-  USER
-  ========================= */
-
   const userName =
     localStorage.getItem("userName") || "Usuario"
 
@@ -68,9 +84,129 @@ export default function AppLayout(){
   const originalRole =
     localStorage.getItem("originalRole")
 
-  /* =========================
-  ACTIONS
-  ========================= */
+  const permissions =
+    getStoredPermissions()
+
+  function hasPermission(permission:string){
+
+    if(role === "SUPERADMIN"){
+      return true
+    }
+
+    return permissions.includes(permission)
+
+  }
+
+  const allMenu = [
+
+    {
+      path:"/app",
+      label:"Dashboard",
+      permission:"DASHBOARD_VIEW"
+    },
+
+    {
+      path:"/app/companies",
+      label:"Empresas",
+      permission:"COMPANIES_VIEW"
+    },
+
+    {
+      path:"/app/users",
+      label:"Usuarios",
+      permission:"USERS_VIEW"
+    },
+
+    {
+      path:"/app/participants",
+      label:"Participantes",
+      permission:"PARTICIPANTS_VIEW"
+    },
+
+    {
+      path:"/app/assignments",
+      label:"Asignaciones",
+      permission:"ASSIGNMENTS_VIEW"
+    },
+
+    {
+      path:"/app/evaluations",
+      label:"Evaluaciones",
+      permission:"EVALUATIONS_VIEW"
+    },
+
+    {
+      path:"/app/reports",
+      label:"Informes",
+      permission:"REPORTS_VIEW"
+    }
+
+  ]
+
+  const participantMenu = [
+    {
+      path:"/app/my-evaluations",
+      label:"Mis evaluaciones"
+    }
+  ]
+
+  const menuItems =
+    role === "PARTICIPANT"
+      ? participantMenu
+      : allMenu.filter((item:any)=>
+          hasPermission(item.permission)
+        )
+
+  useEffect(()=>{
+
+    if(role === "PARTICIPANT"){
+      return
+    }
+
+    const currentPath =
+      location.pathname
+
+    const currentMenuItem = allMenu.find((item:any)=>
+      currentPath === item.path ||
+      currentPath.startsWith(item.path + "/") ||
+      (
+        item.path === "/app" &&
+        currentPath === "/app/dashboard"
+      )
+    )
+
+    if(currentMenuItem){
+
+      const canAccess =
+        hasPermission(currentMenuItem.permission)
+
+      if(!canAccess){
+
+        const firstAllowed =
+          menuItems[0]
+
+        if(firstAllowed){
+
+          navigate(firstAllowed.path,{
+            replace:true
+          })
+
+        }else{
+
+          navigate("/no-access",{
+            replace:true
+          })
+
+        }
+
+      }
+
+    }
+
+  },[
+    location.pathname,
+    role
+  ])
 
   function logout(){
 
@@ -82,69 +218,81 @@ export default function AppLayout(){
 
   function backToAdmin(){
 
-  const originalToken =
-    localStorage.getItem("originalToken")
+    const originalToken =
+      localStorage.getItem("originalToken")
 
-  const originalRole =
-    localStorage.getItem("originalRole")
+    const originalRole =
+      localStorage.getItem("originalRole")
 
-  const originalUserName =
-    localStorage.getItem("originalUserName")
+    const originalUserName =
+      localStorage.getItem("originalUserName")
 
-  const originalPermissions =
-    localStorage.getItem("originalPermissions")
+    const originalPermissions =
+      localStorage.getItem("originalPermissions")
 
-  const originalCompanyId =
-    localStorage.getItem("originalCompanyId")
+    const originalCompanyId =
+      localStorage.getItem("originalCompanyId")
 
-  const originalCompanyName =
-    localStorage.getItem("originalCompanyName")
+    const originalCompanyName =
+      localStorage.getItem("originalCompanyName")
 
-  if(originalToken){
-    localStorage.setItem("token", originalToken)
-    localStorage.setItem("jwt", originalToken)
-    localStorage.setItem("accessToken", originalToken)
-    localStorage.setItem("access_token", originalToken)
+    if(originalToken){
+
+      localStorage.setItem("token", originalToken)
+      localStorage.setItem("jwt", originalToken)
+      localStorage.setItem("accessToken", originalToken)
+      localStorage.setItem("access_token", originalToken)
+
+    }
+
+    if(originalRole){
+
+      localStorage.setItem("role", originalRole)
+
+    }else{
+
+      localStorage.setItem("role", "SUPERADMIN")
+
+    }
+
+    if(originalUserName){
+
+      localStorage.setItem("userName", originalUserName)
+
+    }
+
+    if(originalPermissions){
+
+      localStorage.setItem("permissions", originalPermissions)
+
+    }else{
+
+      localStorage.setItem("permissions", "[]")
+
+    }
+
+    localStorage.setItem(
+      "companyId",
+      originalCompanyId || ""
+    )
+
+    localStorage.setItem(
+      "companyName",
+      originalCompanyName || ""
+    )
+
+    localStorage.removeItem("originalToken")
+    localStorage.removeItem("originalRole")
+    localStorage.removeItem("originalUserName")
+    localStorage.removeItem("originalPermissions")
+    localStorage.removeItem("originalCompanyId")
+    localStorage.removeItem("originalCompanyName")
+
+    navigate("/app",{replace:true})
+
+    window.location.reload()
+
   }
-
-  if(originalRole){
-    localStorage.setItem("role", originalRole)
-  }else{
-    localStorage.setItem("role", "SUPERADMIN")
-  }
-
-  if(originalUserName){
-    localStorage.setItem("userName", originalUserName)
-  }
-
-  if(originalPermissions){
-    localStorage.setItem("permissions", originalPermissions)
-  }else{
-    localStorage.setItem("permissions", "[]")
-  }
-
-  localStorage.setItem(
-    "companyId",
-    originalCompanyId || ""
-  )
-
-  localStorage.setItem(
-    "companyName",
-    originalCompanyName || ""
-  )
-
-  localStorage.removeItem("originalToken")
-  localStorage.removeItem("originalRole")
-  localStorage.removeItem("originalUserName")
-  localStorage.removeItem("originalPermissions")
-  localStorage.removeItem("originalCompanyId")
-  localStorage.removeItem("originalCompanyName")
-
-  navigate("/app",{replace:true})
-
-  window.location.reload()
-
-}
 
   function closeMenu(){
 
@@ -160,7 +308,11 @@ export default function AppLayout(){
 
     const isActive =
       location.pathname === path ||
-      location.pathname.startsWith(path + "/")
+      location.pathname.startsWith(path + "/") ||
+      (
+        path === "/app" &&
+        location.pathname === "/app/dashboard"
+      )
 
     if(isActive){
 
@@ -175,55 +327,9 @@ export default function AppLayout(){
 
   }
 
-  /* =========================
-  MENU
-  ========================= */
-
-  const menu:any={
-
-    SUPERADMIN:[
-      {path:"/app",label:"Dashboard"},
-      {path:"/app/companies",label:"Empresas"},
-      {path:"/app/users",label:"Usuarios"},
-      {path:"/app/participants",label:"Participantes"},
-      {path:"/app/assignments",label:"Asignaciones"},
-      {path:"/app/evaluations",label:"Evaluaciones"},
-      {path:"/app/reports",label:"Informes"}
-    ],
-
-    PSYCHOLOGIST:[
-      {path:"/app",label:"Dashboard"},
-      {path:"/app/participants",label:"Participantes"},
-      {path:"/app/evaluations",label:"Evaluaciones"},
-      {path:"/app/reports",label:"Informes"}
-    ],
-
-    COMPANY_ADMIN:[
-      {path:"/app",label:"Dashboard"},
-      {path:"/app/participants",label:"Participantes"},
-      {path:"/app/assignments",label:"Asignaciones"},
-      {path:"/app/reports",label:"Informes"}
-    ],
-
-    PARTICIPANT:[
-      {path:"/app/my-evaluations",label:"Mis evaluaciones"}
-    ]
-
-  }
-
-  const menuItems = menu[role] || []
-
-  /* =========================
-  UI
-  ========================= */
-
   return(
 
     <div style={styles.container}>
-
-      {/* =========================
-      IMPERSONATION
-      ========================= */}
 
       {originalRole==="SUPERADMIN" && role!=="SUPERADMIN" && (
 
@@ -244,10 +350,6 @@ export default function AppLayout(){
 
       )}
 
-      {/* =========================
-      MOBILE OVERLAY
-      ========================= */}
-
       {isMobile && menuOpen && (
 
         <div
@@ -258,10 +360,6 @@ export default function AppLayout(){
         />
 
       )}
-
-      {/* =========================
-      SIDEBAR
-      ========================= */}
 
       <div style={{
         ...styles.sidebar,
@@ -315,15 +413,7 @@ export default function AppLayout(){
 
       </div>
 
-      {/* =========================
-      MAIN
-      ========================= */}
-
       <div style={styles.main}>
-
-        {/* =========================
-        TOPBAR
-        ========================= */}
 
         <div style={{
           ...styles.topbar,
@@ -338,8 +428,6 @@ export default function AppLayout(){
             alignItems:"center",
             gap:14
           }}>
-
-            {/* HAMBURGER */}
 
             {isMobile && (
 
@@ -395,10 +483,6 @@ export default function AppLayout(){
 
         </div>
 
-        {/* =========================
-        CONTENT
-        ========================= */}
-
         <div style={{
           ...styles.content,
           padding:
@@ -422,10 +506,6 @@ export default function AppLayout(){
   )
 
 }
-
-/* =========================
-STYLES
-========================= */
 
 const styles:any={
 
