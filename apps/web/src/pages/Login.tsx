@@ -1,19 +1,19 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../api";
+import React, { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { apiFetch } from "../api"
 
 export default function Login() {
 
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
-  const [rut,setRut] = useState("");
-  const [password,setPassword] = useState("");
-  const [error,setError] = useState("");
+  const [rut,setRut] = useState("")
+  const [password,setPassword] = useState("")
+  const [error,setError] = useState("")
 
   async function onSubmit(e:any){
 
-    e.preventDefault();
-    setError("");
+    e.preventDefault()
+    setError("")
 
     try{
 
@@ -23,53 +23,50 @@ export default function Login() {
       })
 
       if(!data?.token){
-        setError(data?.error || "Error de autenticación");
-        return;
+        setError(data?.error || "Error de autenticación")
+        return
       }
 
-      const token = data.token;
-      const user = data.user || {};
+      const token = data.token
+      const user = data.user || {}
 
-      /* ===============================
-      GUARDAR TOKEN
-      =============================== */
+      localStorage.clear()
 
-      localStorage.setItem("token",token);
-      localStorage.setItem("jwt",token);
-      localStorage.setItem("accessToken",token);
-      localStorage.setItem("access_token",token);
+      localStorage.setItem("token",token)
+      localStorage.setItem("jwt",token)
+      localStorage.setItem("accessToken",token)
+      localStorage.setItem("access_token",token)
 
-      /* ===============================
-      GUARDAR DATOS USUARIO
-      =============================== */
+      localStorage.setItem("user", JSON.stringify(user))
 
-      localStorage.setItem("user", JSON.stringify(user));
+      if(user.name) localStorage.setItem("userName",user.name)
+      if(user.role) localStorage.setItem("role",user.role)
+      if(user.rut) localStorage.setItem("rut",user.rut)
 
-      if(user.name) localStorage.setItem("userName",user.name);
-      if(user.role) localStorage.setItem("role",user.role);
-      if(user.rut) localStorage.setItem("rut",user.rut);
+      localStorage.setItem(
+        "companyId",
+        user.companyId || ""
+      )
 
-      /* ===============================
-      🔥 ESTA ES LA LÍNEA QUE FALTABA
-      =============================== */
+      localStorage.setItem(
+        "companyName",
+        user.company?.name || ""
+      )
+
+      localStorage.setItem(
+        "permissions",
+        JSON.stringify(user.permissions || [])
+      )
 
       localStorage.setItem(
         "forcePasswordChange",
         data.forcePasswordChange ? "true" : "false"
-      );
-
-      /* ===============================
-      🔥 FORZAR CAMBIO DE CLAVE
-      =============================== */
+      )
 
       if(data.forcePasswordChange){
-        navigate("/change-password");
-        return;
+        navigate("/change-password")
+        return
       }
-
-      /* ===============================
-      REDIRECCIÓN NORMAL
-      =============================== */
 
       if(user.role === "PARTICIPANT"){
         navigate("/app/my-evaluations")
@@ -78,8 +75,10 @@ export default function Login() {
       }
 
     }catch(error:any){
-      console.error(error);
-      setError(error.message || "Error de conexión con el servidor");
+
+      console.error(error)
+      setError(error.message || "Error de conexión con el servidor")
+
     }
 
   }
@@ -169,6 +168,6 @@ export default function Login() {
 
     </div>
 
-  );
+  )
 
 }

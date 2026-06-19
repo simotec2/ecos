@@ -1,11 +1,9 @@
 import jwt from "jsonwebtoken"
 import prisma from "./db"
+import { getUserPermissions } from "./permissions"
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret"
 
-/* =========================
-GENERAR TOKEN
-========================= */
 export function signToken(user:any){
 
   return jwt.sign(
@@ -20,9 +18,6 @@ export function signToken(user:any){
 
 }
 
-/* =========================
-MIDDLEWARE AUTH
-========================= */
 export async function authMiddleware(req:any, res:any, next:any){
 
   try{
@@ -45,12 +40,18 @@ export async function authMiddleware(req:any, res:any, next:any){
       return res.status(401).json({ error:"User not found" })
     }
 
+    const effectiveCompanyId =
+      decoded.companyId !== undefined && decoded.companyId !== null
+        ? decoded.companyId
+        : user.companyId
+
     req.user = {
       ...user,
-      companyId:
-        decoded.companyId !== undefined && decoded.companyId !== null
-          ? decoded.companyId
-          : user.companyId
+      companyId: effectiveCompanyId,
+      permissions: getUserPermissions({
+        ...user,
+        companyId: effectiveCompanyId
+      })
     }
 
     next()

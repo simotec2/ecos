@@ -2,12 +2,10 @@ import { Router } from "express"
 import prisma from "../db"
 import { signToken } from "../utils/jwt"
 import jwt from "jsonwebtoken"
+import { getUserPermissions } from "../permissions"
 
 const router = Router()
 
-/* =====================================
-NORMALIZAR RUT
-===================================== */
 function normalizeRut(rut: string){
 
   if(!rut) return ""
@@ -25,11 +23,6 @@ function normalizeRut(rut: string){
   return `${body}-${dv.toLowerCase()}`
 }
 
-/*
-=====================================
-LOGIN
-=====================================
-*/
 router.post("/login", async (req, res) => {
 
   try {
@@ -51,6 +44,9 @@ router.post("/login", async (req, res) => {
           { rut: rutNormalized },
           { rut: rutNoDash }
         ]
+      },
+      include:{
+        company:true
       }
     })
 
@@ -60,15 +56,14 @@ router.post("/login", async (req, res) => {
       })
     }
 
-    /* =====================================
-    PASSWORD SIMPLE
-    ===================================== */
-
     if (user.password !== password) {
       return res.status(401).json({
         error: "Credenciales inválidas"
       })
     }
+
+    const permissions =
+      getUserPermissions(user)
 
     const token = signToken(user)
 
@@ -76,13 +71,15 @@ router.post("/login", async (req, res) => {
       ok: true,
       token,
       forcePasswordChange: false,
-     user: {
-  id: user.id,
-  name: user.name,
-  rut: user.rut,
-  role: user.role,
-  companyId: user.companyId
-}
+      user: {
+        id: user.id,
+        name: user.name,
+        rut: user.rut,
+        role: user.role,
+        companyId: user.companyId,
+        company: user.company,
+        permissions
+      }
     })
 
   } catch (error: any) {
@@ -98,11 +95,6 @@ router.post("/login", async (req, res) => {
 
 })
 
-/*
-=====================================
-CAMBIO DE CONTRASEÑA
-=====================================
-*/
 router.post("/change-password", async (req, res) => {
 
   try {

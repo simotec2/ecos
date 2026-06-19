@@ -2,9 +2,6 @@ import jwt from "jsonwebtoken"
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret"
 
-/* =========================
-GENERAR TOKEN
-========================= */
 export function signToken(user: any) {
 
   return jwt.sign(
@@ -19,14 +16,8 @@ export function signToken(user: any) {
 
 }
 
-/* =========================
-COMPATIBILIDAD HACIA ATRÁS
-========================= */
 export const signAccessToken = signToken
 
-/* =========================
-VERIFICAR TOKEN
-========================= */
 export function verifyAccessToken(token: string) {
 
   try {
